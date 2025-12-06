@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+
+# Envs
+.venv/
+.env
+.env.*
+
+# Data
+data/pdf_cache/
+data/lancedb/
+data/sumarios/
+data/sqlite/
+
+# Misc
+.ipynb_checkpoints/

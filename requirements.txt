@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+requests
+python-dotenv
+sqlalchemy
+lancedb
+langchain
+pydantic
+pydantic-settings
+pypdf
