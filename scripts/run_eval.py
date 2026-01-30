@@ -604,7 +604,7 @@ def _safe_analyze_intent(question: str) -> dict[str, Any]:
     try:
         return analyze_intent(question)
     except Exception as exc:
-        print(f"[warn] intent failed: {exc}")
+        print(f"[warn] intent failed: {exc} question={question!r}")
         return {
             "language": None,
             "doc_kind": None,

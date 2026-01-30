@@ -165,8 +165,19 @@ def build_answer(
     ]
     try:
         result = client.chat_json(messages, temperature=0.2)
-        if not result.get("citations"):
-            result["citations"] = _collect_citation_ids(evidence)
+        citations_raw = result.get("citations")
+        normalized: list[int] = []
+        if isinstance(citations_raw, list):
+            for item in citations_raw:
+                if isinstance(item, int):
+                    normalized.append(item)
+                elif isinstance(item, str):
+                    text = item.strip()
+                    if text.isdigit():
+                        normalized.append(int(text))
+        if not normalized:
+            normalized = _collect_citation_ids(evidence)
+        result["citations"] = normalized
         return result
     except Exception:
         return {

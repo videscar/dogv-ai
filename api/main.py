@@ -128,7 +128,13 @@ def ask(payload: AskRequest):
     )
     result = None
     try:
-        result = graph.invoke({"question": payload.question, "request_id": request_id})
+        result = graph.invoke(
+            {
+                "question": payload.question,
+                "request_id": request_id,
+                "debug": payload.debug,
+            }
+        )
     except Exception:
         logger.exception("ask.error req=%s", request_id)
         raise

@@ -44,6 +44,7 @@ logger = logging.getLogger("dogv.graph")
 
 class QAState(TypedDict, total=False):
     question: str
+    debug: bool
     intent: dict[str, Any]
     language: str
     request_id: str
@@ -258,6 +259,7 @@ def _doc_similarity_scores(
 def analyze_intent_node(state: QAState) -> QAState:
     start = time.monotonic()
     request_id = state.get("request_id")
+    debug = bool(state.get("debug"))
     try:
         intent = analyze_intent(state["question"])
         intent_lang = intent.get("language")
@@ -266,8 +268,8 @@ def analyze_intent_node(state: QAState) -> QAState:
         else:
             lang = guess_language(state["question"])
         lang_filter = lang
-        doc_kind = None
-        doc_subkind = None
+        doc_kind = intent.get("doc_kind")
+        doc_subkind = intent.get("doc_subkind")
         bm25_query, bm25_strict_query = build_bm25_queries(state["question"], intent)
         since_date = intent.get("since_date")
         until_date = intent.get("until_date")
@@ -303,12 +305,21 @@ def analyze_intent_node(state: QAState) -> QAState:
             "feed_query": feed_query,
         }
     except Exception as exc:
-        logger.warning(
-            "intent.fallback req=%s reason=%s elapsed=%.2fs",
-            request_id,
-            exc,
-            time.monotonic() - start,
-        )
+        if debug:
+            logger.warning(
+                "intent.fallback req=%s reason=%s question=%r elapsed=%.2fs",
+                request_id,
+                exc,
+                state.get("question"),
+                time.monotonic() - start,
+            )
+        else:
+            logger.warning(
+                "intent.fallback req=%s reason=%s elapsed=%.2fs",
+                request_id,
+                exc,
+                time.monotonic() - start,
+            )
         intent = {
             "language": None,
             "doc_kind": None,
@@ -1301,6 +1312,11 @@ def answer_node(state: QAState) -> QAState:
                 cited_ids.add(parsed)
 
         citations = []
+        if not cited_ids and evidence:
+            for item in evidence:
+                parsed = _parse_citation_id(item)
+                if parsed is not None:
+                    cited_ids.add(parsed)
         if cited_ids:
             with SessionLocal() as db:
                 docs = (
