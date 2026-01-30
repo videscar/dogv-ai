@@ -17,6 +17,7 @@ try:
     from . import _path  # type: ignore  # ensures project root is on sys.path
 except ImportError:
     import _path  # type: ignore  # noqa: F401
+from sqlalchemy import text as sa_text
 from api.db import SessionLocal
 from api.models import DogvIssue, DogvDocument
 
@@ -68,6 +69,8 @@ def _extract_document_fields(doc: Dict[str, Any]) -> Dict[str, Any]:
         doc.get("numeroDisposicion")
         or doc.get("ref")
         or doc.get("codigo")
+        or doc.get("codigoInsercion")
+        or doc.get("codigo_insercion")
     )
     ref = _normalize(ref_raw)
 
@@ -128,8 +131,17 @@ def process_issue(db: Session, issue: DogvIssue) -> int:
         print(f"[WARN] issue id={issue.id}: 'disposicion' is not a list")
         return 0
 
-    # Optionally: clear existing docs for idempotency
-    db.query(DogvDocument).filter(DogvDocument.issue_id == issue.id).delete()
+    # Clear existing docs (and their chunks) for idempotency
+    existing_docs = db.query(DogvDocument.id).filter(DogvDocument.issue_id == issue.id).all()
+    if existing_docs:
+        for (doc_id,) in existing_docs:
+            try:
+                db.execute(sa_text("DELETE FROM rag_chunk WHERE document_id = :doc_id"), {"doc_id": doc_id})
+                db.execute(sa_text("DELETE FROM rag_title WHERE document_id = :doc_id"), {"doc_id": doc_id})
+                db.execute(sa_text("DELETE FROM rag_doc WHERE document_id = :doc_id"), {"doc_id": doc_id})
+            except Exception:
+                pass
+        db.query(DogvDocument).filter(DogvDocument.issue_id == issue.id).delete()
 
     count = 0
     for idx, d in enumerate(disposiciones):

@@ -1,5 +1,5 @@
 """
-Fetch and store DOGV 'sumario' (issue metadata) into SQLite.
+Fetch and store DOGV 'sumario' (issue metadata) into the database.
 
 Usage:
     python scripts/sumario_ingest.py YYYY-MM-DD [lang]
@@ -59,23 +59,42 @@ def upsert_issue(db: Session, date_str: str, lang: str, data: Dict[str, Any]) ->
     print(f"[upsert_issue] numero source: {numero_key or 'missing'}, value: {numero!r}")
     print(f"[upsert_issue] title source: {title_key or 'missing'}, value: {title!r}")
 
-    issue = (
+    numero_text = str(numero).strip() if numero is not None else None
+
+    # Allow multiple issues per date (e.g., BIS editions). Prefer an exact numero match,
+    # otherwise re-use a placeholder issue with numero=None for the same day.
+    same_day_issues = (
         db.query(DogvIssue)
         .filter(DogvIssue.date == date, DogvIssue.language == lang)
-        .one_or_none()
+        .all()
     )
+
+    issue = None
+    if numero_text:
+        issue = next((i for i in same_day_issues if i.numero == numero_text), None)
+        if issue is None and len(same_day_issues) == 1 and same_day_issues[0].numero is None:
+            issue = same_day_issues[0]
+        if issue is None:
+            issue = (
+                db.query(DogvIssue)
+                .filter(DogvIssue.language == lang, DogvIssue.numero == numero_text)
+                .one_or_none()
+            )
+    else:
+        issue = same_day_issues[0] if same_day_issues else None
 
     if issue is None:
         issue = DogvIssue(
             date=date,
             language=lang,
-            numero=numero,
+            numero=numero_text,
             title=title,
             raw_json=data,
         )
         db.add(issue)
     else:
-        issue.numero = numero
+        issue.date = date
+        issue.numero = numero_text
         issue.title = title
         issue.raw_json = data
 

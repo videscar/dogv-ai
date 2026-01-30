@@ -3,10 +3,12 @@ from sqlalchemy import (
     Integer,
     String,
     Date,
+    DateTime,
     Text,
     JSON,
     ForeignKey,
     UniqueConstraint,
+    Float,
 )
 from sqlalchemy.orm import relationship
 
@@ -26,7 +28,7 @@ class DogvIssue(Base):
     documents = relationship("DogvDocument", back_populates="issue")
 
     __table_args__ = (
-        UniqueConstraint("date", "language", name="uq_issue_date_lang"),
+        UniqueConstraint("language", "date", "numero", name="uq_issue_lang_date_numero"),
     )
 
 
@@ -41,11 +43,17 @@ class DogvDocument(Base):
     conselleria = Column(String, index=True, nullable=True)
     title = Column(String, nullable=True)
     type = Column(String, index=True, nullable=True)
+    doc_kind = Column(String, index=True, nullable=True)
+    doc_kind_confidence = Column(Float, nullable=True)
+    doc_subkind = Column(String, index=True, nullable=True)
+    doc_tags = Column(JSON, nullable=True)
 
     pdf_url = Column(String, nullable=True)
     html_url = Column(String, nullable=True)
 
     text = Column(Text, nullable=True)
+    text_source = Column(String, nullable=True)
+    text_updated_at = Column(DateTime, nullable=True)
     raw_json = Column(JSON, nullable=True)
 
     issue = relationship("DogvIssue", back_populates="documents")

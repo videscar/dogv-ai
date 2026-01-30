@@ -15,6 +15,7 @@ data/pdf_cache/
 data/lancedb/
 data/sumarios/
 data/sqlite/
+data/html_cache/
 
 # Misc
 .ipynb_checkpoints/
