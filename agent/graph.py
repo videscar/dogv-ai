@@ -20,7 +20,8 @@ from api.query_expansion import (
     build_prf_query,
     decompose_question,
     guess_language,
-    is_feed_query,
+    is_relative_time_query,
+    llm_expand_query,
 )
 from api.reader import extract_evidence
 from api.rerank import rerank_titles
@@ -48,6 +49,7 @@ class QAState(TypedDict, total=False):
     intent: dict[str, Any]
     language: str
     request_id: str
+    temporal_reject: bool
     query_embedding: list[float]
     query_embeddings: list[list[float]]
     bm25_query: str
@@ -270,11 +272,16 @@ def analyze_intent_node(state: QAState) -> QAState:
         lang_filter = lang
         doc_kind = intent.get("doc_kind")
         doc_subkind = intent.get("doc_subkind")
-        bm25_query, bm25_strict_query = build_bm25_queries(state["question"], intent)
+        expansion = llm_expand_query(state["question"], intent) if settings.ask_llm_expand else {}
+        bm25_query, bm25_strict_query = build_bm25_queries(
+            state["question"],
+            intent,
+            expansion=expansion,
+        )
         since_date = intent.get("since_date")
         until_date = intent.get("until_date")
-        feed_query = is_feed_query(state["question"])
-        if feed_query:
+        feed_query = is_relative_time_query(state["question"])
+        if feed_query and (settings.ask_temporal_policy or "").lower() == "filter":
             today = date.today()
             window_start = today - timedelta(days=settings.feed_recent_days)
             if since_date is None or since_date > window_start:
@@ -331,11 +338,16 @@ def analyze_intent_node(state: QAState) -> QAState:
             "entities": {},
         }
         lang = guess_language(state["question"])
-        bm25_query, bm25_strict_query = build_bm25_queries(state["question"], intent)
+        expansion = llm_expand_query(state["question"], intent) if settings.ask_llm_expand else {}
+        bm25_query, bm25_strict_query = build_bm25_queries(
+            state["question"],
+            intent,
+            expansion=expansion,
+        )
         since_date = None
         until_date = None
-        feed_query = is_feed_query(state["question"])
-        if feed_query:
+        feed_query = is_relative_time_query(state["question"])
+        if feed_query and (settings.ask_temporal_policy or "").lower() == "filter":
             today = date.today()
             window_start = today - timedelta(days=settings.feed_recent_days)
             since_date = window_start
@@ -355,6 +367,37 @@ def analyze_intent_node(state: QAState) -> QAState:
             "bm25_strict_query": bm25_strict_query,
             "feed_query": feed_query,
         }
+
+
+def _temporal_reject_message(language: str | None) -> str:
+    if (language or "").startswith(("va", "ca")):
+        return (
+            "La consulta fa referencia a una data relativa (hui, esta setmana, etc.). "
+            "Indica un rang de dates concret (YYYY-MM-DD a YYYY-MM-DD) per a poder buscar al DOGV."
+        )
+    return (
+        "La consulta hace referencia a una fecha relativa (hoy, esta semana, etc.). "
+        "Indica un rango de fechas concreto (YYYY-MM-DD a YYYY-MM-DD) para poder buscar en el DOGV."
+    )
+
+
+def temporal_guard_node(state: QAState) -> QAState:
+    policy = (settings.ask_temporal_policy or "reject").lower()
+    question = state.get("question") or ""
+    if policy == "reject" and is_relative_time_query(question):
+        language = state.get("language") or guess_language(question)
+        return {
+            "answer": _temporal_reject_message(language),
+            "citations": [],
+            "temporal_reject": True,
+        }
+    return {"temporal_reject": False}
+
+
+def _should_continue_after_temporal(state: QAState) -> str:
+    if state.get("temporal_reject"):
+        return "reject"
+    return "continue"
 
 
 def online_ingest_node(state: QAState) -> QAState:
@@ -891,6 +934,16 @@ def rerank_titles_node(state: QAState) -> QAState:
             candidates = candidates[:max_candidates]
 
         top_chunks = state.get("top_chunks") or {}
+        chunk_candidates = state.get("chunk_candidates") or []
+        chunk_candidates_by_doc: dict[int, list[dict[str, Any]]] = {}
+        if chunk_candidates:
+            for item in chunk_candidates:
+                doc_id = item.get("document_id")
+                if doc_id is None:
+                    continue
+                chunk_candidates_by_doc.setdefault(int(doc_id), []).append(item)
+            for doc_id, items in chunk_candidates_by_doc.items():
+                items.sort(key=lambda row: float(row.get("score") or 0.0), reverse=True)
         fallback_doc_ids = [int(item["document_id"]) for item in candidates]
         fallback_summaries: dict[int, str] = {}
         fallback_chunks: dict[int, list[dict[str, Any]]] = {}
@@ -944,6 +997,12 @@ def rerank_titles_node(state: QAState) -> QAState:
                 snippet = fallback_summaries.get(doc_id, "")
             if not snippet and doc_id in fallback_chunks:
                 snippet = _best_snippet(question, fallback_chunks[doc_id])
+            if snippet and keywords and _coverage_score(snippet, keywords) == 0:
+                candidate_chunks = chunk_candidates_by_doc.get(doc_id) or []
+                if candidate_chunks:
+                    improved = _best_snippet(question, candidate_chunks)
+                    if improved and _coverage_score(improved, keywords) > 0:
+                        snippet = improved
             if not snippet:
                 snippet = (item.get("title") or "").strip()
             rerank_candidates.append(
@@ -977,12 +1036,13 @@ def rerank_titles_node(state: QAState) -> QAState:
         coverage_keep = []
         coverage_keep_n = getattr(settings, "ask_rerank_coverage_keep", 2)
         if coverage_keep_n > 0 and keywords:
+            threshold = 1 if len(keywords) <= 3 else 2
             scored = []
             for item in rerank_candidates:
                 doc_id = int(item["document_id"])
                 text = f"{item.get('title') or ''} {item.get('snippet') or ''}"
                 score = _coverage_score(text, keywords)
-                if score > 0:
+                if score >= threshold:
                     scored.append((score, doc_id))
             scored.sort(key=lambda item: item[0], reverse=True)
             coverage_keep = [doc_id for _, doc_id in scored[:coverage_keep_n]]
@@ -1354,6 +1414,7 @@ def answer_node(state: QAState) -> QAState:
 def build_graph():
     graph = StateGraph(QAState)
     graph.add_node("analyze_intent", analyze_intent_node)
+    graph.add_node("temporal_guard", temporal_guard_node)
     graph.add_node("online_ingest", online_ingest_node)
     graph.add_node("retrieve_candidates", retrieve_candidates_node)
     graph.add_node("backfill", backfill_node)
@@ -1362,7 +1423,12 @@ def build_graph():
     graph.add_node("answer_node", answer_node)
 
     graph.set_entry_point("analyze_intent")
-    graph.add_edge("analyze_intent", "online_ingest")
+    graph.add_edge("analyze_intent", "temporal_guard")
+    graph.add_conditional_edges(
+        "temporal_guard",
+        _should_continue_after_temporal,
+        {"reject": END, "continue": "online_ingest"},
+    )
     graph.add_edge("online_ingest", "retrieve_candidates")
     graph.add_conditional_edges(
         "retrieve_candidates",

@@ -214,6 +214,43 @@ _FEED_PATTERNS = [
     r"\búltimes?\s+convocatòries\b",
 ]
 
+_RELATIVE_TIME_PATTERNS = _FEED_PATTERNS + [
+    r"\bhoy\b",
+    r"\bahir\b",
+    r"\bayer\b",
+    r"\bmañana\b",
+    r"\bmanana\b",
+    r"\besta\s+setmana\b",
+    r"\besta\s+semana\b",
+    r"\bla\s+semana\s+pasada\b",
+    r"\bsemana\s+pasada\b",
+    r"\bsemana\s+anterior\b",
+    r"\beste\s+mes\b",
+    r"\bmes\s+pasado\b",
+    r"\bmes\s+anterior\b",
+    r"\bultima\s+semana\b",
+    r"\búltima\s+semana\b",
+]
+
+EXPAND_SYSTEM = (
+    "Eres un asistente para expandir consultas del DOGV. "
+    "Devuelve SOLO JSON con campos keywords (lista) y phrases (lista). "
+    "keywords debe ser una lista de terminos de una sola palabra. "
+    "phrases debe ser una lista de frases de 2 a 5 palabras. "
+    "Evita terminos genericos y stopwords. "
+    "No inventes entidades si no estan sugeridas por la pregunta."
+)
+
+EXPAND_USER = """Pregunta:
+{question}
+
+Contexto opcional:
+- doc_kind: {doc_kind}
+- doc_subkind: {doc_subkind}
+- keywords: {keywords}
+
+Devuelve SOLO JSON con keywords y phrases."""
+
 
 def _tokenize(text: str) -> list[str]:
     return re.findall(r"[\w·'/-]+", text.lower())
@@ -312,6 +349,144 @@ def _phrase_is_useful(phrase: str) -> bool:
     if not tokens:
         return False
     return any(token.lower() not in _LOW_SIGNAL_TERMS for token in tokens)
+
+
+def _has_content_tokens(text: str) -> bool:
+    tokens = [t for t in _tokenize(text) if _keep_token(t) and t not in _STOPWORDS]
+    return len(tokens) >= 2
+
+
+def _normalize_expansion_item(text: str) -> str | None:
+    if not isinstance(text, str):
+        return None
+    cleaned = re.sub(r"\s+", " ", text.strip().lower())
+    return cleaned or None
+
+
+def _filter_expansion_terms(
+    question: str,
+    raw_keywords: list[str],
+    raw_phrases: list[str],
+    max_keywords: int,
+    max_phrases: int,
+    max_tokens: int,
+) -> dict[str, list[str]]:
+    question_lower = (question or "").lower()
+    question_tokens = {t for t in _tokenize(question) if t}
+
+    keywords: list[str] = []
+    phrases: list[str] = []
+    seen: set[str] = set()
+
+    for item in raw_keywords:
+        cleaned = _normalize_expansion_item(item)
+        if not cleaned or " " in cleaned:
+            continue
+        if cleaned in seen or cleaned in question_tokens:
+            continue
+        if not _keep_token(cleaned) or cleaned in _STOPWORDS or cleaned in _GENERIC_TERMS:
+            continue
+        seen.add(cleaned)
+        keywords.append(cleaned)
+        if len(keywords) >= max_keywords:
+            break
+
+    for item in raw_phrases:
+        cleaned = _normalize_expansion_item(item)
+        if not cleaned:
+            continue
+        if cleaned in seen or cleaned in question_lower:
+            continue
+        tokens = [t for t in cleaned.split() if t]
+        if len(tokens) < 2 or len(tokens) > 5:
+            continue
+        useful = any(
+            t not in _STOPWORDS and t not in _GENERIC_TERMS and t not in _LOW_SIGNAL_TERMS
+            for t in tokens
+        )
+        if not useful:
+            continue
+        if all(t in question_tokens for t in tokens):
+            continue
+        seen.add(cleaned)
+        phrases.append(cleaned)
+        if len(phrases) >= max_phrases:
+            break
+
+    selected_phrases: list[str] = []
+    selected_keywords: list[str] = []
+    remaining = max_tokens
+
+    for phrase in phrases:
+        tokens = phrase.split()
+        if len(tokens) > remaining:
+            continue
+        selected_phrases.append(phrase)
+        remaining -= len(tokens)
+        if remaining <= 0:
+            break
+
+    if remaining > 0:
+        for keyword in keywords:
+            if remaining <= 0:
+                break
+            selected_keywords.append(keyword)
+            remaining -= 1
+
+    return {"keywords": selected_keywords, "phrases": selected_phrases}
+
+
+def llm_expand_query(
+    question: str,
+    intent: dict[str, Any] | None = None,
+    max_keywords: int = 6,
+    max_phrases: int = 4,
+    max_tokens: int = 8,
+) -> dict[str, list[str]]:
+    if not question or not _has_content_tokens(question):
+        return {"keywords": [], "phrases": []}
+
+    doc_kind = ""
+    doc_subkind = ""
+    keywords: list[str] = []
+    if isinstance(intent, dict):
+        doc_kind = str(intent.get("doc_kind") or "")
+        doc_subkind = str(intent.get("doc_subkind") or "")
+        raw_keywords = intent.get("keywords")
+        if isinstance(raw_keywords, list):
+            keywords = [str(item) for item in raw_keywords if isinstance(item, str)]
+
+    client = OllamaClient()
+    messages = [
+        {"role": "system", "content": EXPAND_SYSTEM},
+        {
+            "role": "user",
+            "content": EXPAND_USER.format(
+                question=question,
+                doc_kind=doc_kind or "null",
+                doc_subkind=doc_subkind or "null",
+                keywords=", ".join(keywords[:8]) if keywords else "null",
+            ),
+        },
+    ]
+    try:
+        result = client.chat_json(messages, temperature=0.0)
+    except Exception:
+        return {"keywords": [], "phrases": []}
+
+    raw_keywords = result.get("keywords") if isinstance(result, dict) else None
+    raw_phrases = result.get("phrases") if isinstance(result, dict) else None
+    keyword_list = [item for item in raw_keywords if isinstance(item, str)] if isinstance(raw_keywords, list) else []
+    phrase_list = [item for item in raw_phrases if isinstance(item, str)] if isinstance(raw_phrases, list) else []
+
+    return _filter_expansion_terms(
+        question,
+        keyword_list,
+        phrase_list,
+        max_keywords=max_keywords,
+        max_phrases=max_phrases,
+        max_tokens=max_tokens,
+    )
 
 
 def _extract_content_phrases(question: str) -> list[str]:
@@ -433,10 +608,14 @@ def _rank_phrase_tokens(phrases: list[str]) -> list[str]:
 
 
 def is_feed_query(text: str) -> bool:
+    return is_relative_time_query(text)
+
+
+def is_relative_time_query(text: str) -> bool:
     if not text:
         return False
     lower = text.lower()
-    return any(re.search(pattern, lower) for pattern in _FEED_PATTERNS)
+    return any(re.search(pattern, lower) for pattern in _RELATIVE_TIME_PATTERNS)
 
 
 _VALENCIAN_MARKERS = {
@@ -492,8 +671,45 @@ def _clean_phrase(text: str) -> str | None:
     return phrase
 
 
-def build_bm25_query(question: str, intent: dict[str, Any]) -> str:
+def _merge_expansion_keywords(
+    intent_keywords: list[str] | None,
+    expansion: dict[str, list[str]] | None,
+) -> list[str] | None:
+    if not expansion:
+        return intent_keywords
+    expanded: list[str] = []
+    seen: set[str] = set()
+    base = intent_keywords or []
+    for item in base:
+        if not isinstance(item, str):
+            continue
+        token = item.strip()
+        if not token or token in seen:
+            continue
+        seen.add(token)
+        expanded.append(token)
+    for item in expansion.get("phrases", []) + expansion.get("keywords", []):
+        if not isinstance(item, str):
+            continue
+        token = item.strip()
+        if not token or token in seen:
+            continue
+        seen.add(token)
+        expanded.append(token)
+    return expanded
+
+
+def build_bm25_query(
+    question: str,
+    intent: dict[str, Any],
+    expansion: dict[str, list[str]] | None = None,
+) -> str:
     keywords = intent.get("keywords") if isinstance(intent, dict) else None
+    if expansion:
+        keywords = _merge_expansion_keywords(
+            keywords if isinstance(keywords, list) else None,
+            expansion,
+        )
     phrases = _extract_phrases(question, keywords if isinstance(keywords, list) else None)
     tokens = _tokenize(question)
     specific_terms: list[str] = []
@@ -557,8 +773,12 @@ def build_bm25_query(question: str, intent: dict[str, Any]) -> str:
     return " OR ".join(terms[:max_terms])
 
 
-def build_bm25_queries(question: str, intent: dict[str, Any]) -> tuple[str, str | None]:
-    broad = build_bm25_query(question, intent)
+def build_bm25_queries(
+    question: str,
+    intent: dict[str, Any],
+    expansion: dict[str, list[str]] | None = None,
+) -> tuple[str, str | None]:
+    broad = build_bm25_query(question, intent, expansion=expansion)
     keywords = intent.get("keywords") if isinstance(intent, dict) else None
 
     phrases = _extract_phrases(question, keywords if isinstance(keywords, list) else None)

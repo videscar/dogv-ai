@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     ask_rerank_max_candidates: int = 10
     ask_rerank_expand_candidates: int = 10
     ask_rerank_expand_top_n: int = 2
-    ask_rerank_coverage_keep: int = 2
+    ask_rerank_coverage_keep: int = 4
     ask_bm25_max_docs: int = 50
     feed_recent_days: int = 21
     ask_lanes: str = "vector,bm25,title"
@@ -51,6 +51,8 @@ class Settings(BaseSettings):
     full_doc_max_chars: int = 120000
     full_doc_max_docs: int = 2
     full_doc_total_chars: int = 200000
+    ask_temporal_policy: str = "reject"
+    ask_llm_expand: bool = True
     auto_ingest_enabled: bool = True
     auto_ingest_max_days: int = 15
     backfill_enabled: bool = True

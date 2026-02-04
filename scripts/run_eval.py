@@ -21,7 +21,14 @@ from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
 from api.intent import analyze_intent
 from api.ollama import OllamaClient
-from api.query_expansion import build_bm25_queries, build_prf_query, decompose_question, guess_language, is_feed_query
+from api.query_expansion import (
+    build_bm25_queries,
+    build_prf_query,
+    decompose_question,
+    guess_language,
+    is_relative_time_query,
+    llm_expand_query,
+)
 from api.rerank import rerank_titles
 from api.retrieval import (
     RetrievalFilters,
@@ -177,9 +184,17 @@ def _collect_facet_specs(
         embedding = client.embed(question)
         embed_cache[question] = embedding
         embeddings = [embedding]
+    expansion = llm_expand_query(question, intent) if settings.ask_llm_expand else {}
     specs: list[tuple[str, str | None]] = []
     for idx, facet_question in enumerate(facet_questions):
-        bm25_query, bm25_strict_query = build_bm25_queries(facet_question, intent)
+        if idx == 0:
+            bm25_query, bm25_strict_query = build_bm25_queries(
+                facet_question,
+                intent,
+                expansion=expansion,
+            )
+        else:
+            bm25_query, bm25_strict_query = build_bm25_queries(facet_question, intent)
         specs.append((bm25_query, bm25_strict_query))
     return embeddings, specs
 
@@ -265,7 +280,7 @@ def _normalize_intent_filters(
         language = guess_language(question)
     since_date = intent.get("since_date")
     until_date = intent.get("until_date")
-    if is_feed_query(question):
+    if is_relative_time_query(question) and (settings.ask_temporal_policy or "").lower() == "filter":
         today = date.today()
         window_start = today - timedelta(days=settings.feed_recent_days)
         if since_date is None or since_date > window_start:
