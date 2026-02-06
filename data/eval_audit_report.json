@@ -1,0 +1,1134 @@
+{
+  "input": "data/eval_set.json",
+  "output": "data/eval_set.json",
+  "size": 75,
+  "changed": 0,
+  "uncertain": 0,
+  "rows": [
+    {
+      "id": 1,
+      "question": "Segons el DECRET 83/2025 (ref 2025/19923), quines ajudes per a vehicles sinistrats per la DANA es van aprovar, quina quantia tenien i qui les podia sol·licitar?",
+      "legacy_doc_ids": [
+        37026
+      ],
+      "gold_sets": [
+        [
+          37026
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 2,
+      "question": "Segons el DECRET 189/2025 (ref 2025/49581), qui va ser nomenat director general de Tecnologies de la Informació i les Comunicacions i a quina conselleria pertany?",
+      "legacy_doc_ids": [
+        42762
+      ],
+      "gold_sets": [
+        [
+          42762
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 3,
+      "question": "Qui ha estat nou president de la Generalitat Valenciana? Amb quina data?",
+      "legacy_doc_ids": [
+        42629
+      ],
+      "gold_sets": [
+        [
+          42629
+        ]
+      ],
+      "status": "ok",
+      "reason": "Document 42629 contains both the name of the new president (Juan Francisco Pérez Llorca) and the appointment date (28 de novembre de 2025).",
+      "changed": false
+    },
+    {
+      "id": 4,
+      "question": "¿Ha salido la lista de admitidos de Ingeniero de caminos del Ayuntamiento de Xirivella?",
+      "legacy_doc_ids": [
+        19294
+      ],
+      "gold_sets": [
+        [
+          19294
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 19294 contiene la lista provisional de personas admitidas para la plaza de ingeniero o ingeniera de caminos del Ayuntamiento de Xirivella.",
+      "changed": false
+    },
+    {
+      "id": 5,
+      "question": "¿Ha salido ya el concurso de traslados para personal sanitario?",
+      "legacy_doc_ids": [
+        20397
+      ],
+      "gold_sets": [
+        [
+          20397
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution 20397 (19 de noviembre de 2025) publishes the definitive resolution with the destinations of the transfer contest for health personnel, confirming that the contest has already been released.",
+      "changed": false
+    },
+    {
+      "id": 6,
+      "question": "¿Dónde puedo encontrar las bases de la convocatoria de educador social? ¿Cuáles son los requisitos para participar en [convocatoria] ?",
+      "legacy_doc_ids": [
+        20771
+      ],
+      "gold_sets": [
+        [
+          20771
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 20771 contiene tanto la publicación de las bases de la convocatoria como los requisitos para participar en la misma.",
+      "changed": false
+    },
+    {
+      "id": 7,
+      "question": "¿Se ha publicado alguna modificación del tribunal de técnico de laboratorio?",
+      "legacy_doc_ids": [
+        13692
+      ],
+      "gold_sets": [
+        [
+          13692
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 13692 es una resolución que modifica la resolución previa que a su vez modificaba el acuerdo sobre el tribunal de técnico de laboratorio. No se requiere ningún otro documento para responder la pregunta.",
+      "changed": false
+    },
+    {
+      "id": 8,
+      "question": "¿Se publicó el decreto de luto oficial por el accidente ferroviario de Adamuz (Córdoba)?",
+      "legacy_doc_ids": [
+        44120
+      ],
+      "gold_sets": [
+        [
+          44120
+        ]
+      ],
+      "status": "ok",
+      "reason": "El decreto de luto oficial por el accidente ferroviario de Adamuz (Córdoba) se publicó en el DOGV con el número 44120.",
+      "changed": false
+    },
+    {
+      "id": 9,
+      "question": "¿Se aprobó la oferta de empleo público de 2025 para personal gestionado por la Conselleria de Sanidad?",
+      "legacy_doc_ids": [
+        21469
+      ],
+      "gold_sets": [
+        [
+          21469
+        ]
+      ],
+      "status": "ok",
+      "reason": "El Decreto 205/2025, de 26 de diciembre, del Consell, es la disposición que aprueba la oferta de empleo público de 2025 para personal gestionado por la Conselleria de Sanidad.",
+      "changed": false
+    },
+    {
+      "id": 10,
+      "question": "¿Se convocó el concurso ordinario 152/2025 para puestos de ingeniería de la Generalitat?",
+      "legacy_doc_ids": [
+        44101
+      ],
+      "gold_sets": [
+        [
+          44101
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 44101 contiene la convocatoria del concurso ordinario número 152/2025, lo que responde a la pregunta.",
+      "changed": false
+    },
+    {
+      "id": 11,
+      "question": "¿Se publicó la corrección de errores del Decreto 1/2026 sobre cese y nombramiento de altos cargos?",
+      "legacy_doc_ids": [
+        44028
+      ],
+      "gold_sets": [
+        [
+          44028
+        ]
+      ],
+      "status": "ok",
+      "reason": "The correction of errors to Decreto 1/2026 was published and is documented in document 44028.",
+      "changed": false
+    },
+    {
+      "id": 12,
+      "question": "Segons el DECRETO 126/2025 (ref 2025/38864), se incrementó el importe de las ayudas por vehículos siniestrados por la DANA y se habilitó un nuevo plazo de solicitud?",
+      "legacy_doc_ids": [
+        18162
+      ],
+      "gold_sets": [
+        [
+          18162
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 13,
+      "question": "¿Dónde puedo ver las bases de la plaza de ingeniero/a de caminos del Ayuntamiento de L'Eliana?",
+      "legacy_doc_ids": [
+        17877
+      ],
+      "gold_sets": [
+        [
+          17877
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 17877 contiene la convocatoria y las bases de la plaza de ingeniero/a de caminos del Ayuntamiento de L'Eliana.",
+      "changed": false
+    },
+    {
+      "id": 14,
+      "question": "¿Se publicaron las listas provisionales y el tribunal de la escala auxiliar administrativa en la UMH?",
+      "legacy_doc_ids": [
+        19844
+      ],
+      "gold_sets": [
+        [
+          19844
+        ]
+      ],
+      "status": "ok",
+      "reason": "Document 19844 contains the publication of provisional lists and the composition of the tribunal for the auxiliary administrative scale at UMH.",
+      "changed": false
+    },
+    {
+      "id": 15,
+      "question": "¿Se nombró el tribunal para la escala básica de laboratorios (C1)?",
+      "legacy_doc_ids": [
+        21213
+      ],
+      "gold_sets": [
+        [
+          21213
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 21213 contiene la resolución que nombra el tribunal para la escala básica de laboratorios (C1).",
+      "changed": false
+    },
+    {
+      "id": 16,
+      "question": "S'ha publicat el decret de dol oficial per l'accident ferroviari d'Adamuz (Còrdova)?",
+      "legacy_doc_ids": [
+        44429
+      ],
+      "gold_sets": [
+        [
+          44429
+        ]
+      ],
+      "status": "ok",
+      "reason": "El decreto de dol oficial por el accidente ferroviario de Adamuz (Córdoba) está contenido en el documento 44429.",
+      "changed": false
+    },
+    {
+      "id": 17,
+      "question": "S'ha publicat la correcció d'errades del Decret 1/2026 sobre el cessament i el nomenament d'alts càrrecs?",
+      "legacy_doc_ids": [
+        44337
+      ],
+      "gold_sets": [
+        [
+          44337
+        ]
+      ],
+      "status": "ok",
+      "reason": "The correction of errors for Decret 1/2026 has been published in document 44337.",
+      "changed": false
+    },
+    {
+      "id": 18,
+      "question": "S'ha convocat el concurs ordinari 152/2025 per a llocs d'enginyeria de la Generalitat?",
+      "legacy_doc_ids": [
+        44410
+      ],
+      "gold_sets": [
+        [
+          44410
+        ]
+      ],
+      "status": "ok",
+      "reason": "Document 44410 contains the resolution that convocates the ordinary contest 152/2025 for engineering positions of the Generalitat.",
+      "changed": false
+    },
+    {
+      "id": 19,
+      "question": "S'ha publicat el nomenament del tribunal per a l'escala bàsica de laboratoris (C1)?",
+      "legacy_doc_ids": [
+        43114
+      ],
+      "gold_sets": [
+        [
+          43114
+        ]
+      ],
+      "status": "ok",
+      "reason": "The question asks whether the tribunal for the basic laboratory scale (C1) has been named. Document 43114 is a resolution dated 10 December 2025 that names the tribunal for the selection process of the basic laboratory scale (C1). This single document fully answers the question.",
+      "changed": false
+    },
+    {
+      "id": 20,
+      "question": "¿On puc consultar el Ayudas Adjudicaciones \"RESOLUCIÓ de 29 de desembre de 2025, per la qual s’aprova la concessió parcial 16 de l’ampliació de les ajudes, per concessió directa, per a reparar les conseqüències econòmiques derivades de la destrucció de vehicles sinistrats durant el\" del 2026-01-13?",
+      "legacy_doc_ids": [
+        44328
+      ],
+      "gold_sets": [
+        [
+          44328
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution in question is document 44328, which contains the full text of the 'RESOLUCIÓ de 29 de desembre de 2025' and therefore provides the information needed to consult the Ayudas Adjudicaciones.",
+      "changed": false
+    },
+    {
+      "id": 21,
+      "question": "¿Quin és el Ayudas Bases titulat \"RESOLUCIÓ de 29 de desembre de 2025, de concessió de les ajudes convocades mitjançant el Decret 175/2025, de 26 de novembre, del Consell, pel qual s’aproven les bases reguladores i el procediment de concessió directa d’ajudes urgents de\" (ref 2026/183) del 2026-01-08?",
+      "legacy_doc_ids": [
+        44216
+      ],
+      "gold_sets": [
+        [
+          44216
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with the specified title, reference 2026/183, and date 2026-01-08 is document 44216.",
+      "changed": false
+    },
+    {
+      "id": 22,
+      "question": "¿Cuál es el Ayudas Convocatoria titulado \"EXTRACTO de la Resolución de 12 de enero de 2026, del Vicerrectorado de Estudios, por la que se establecen las bases reguladoras de la convocatoria abierta de ayudas «Fora de classe» al estudiantado de la Universitat de València para la\" (ref 2026/985) del 2026-01-15?",
+      "legacy_doc_ids": [
+        44078
+      ],
+      "gold_sets": [
+        [
+          44078
+        ]
+      ],
+      "status": "ok",
+      "reason": "The single document 44078 contains the full title of the convocatoria and all requested information.",
+      "changed": false
+    },
+    {
+      "id": 23,
+      "question": "¿Quin és el Ayudas Correcciones titulat \"RESOLUCIÓ de 29 de desembre de 2025, per la qual s’aprova la resolució de desestimació parcial 6 de les ajudes, per concessió directa, per a reparar les conseqüències econòmiques derivades de la destrucció de vehicles sinistrats durant el\" (ref 2026/21) del 2026-01-12?",
+      "legacy_doc_ids": [
+        44258
+      ],
+      "gold_sets": [
+        [
+          44258
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with ID 44258 matches the title, reference 2026/21, and date 2026-01-12.",
+      "changed": false
+    },
+    {
+      "id": 24,
+      "question": "¿Quin és el Ayudas Listas titulat \"RESOLUCIÓ de 27 d’octubre de 2025, de la Direcció General d'Indústria, per la qual s'aprova la llista de reserva reordenada definitiva després de l'execució de les resolucions estimatòries dels recursos de reposició interposats contra la\" (ref 2025/44503) del 2025-10-30?",
+      "legacy_doc_ids": [
+        41651
+      ],
+      "gold_sets": [
+        [
+          41651
+        ]
+      ],
+      "status": "ok",
+      "reason": "The list of reserves is contained in the resolution document 41651, which is the only document that provides the requested Ayudas List.",
+      "changed": false
+    },
+    {
+      "id": 25,
+      "question": "¿Se publicó \"RESOLUCIÓN de 9 de diciembre de 2025, por la que se autoriza una generación de créditos por la financiación relativa al mecanismo de apoyo a la liquidez, por un importe global de 2.624.207,14 euros (expediente 06.030/25 II parte).\" (ref 2025/51817) en el DOGV del 2026-01-12?",
+      "legacy_doc_ids": [
+        43966
+      ],
+      "gold_sets": [
+        [
+          43966
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento con id 43966 corresponde a la Resolución de 9 de diciembre de 2025, ref 2025/51817, publicada en el DOGV el 12 de enero de 2026.",
+      "changed": false
+    },
+    {
+      "id": 26,
+      "question": "¿Cuál es el Ayudas Resultados titulado \"RESOLUCIÓN de 4 de diciembre 2025, de denegación de las ayudas convocadas por la Resolución de 14 de agosto de 2025, de la Dirección General de Comercio, Artesanía y Consumo, por la que se efectúa la convocatoria de las ayudas en materia\" (ref 2025/49804) del 2025-12-11?",
+      "legacy_doc_ids": [
+        21032
+      ],
+      "gold_sets": [
+        [
+          21032
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 21032 contiene la resolución de 4 de diciembre de 2025 que deniega las ayudas convocadas por la Resolución de 14 de agosto de 2025, por lo que cubre la respuesta completa a la pregunta.",
+      "changed": false
+    },
+    {
+      "id": 27,
+      "question": "¿Quin és el Ayudas titulat \"RESOLUCIÓ de 30 de maig de 2025, per la qual es prorroga fins al 8 de juny de 2025 la validesa dels suports no personalitzats dels títols temporals gratuïts per a jóvens a l'empara del que es disposa en el Decret llei 2/2025, de 28 de\" (ref 2025/19781) del 2025-06-03?",
+      "legacy_doc_ids": [
+        36851
+      ],
+      "gold_sets": [
+        [
+          36851
+        ]
+      ],
+      "status": "ok",
+      "reason": "The requested aid is the resolution titled \"RESOLUCIÓ de 30 de maig de 2025, per la qual es prorroga fins al 8 de juny de 2025 la validesa dels suports no personalitzats dels títols temporals gratuïts per a jóvens a l'empara del que es disposa en el Decret llei 2/2025, de 28 de…\". This title is found in document 36851.",
+      "changed": false
+    },
+    {
+      "id": 28,
+      "question": "¿Quin és el Becas Adjudicaciones titulat \"RESOLUCIÓ de 14 de novembre de 2025, de la Direcció General d’Inclusió i Cooperació al Desenrotllament, per la qual es prorroguen cinc beques per a la realització de pràctiques professionals en matèria de cooperació al desenrotllament,\" (ref 2025/50601) del 2025-12-17?",
+      "legacy_doc_ids": [
+        43091
+      ],
+      "gold_sets": [
+        [
+          43091
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 43091 contains the full title and reference requested.",
+      "changed": false
+    },
+    {
+      "id": 29,
+      "question": "¿Se publicó \"RESOLUCIÓN de 10 de diciembre de 2025, por la que se compensa a las personas beneficiarias de las universidades que integran el Sistema Universitario Valenciano o centros adscritos, la parte no financiada con cargo a los presupuestos\" (ref 2025/50505) en el DOGV del 2025-12-15?",
+      "legacy_doc_ids": [
+        21070
+      ],
+      "gold_sets": [
+        [
+          21070
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution with reference 2025/50505 was published in the DOGV on 2025-12-15, as indicated by document ID 21070.",
+      "changed": false
+    },
+    {
+      "id": 30,
+      "question": "¿On puc consultar el Becas Convocatoria \"EXTRACTE de la Resolució de 7 de gener de 2026, del Vicerectorat d'Internacionalització i Multilingüisme, per la qual es convoquen les beques Santander Mobilitat Internacional No Eramus destinades a l'alumnat de doble titulació\" del 2026-01-15?",
+      "legacy_doc_ids": [
+        44382
+      ],
+      "gold_sets": [
+        [
+          44382
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 44382 is the exact extract of the resolution dated 7 January 2026, which contains the convocatoria for the Santander Mobilitat Internacional No Erasmus scholarships for double‑degree students. No additional documents are required.",
+      "changed": false
+    },
+    {
+      "id": 31,
+      "question": "¿Cuál es el Becas Correcciones titulado \"EXTRACTO de la Resolución de 8 de enero de 2026, del Rectorado, por la que se modifica la convocatoria a Movilidad Erasmus+ Estudios Dimensión Europea (Acción KA131), de la Universidad de Alicante. Curso 2026-2027.\" (ref 2026/695) del 2026-01-12?",
+      "legacy_doc_ids": [
+        43967
+      ],
+      "gold_sets": [
+        [
+          43967
+        ]
+      ],
+      "status": "ok",
+      "reason": "The requested document is uniquely identified by doc_id 43967.",
+      "changed": false
+    },
+    {
+      "id": 32,
+      "question": "¿On puc consultar el Becas Listas \"RESOLUCIÓ de 26 de maig de 2025, de la Direcció General d’Esport, per la qual s'acorda donar publicitat a les subvencions concedides per estimació de recursos de reposició interposats contra la Resolució de 28 de novembre de 2024, del\" del 2025-06-05?",
+      "legacy_doc_ids": [
+        36924
+      ],
+      "gold_sets": [
+        [
+          36924
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution document (id 36924) contains the Beques List and is the only document needed to answer the question.",
+      "changed": false
+    },
+    {
+      "id": 33,
+      "question": "¿Se publicó \"ACUERDO de 14 de octubre de 2025, del Consell, de autorización del incremento del límite para comprometer gasto plurianual en la línea de subvención S0225, Becas y ayudas al alumnado de enseñanzas universitarias y estudios superiores de\" (ref 2025/42449) en el DOGV del 2025-10-17?",
+      "legacy_doc_ids": [
+        19348
+      ],
+      "gold_sets": [
+        [
+          19348
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento con id 19348 corresponde al ACUERDO de 14 de octubre de 2025, del Consell, con referencia 2025/42449 y fecha de publicación 2025‑10‑17, por lo que confirma que fue publicado en el DOGV en esa fecha.",
+      "changed": false
+    },
+    {
+      "id": 34,
+      "question": "¿Se publicó \"RESOLUCIÓN de 22 de octubre 2025, por la que se acepta una renuncia para la realización de prácticas profesionales en la Dirección General de Dependencia y de las Personas Mayores.\" (ref 2025/43985) en el DOGV del 2025-10-24?",
+      "legacy_doc_ids": [
+        19633
+      ],
+      "gold_sets": [
+        [
+          19633
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento con id 19633 corresponde a la Resolución de 22 de octubre de 2025 (ref 2025/43985) y fue publicado en el DOGV el 24 de octubre de 2025.",
+      "changed": false
+    },
+    {
+      "id": 35,
+      "question": "¿Cuál es el Becas Tribunales titulado \"RESOLUCIÓN de 13 de octubre de 2025, de la Dirección General de Universidades, por la que se emplaza a los interesados en el procedimiento ordinario 209/2025 a comparecer en la vía jurisdiccional.\" (ref 2025/42621) del 2025-10-17?",
+      "legacy_doc_ids": [
+        19352
+      ],
+      "gold_sets": [
+        [
+          19352
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with the exact title and reference is doc_id 19352.",
+      "changed": false
+    },
+    {
+      "id": 36,
+      "question": "¿Quin és el Empleo Publico Adjudicaciones titulat \"RESOLUCIÓ de 16 de gener de 2026, de la Direcció General de Funció Pública, per la qual s'adjudiquen destinacions a les persones que han superat les proves selectives d'accés al cos superior d'intervenció i auditoria de la Generalitat,\" (ref 2026/1468) del 2026-01-19?",
+      "legacy_doc_ids": [
+        44417
+      ],
+      "gold_sets": [
+        [
+          44417
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution document 44417 contains the requested employment public adjudications titled 'RESOLUCIÓ de 16 de gener de 2026, de la Direcció General de Funció Pública, per la qual s'adjudiquen destinacions a les persones que han superat les proves selectives d'accés al cos superior d'intervenció i auditoria de la Generalitat' (ref 2026/1468).",
+      "changed": false
+    },
+    {
+      "id": 37,
+      "question": "¿Quin és el Empleo Publico Bases titulat \"ANUNCI de les bases que han de regir les proves de selecció d'una plaça de funcionari o funcionària de carrera com a oficial o oficiala de cementeri i altres servicis municipals.\" (ref 2026/1305) del 2026-01-19?",
+      "legacy_doc_ids": [
+        44426
+      ],
+      "gold_sets": [
+        [
+          44426
+        ]
+      ],
+      "status": "ok",
+      "reason": "The requested announcement is present in document 44426, which contains the full title and reference.",
+      "changed": false
+    },
+    {
+      "id": 38,
+      "question": "¿S'ha publicat \"RESOLUCIÓ de 12 de gener de 2026, per la qual es convoca l'oferta pública de diferents places amb contracte laboral a càrrec de diverses línies d’investigació.\" (ref 2026/906) al DOGV del 2026-01-19?",
+      "legacy_doc_ids": [
+        44428
+      ],
+      "gold_sets": [
+        [
+          44428
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution with reference 2026/906 was published on 2026-01-19 and is represented by document 44428.",
+      "changed": false
+    },
+    {
+      "id": 39,
+      "question": "¿Quin és el Empleo Publico Correcciones titulat \"CORRECCIÓ D'ERRADES de la Resolució de 16 de desembre de 2025, per la qual es convoca un procés de selecció per a l'ingrés com a personal fix en el lloc de treball de l'Institut Valencià d'Art Modern (IVAM) de naturalesa laboral número 11,\" (ref 2026/1361) del 2026-01-19?",
+      "legacy_doc_ids": [
+        44423
+      ],
+      "gold_sets": [
+        [
+          44423
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with reference 2026/1361 and date 2026-01-19 is identified by doc_id 44423.",
+      "changed": false
+    },
+    {
+      "id": 40,
+      "question": "¿On puc consultar el Empleo Publico Listas \"RESOLUCIÓ de 9 de gener de 2026, per la qual es publiquen les llistes provisionals d’admesos i exclosos en el procés selectiu per a l’ingrés en l’escala bàsica de laboratoris de ciències i tecnològics (referència C15/25), pel sistema\" del 2026-01-15?",
+      "legacy_doc_ids": [
+        44400
+      ],
+      "gold_sets": [
+        [
+          44400
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution 9 de gener de 2026 (doc_id 44400) contains the provisional lists and provides the link to the DOGV where they can be consulted.",
+      "changed": false
+    },
+    {
+      "id": 41,
+      "question": "¿Quin és el Empleo Publico OPE titulat \"DECRET 4/2026, de 16 de gener, del Consell, pel qual es disposen el cessament i el nomenament de la persona titular de la Direcció General de Coordinació dels Servicis de Prevenció, Extinció d'Incendis i Salvament de la Comunitat\" (ref 2026/1421) del 2026-01-16?",
+      "legacy_doc_ids": [
+        44408
+      ],
+      "gold_sets": [
+        [
+          44408
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 44408 contains the full title of the public employment OPE requested in the question.",
+      "changed": false
+    },
+    {
+      "id": 42,
+      "question": "¿S'ha publicat \"RESOLUCIÓ de 14 de gener de 2026, de la Direcció General, per la qual es declara desert el procés selectiu per a cobrir el lloc de naturalesa laboral número 2055, cap de Comunicació i Màrqueting, corresponent a l’oferta d’ocupació pública\" (ref 2026/1290) al DOGV del 2026-01-19?",
+      "legacy_doc_ids": [
+        44425
+      ],
+      "gold_sets": [
+        [
+          44425
+        ]
+      ],
+      "status": "ok",
+      "reason": "El document 44425 corresponde a la Resolució de 14 de gener de 2026, de la Direcció General, que declara desert el procés selectiu per a cobrir el lloc de naturalesa laboral número 2055, cap de Comunicació i Màrqueting, i fue publicada en el DOGV el 2026-01-19.",
+      "changed": false
+    },
+    {
+      "id": 43,
+      "question": "¿Quin és el Empleo Publico titulat \"RESOLUCIÓ de 14 de gener de 2026, de la Subsecretaria, per la qual es disposa el nomenament de personal eventual.\" (ref 2026/1182) del 2026-01-15?",
+      "legacy_doc_ids": [
+        44390
+      ],
+      "gold_sets": [
+        [
+          44390
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with ID 44390 matches the title, reference, and date specified in the question.",
+      "changed": false
+    },
+    {
+      "id": 44,
+      "question": "¿S'ha publicat \"RESOLUCIÓ de 29 de desembre de 2025, de la Direcció General de Personal, per la qual se cita a termini les persones interessades en el procediment ordinari 787/2025, del Tribunal Superior de Justícia de la Comunitat Valenciana, Sala\" (ref 2026/714) al DOGV del 2026-01-15?",
+      "legacy_doc_ids": [
+        44380
+      ],
+      "gold_sets": [
+        [
+          44380
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution with reference 2026/714 was published in the DOGV on 2026-01-15, as indicated by document 44380.",
+      "changed": false
+    },
+    {
+      "id": 45,
+      "question": "¿S'ha publicat l'ANUNCI de l'acord adoptat per la sessió plenària del 23 de desembre de 2025 en relació amb el Pla parcial Quijote II (ref 2026/661) al DOGV del 2026-01-15?",
+      "legacy_doc_ids": [
+        44399
+      ],
+      "gold_sets": [
+        [
+          44399
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 46,
+      "question": "¿Quin és el Otros Bases titulat \"ANUNCI sobre el tràmit d'informació pública de l'aprovació del Programa d'actuació integrada de la unitat d'execució Cementeri del Pla general d'ordenació urbana d'Altea, del Projecte de reparcel·lació voluntària i del Projecte\" (ref 2026/1133) del 2026-01-19?",
+      "legacy_doc_ids": [
+        44414
+      ],
+      "gold_sets": [
+        [
+          44414
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with ref 2026/1133 and the specified title is identified by doc_id 44414.",
+      "changed": false
+    },
+    {
+      "id": 47,
+      "question": "¿On puc consultar el Otros Convocatoria \"ANUNCI de la convocatòria del procediment de pública concurrència número 05C25002, per a l'adjudicació de la concessió demanial per a l'ocupació i explotació del port esportiu de la Pobla de Farnals.\" del 2026-01-14?",
+      "legacy_doc_ids": [
+        44343
+      ],
+      "gold_sets": [
+        [
+          44343
+        ]
+      ],
+      "status": "ok",
+      "reason": "The single document 44343 contains the announcement and its reference to the 'Otros Convocatoria' section, which is sufficient to answer where it can be consulted.",
+      "changed": false
+    },
+    {
+      "id": 48,
+      "question": "¿On puc consultar el Otros Correcciones \"CORRECCIÓ D'ERRADES del Decret 186/2025, de 5 de desembre, del Consell, pel qual establix l'estructura orgànica bàsica de la Presidència i de les conselleries de la Generalitat.\" del 2026-01-19?",
+      "legacy_doc_ids": [
+        44415
+      ],
+      "gold_sets": [
+        [
+          44415
+        ]
+      ],
+      "status": "ok",
+      "reason": "The question asks where to consult the 'Otros Correcciones' of the decree dated 2026-01-19. The relevant document is the DOGV issue 1466 of 19.01.2026, which is represented by doc_id 44415.",
+      "changed": false
+    },
+    {
+      "id": 49,
+      "question": "¿S'ha publicat la RESOLUCIÓ de 17 de novembre de 2025 sobre el calendari de fires comercials de 2026 (ref 2025/46948) al DOGV del 2025-12-10?",
+      "legacy_doc_ids": [
+        42887
+      ],
+      "gold_sets": [
+        [
+          42887
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 50,
+      "question": "¿On puc consultar el Otros N/A \"RESOLUCIÓ de 26 de maig de 2025, de la Direcció General d'Urbanisme, Paisatge i Avaluació Ambiental, per la qual es formula un informe d'impacte ambiental del Projecte d'àrea d'aparcament d'autocaravanes en el terme municipal de Busot\" del 2025-07-10?",
+      "legacy_doc_ids": [
+        38133
+      ],
+      "gold_sets": [
+        [
+          38133
+        ]
+      ],
+      "status": "ok",
+      "reason": "The requested resolution is identified by doc_id 38133, which contains the full text and the link to consult it on the DOGV website.",
+      "changed": false
+    },
+    {
+      "id": 51,
+      "question": "¿On puc consultar el Otros OPE \"RESOLUCIÓ de 12 de desembre de 2025, per la qual s'autoritza una ampliació de crèdit, en virtut del que es preveu en l'article 48 de la Llei 1/2015, d'hisenda pública, del sector públic instrumental i de subvencions, i en l'article 25.1.i)\" del 2026-01-15?",
+      "legacy_doc_ids": [
+        44388
+      ],
+      "gold_sets": [
+        [
+          44388
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 44388 matches the requested resolution title and date.",
+      "changed": false
+    },
+    {
+      "id": 52,
+      "question": "¿S'ha publicat l'ACORD de 4 de novembre de 2025 del Consell sobre la línia T0078 «Fons de transició al nou model de finançament de les universitats públiques» (ref 2025/45484) al DOGV del 2025-11-07?",
+      "legacy_doc_ids": [
+        41863
+      ],
+      "gold_sets": [
+        [
+          41863
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 53,
+      "question": "¿S'ha publicat l'ANUNCIO del informe ambiental y territorial estratégico favorable relatiu a la modificación puntual del Plan general del área de reparto 97 y del sector E-9 de Elche (ref 2025/52249) al DOGV del 2026-01-15?",
+      "legacy_doc_ids": [
+        44093
+      ],
+      "gold_sets": [
+        [
+          44093
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 54,
+      "question": "¿Quin és el Otros Tribunales titulat \"RESOLUCIÓ de 29 de desembre de 2025, de la Direcció General de Personal, per la qual se cita les persones interessades en el procediment abreujat 516/2025 del Jutjat Contenciós Administratiu número 7 de València.\" (ref 2026/713) del 2026-01-15?",
+      "legacy_doc_ids": [
+        44375
+      ],
+      "gold_sets": [
+        [
+          44375
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 44375 contains the requested 'Otros Tribunales' field for the specified resolution.",
+      "changed": false
+    },
+    {
+      "id": 55,
+      "question": "¿S'ha publicat el DECRET 16/2025, de 3 de desembre, del President de la Generalitat, sobre nombre i denominació de les conselleries (ref 2025/49243) al DOGV del 2025-12-03?",
+      "legacy_doc_ids": [
+        42755
+      ],
+      "gold_sets": [
+        [
+          42755
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 56,
+      "question": "¿Quin és el Premios Adjudicaciones titulat \"RESOLUCIÓ de 8 de gener de 2026, per la qual es modifica la concessió dels premis d’excel·lència acadèmica destinats a les persones que hagen conclòs, durant els cursos 2023-2024 i 2024-2025, estudis de grau en les universitats públiques\" (ref 2026/729) del 2026-01-19?",
+      "legacy_doc_ids": [
+        44420
+      ],
+      "gold_sets": [
+        [
+          44420
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution document 44420 contains the list of award adjudications for the specified academic excellence awards.",
+      "changed": false
+    },
+    {
+      "id": 57,
+      "question": "¿Quin és el Premios Bases titulat \"ORDE 1/2025, de 26 de desembre, de la Vicepresidència Segona i Conselleria de Presidència, de modificació del Decret 40/2022, de 30 de desembre, del President de la Generalitat, pel qual es creen els premis President i els premis\" (ref 2025/52562) del 2025-12-31?",
+      "legacy_doc_ids": [
+        43373
+      ],
+      "gold_sets": [
+        [
+          43373
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 43373 is the sole source that contains the Premios Bases titled 'ORDE 1/2025, de 26 de desembre, de la Vicepresidència Segona i Conselleria de Presidència, de modificació del Decret 40/2022, de 30 de desembre, del President de la Generalitat, pel qual es creen els premis President i els premis' (ref 2025/52562) dated 2025-12-31.",
+      "changed": false
+    },
+    {
+      "id": 58,
+      "question": "¿On puc consultar el Premios Convocatoria \"EXTRACTE de la Resolució de 12 de gener de 2026, del Rectorat, per la qual es convoca IV Concurs de microrelats expressos de la Universitat d'Alacant - 2026.\" del 2026-01-19?",
+      "legacy_doc_ids": [
+        44424
+      ],
+      "gold_sets": [
+        [
+          44424
+        ]
+      ],
+      "status": "ok",
+      "reason": "The single document (doc_id 44424) contains the extract of the resolution for the IV Concurs de microrelats expressos de la Universitat d'Alacant – 2026, which is the requested Premios Convocatoria. No additional documents are required.",
+      "changed": false
+    },
+    {
+      "id": 59,
+      "question": "¿On puc consultar el Premios Correcciones \"CORRECCIÓ D’ERRADES de la Resolució de 18 de novembre de 2025, de la Direcció General d'Ordenació Educativa i Política Lingüística, per la qual es publica l'annex definitiu de la Resolució de 15 de setembre de 2025, de la Direcció General\" del 2025-12-15?",
+      "legacy_doc_ids": [
+        42966
+      ],
+      "gold_sets": [
+        [
+          42966
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento 42966 contiene la referencia y la información necesaria para consultar la sección de Premios Correcciones correspondiente al 2025-12-15.",
+      "changed": false
+    },
+    {
+      "id": 60,
+      "question": "¿S'ha publicat \"RESOLUCIÓ de 5 de novembre de 2025, de la Direcció, per la qual es publica la relació de les distincions i les condecoracions concedides per la Generalitat al personal dels cossos de policia local de la Comunitat Valenciana.\" (ref 2025/45807) al DOGV del 2025-11-11?",
+      "legacy_doc_ids": [
+        41962
+      ],
+      "gold_sets": [
+        [
+          41962
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento con id 41962 corresponde a la Resolución de 5 de noviembre de 2025, de la Direcció, que publica la relación de las distinciones y condecoraciones concedidas por la Generalitat al personal de los cuerpos de policía local de la Comunidad Valenciana, y fue publicado en el DOGV el 2025-11-11.",
+      "changed": false
+    },
+    {
+      "id": 61,
+      "question": "¿On puc consultar el Premios OPE \"DECRET 116/2025, de 5 d'agost, del Consell, pel qual es concedixen condecoracions i distincions de la Generalitat al mèrit policial de la Unitat del Cos Nacional de Policia adscrita a la Comunitat Valenciana.\" del 2025-08-13?",
+      "legacy_doc_ids": [
+        39507
+      ],
+      "gold_sets": [
+        [
+          39507
+        ]
+      ],
+      "status": "ok",
+      "reason": "The requested decree is published in the Diari Oficial de la Generalitat Valenciana (DOGV) and can be consulted via its document ID 39507.",
+      "changed": false
+    },
+    {
+      "id": 62,
+      "question": "¿Cuál es el Premios Otros titulado \"RESOLUCIÓN de 24 de julio de 2025, de la Dirección General de Formación Profesional, por la que se otorga el reconocimiento de logros de los diferentes programas a determinados centros docentes públicos no universitarios de titularidad de\" (ref 2025/30462) del 2025-07-31?",
+      "legacy_doc_ids": [
+        17294
+      ],
+      "gold_sets": [
+        [
+          17294
+        ]
+      ],
+      "status": "ok",
+      "reason": "Found a single document matching the reference 2025/30462 and date 2025-07-31.",
+      "changed": false
+    },
+    {
+      "id": 63,
+      "question": "¿Cuál es el Premios Resultados titulado \"RESOLUCIÓN de 8 de enero de 2026, por la que se modifica la concesión de los premios de excelencia académica destinados a las personas que hayan concluido, durante los cursos 2023-2024 y 2024-2025, estudios de grado en las universidades\" (ref 2026/729) del 2026-01-19?",
+      "legacy_doc_ids": [
+        44111
+      ],
+      "gold_sets": [
+        [
+          44111
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution 2026/729 (doc_id 44111) contains the full list of awardees and thus the requested 'Premios Resultados'.",
+      "changed": false
+    },
+    {
+      "id": 64,
+      "question": "¿S'ha publicat \"DECRET 143/2025, de 7 d’octubre, del Consell, pel qual concedix l'Alta Distinció de la Generalitat a les comunitats autònomes.\" (ref 2025/42021) al DOGV del 2025-10-08?",
+      "legacy_doc_ids": [
+        40975
+      ],
+      "gold_sets": [
+        [
+          40975
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento con id 40975 corresponde al DECRET 143/2025, de 7 d’octubre, del Consell, con referencia 2025/42021, y fue publicado en el DOGV el 2025-10-08.",
+      "changed": false
+    },
+    {
+      "id": 65,
+      "question": "¿Quin és el Subvenciones Adjudicaciones titulat \"RESOLUCIÓ de 26 de desembre de 2025, per la qual s'aprova la setzena concessió parcial de les ajudes previstes en el Decret 190/2024, de 17 de desembre, del Consell, pel qual s'aproven les bases reguladores i la concessió d'ajudes directes\" (ref 2026/685) del 2026-01-13?",
+      "legacy_doc_ids": [
+        44321
+      ],
+      "gold_sets": [
+        [
+          44321
+        ]
+      ],
+      "status": "ok",
+      "reason": "Found a single document matching the title, reference, and date.",
+      "changed": false
+    },
+    {
+      "id": 66,
+      "question": "¿S'ha publicat \"RESOLUCIÓ de 13 de gener de 2026, de la Direcció, per la qual s'amplia el termini de justificació de les ajudes per a la cooperació en el marc del Pla estratègic de la política agrària comuna per al període 2023-2027.\" (ref 2026/1140) al DOGV del 2026-01-19?",
+      "legacy_doc_ids": [
+        44422
+      ],
+      "gold_sets": [
+        [
+          44422
+        ]
+      ],
+      "status": "ok",
+      "reason": "El document 44422, datat el 2026-01-19, té la referència 2026/1140 i el títol complet que coincideix amb la resolució citada. Per tant, la resolució s'ha publicat al DOGV el 19 de gener de 2026.",
+      "changed": false
+    },
+    {
+      "id": 67,
+      "question": "¿S'ha publicat \"EXTRACTE de la Resolució de 12 de enero de 2026, del Vicerectorat de Relacions Internacionals, per la qual es convoca el programa de mobilitat de grau «Erasmus+ estudis» (KA131) i doble títol internacional per al curs 2026/2027.\" (ref 2026/853) al DOGV del 2026-01-14?",
+      "legacy_doc_ids": [
+        44365
+      ],
+      "gold_sets": [
+        [
+          44365
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento con id 44365, publicado el 2026-01-14, corresponde exactamente a la referencia 2026/853 y al extracto solicitado.",
+      "changed": false
+    },
+    {
+      "id": 68,
+      "question": "¿On puc consultar el Subvenciones Correcciones \"CORRECCIÓ D'ERRADES de la Resolució de 17 de desembre de 2025, de la Direcció General de Producció Agrícola i Ramadera, per la qual s'establix la convocatòria anticipada, per al pla 2026, de les ajudes de la Comunitat Valenciana destinades\" del 2026-01-19?",
+      "legacy_doc_ids": [
+        44418
+      ],
+      "gold_sets": [
+        [
+          44418
+        ]
+      ],
+      "status": "ok",
+      "reason": "El document 44418 conté la informació necessària (URL i secció) per consultar la correcció de subvencions del 2026-01-19.",
+      "changed": false
+    },
+    {
+      "id": 69,
+      "question": "¿S'ha publicat \"RESOLUCIÓ de 13 de gener de 2026, de la Secretaria Autonòmica d’Educació, per la qual es publiquen la relació de centres educatius participants i la dotació econòmica assignada en el programa «#VegaRenHace», en el marc del Pla de\" (ref 2026/992) al DOGV del 2026-01-15?",
+      "legacy_doc_ids": [
+        44395
+      ],
+      "gold_sets": [
+        [
+          44395
+        ]
+      ],
+      "status": "ok",
+      "reason": "El documento con id 44395 corresponde a la Resolución de 13 de enero de 2026, de la Secretaria Autonómica de Educación, con referencia 2026/992, publicada el 2026-01-15 en el DOGV.",
+      "changed": false
+    },
+    {
+      "id": 70,
+      "question": "¿S'ha publicat la RESOLUCIÓ de 20 de setembre de 2025 de transferència de crèdit entre projectes AT345, EM345, QN345 i QR345 (ref 2026/703) al DOGV del 2026-01-15?",
+      "legacy_doc_ids": [
+        44398
+      ],
+      "gold_sets": [
+        [
+          44398
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 71,
+      "question": "¿Quin és el Subvenciones Otros titulat \"RESOLUCIÓ de 24 de novembre de 2025, per la qual s'autoritza una ampliació de crèdit, en virtut del que es preveu en l'article 48 de la Llei 1/2015, d'hisenda pública, del sector públic instrumental i de subvencions, i en l'article 25.1.f)\" (ref 2025/48468) del 2025-12-22?",
+      "legacy_doc_ids": [
+        43220
+      ],
+      "gold_sets": [
+        [
+          43220
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 43220 is the only candidate that matches the requested title and reference.",
+      "changed": false
+    },
+    {
+      "id": 72,
+      "question": "¿Cuál es el Subvenciones Resultados titulado \"RESOLUCIÓN de 20 de noviembre de 2025, por la que se conceden las subvenciones a entidades locales y entidades sin ánimo de lucro para proyectos de inversión en materia de obras de centros en el ámbito de los servicios sociales, convocadas\" (ref 2025/47924) del 2025-11-26?",
+      "legacy_doc_ids": [
+        20531
+      ],
+      "gold_sets": [
+        [
+          20531
+        ]
+      ],
+      "status": "ok",
+      "reason": "The document with id 20531 contains the requested Subvenciones Resultados titled \"RESOLUCIÓN de 20 de noviembre de 2025, por la que se conceden las subvenciones a entidades locales y entidades sin ánimo de lucro para proyectos de inversión en materia de obras de centros en el ámbito de los servicios sociales, convocadas\" (ref 2025/47924) dated 2025-11-26.",
+      "changed": false
+    },
+    {
+      "id": 73,
+      "question": "¿S'ha publicat la RESOLUCIÓ de 9 de desembre de 2025 sobre generació de crèdits (expedient 06.030/25 part II, ref 2025/51817) al DOGV del 2026-01-12?",
+      "legacy_doc_ids": [
+        44275
+      ],
+      "gold_sets": [
+        [
+          44275
+        ]
+      ],
+      "status": "ok",
+      "reason": "manual_review_2026-02-06: validated against dogv_documents by ref/date/title/text.",
+      "changed": false
+    },
+    {
+      "id": 74,
+      "question": "¿Cuál es el Subvenciones Tribunales titulado \"RESOLUCIÓN de 26 de marzo de 2025, de la Dirección General, sobre el recurso de reposición interpuesto por Kinépolis Paterna, SA, contra la resolución para la concesión de ayudas a la exhibición en salas de cine de la Comunitat Valenciana\" (ref 2025/8445) del 2025-04-14?",
+      "legacy_doc_ids": [
+        13190
+      ],
+      "gold_sets": [
+        [
+          13190
+        ]
+      ],
+      "status": "ok",
+      "reason": "The resolution document 13190 contains the tribunal name that handled the case, covering all parts of the question.",
+      "changed": false
+    },
+    {
+      "id": 75,
+      "question": "¿On puc consultar el Ayudas Adjudicaciones \"RESOLUCIÓ de 23 de juny de 2025, per la qual s'aprova la concessió parcial 37 de les ajudes, per concessió directa, per a reparar les conseqüències econòmiques derivades de la destrucció de vehicles sinistrats durant el temporal de vent i\" del 2025-07-23?",
+      "legacy_doc_ids": [
+        38823
+      ],
+      "gold_sets": [
+        [
+          38823
+        ]
+      ],
+      "status": "ok",
+      "reason": "The question asks where to consult the specific resolution. The resolution is identified by reference 2025/27961 and is available in the DOGV. The only candidate document that matches this resolution is doc_id 38823, which contains the full text and the link to the DOGV page. Therefore a single-document gold set suffices.",
+      "changed": false
+    }
+  ]
+}

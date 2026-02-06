@@ -1,0 +1,34 @@
+{
+  "version": "v2",
+  "description": "Strict multi-document retrieval evaluation schema. A query is a hit only when all docs in at least one gold_set are retrieved.",
+  "fields": {
+    "id": {
+      "type": "integer",
+      "description": "Sequential query id."
+    },
+    "question": {
+      "type": "string",
+      "description": "User-style question to evaluate retrieval/rerank coverage."
+    },
+    "gold_sets": {
+      "type": "array[array[integer]]",
+      "description": "Alternative complete document sets. A stage hits at k if top-k contains all docs from any one set."
+    },
+    "doc_ids": {
+      "type": "array[integer]",
+      "description": "Union of all ids in gold_sets (diagnostic only)."
+    },
+    "language": {
+      "type": "string",
+      "description": "Question language label (e.g. es_es, va_va)."
+    },
+    "doc_kind": {
+      "type": "string",
+      "description": "Optional category tag for stratified metrics."
+    },
+    "doc_subkind": {
+      "type": "string",
+      "description": "Optional subcategory tag for stratified metrics."
+    }
+  }
+}

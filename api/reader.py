@@ -714,7 +714,65 @@ def _eligibility_evidence(
     full_docs: list[dict[str, Any]] | None = None,
     max_items: int = 3,
 ) -> list[dict[str, Any]]:
-    return []
+    if not re.search(
+        r"\b(qui|qu[ií]en|beneficiar|beneficiari|beneficiario|sol·licit|solicitar|requisit|requisito|destinatari|destinatario|pot|puede|poden|pueden)\b",
+        question,
+        re.IGNORECASE,
+    ):
+        return []
+
+    eligibility_terms = re.compile(
+        r"\b(beneficiar|beneficiari|beneficiario|sol·licit|solicitud|requisit|requisito|destinatari|destinatario|titular|persona fisica|persona jurídica|podran|podrán|pueden|podran)\b",
+        re.IGNORECASE,
+    )
+    candidates: list[tuple[int, int, str]] = []
+
+    def _score(text: str) -> int:
+        return len(eligibility_terms.findall(text))
+
+    for doc in docs:
+        doc_id = doc.get("document_id")
+        if doc_id is None:
+            continue
+        for chunk in doc.get("chunks") or []:
+            score = _score(chunk)
+            if score > 0:
+                candidates.append((score, int(doc_id), chunk))
+
+    if not candidates and full_docs:
+        for doc in full_docs:
+            doc_id = doc.get("document_id")
+            if doc_id is None:
+                continue
+            text = doc.get("text") or ""
+            for line in text.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                score = _score(line)
+                if score > 0:
+                    candidates.append((score, int(doc_id), line))
+
+    if not candidates:
+        return []
+
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    best: dict[int, str] = {}
+    for _, doc_id, text in candidates:
+        if doc_id in best:
+            continue
+        best[doc_id] = text.strip()
+        if len(best) >= max_items:
+            break
+
+    return [
+        {
+            "doc_id": doc_id,
+            "quote": quote[:800],
+            "detail": "Extracto de requisitos/beneficiarios.",
+        }
+        for doc_id, quote in best.items()
+    ]
 
 
 def _clean_evidence(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -757,17 +815,23 @@ def extract_evidence(
         result = client.chat_json(messages, temperature=0.0)
         evidence = _clean_evidence(result.get("evidence") or [])
         numeric = _numeric_evidence(question, docs, full_docs=full_docs)
+        eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
         if evidence:
             combined = evidence
         else:
             combined = _fallback_evidence(question, docs, full_docs=full_docs)
+        if eligibility:
+            combined = combined + eligibility
         if numeric:
             combined = combined + numeric
         return _coverage_rank_evidence(question, combined, docs)
     except Exception:
         fallback = _fallback_evidence(question, docs, full_docs=full_docs)
+        eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
         numeric = _numeric_evidence(question, docs, full_docs=full_docs)
         combined = fallback
+        if eligibility:
+            combined = combined + eligibility
         if numeric:
             combined = combined + numeric
         return _coverage_rank_evidence(question, combined, docs)

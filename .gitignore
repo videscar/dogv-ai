@@ -16,6 +16,12 @@ data/lancedb/
 data/sumarios/
 data/sqlite/
 data/html_cache/
+data/eval_reports/
+data/eval_baseline.json
+data/missing_chunks_*.csv
+data/missing_chunks_detailed_*.csv
 
 # Misc
 .ipynb_checkpoints/
+logs/
+ollama/

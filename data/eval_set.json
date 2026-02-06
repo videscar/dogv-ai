@@ -1,0 +1,1127 @@
+[
+  {
+    "id": 1,
+    "question": "Segons el DECRET 83/2025 (ref 2025/19923), quines ajudes per a vehicles sinistrats per la DANA es van aprovar, quina quantia tenien i qui les podia sol·licitar?",
+    "gold_sets": [
+      [
+        37026
+      ]
+    ],
+    "doc_ids": [
+      37026
+    ],
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 2,
+    "question": "Segons el DECRET 189/2025 (ref 2025/49581), qui va ser nomenat director general de Tecnologies de la Informació i les Comunicacions i a quina conselleria pertany?",
+    "gold_sets": [
+      [
+        42762
+      ]
+    ],
+    "doc_ids": [
+      42762
+    ],
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 3,
+    "question": "Qui ha estat nou president de la Generalitat Valenciana? Amb quina data?",
+    "gold_sets": [
+      [
+        42629
+      ]
+    ],
+    "doc_ids": [
+      42629
+    ],
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 4,
+    "question": "¿Ha salido la lista de admitidos de Ingeniero de caminos del Ayuntamiento de Xirivella?",
+    "gold_sets": [
+      [
+        19294
+      ]
+    ],
+    "doc_ids": [
+      19294
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 5,
+    "question": "¿Ha salido ya el concurso de traslados para personal sanitario?",
+    "gold_sets": [
+      [
+        20397
+      ]
+    ],
+    "doc_ids": [
+      20397
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 6,
+    "question": "¿Dónde puedo encontrar las bases de la convocatoria de educador social? ¿Cuáles son los requisitos para participar en [convocatoria] ?",
+    "gold_sets": [
+      [
+        20771
+      ]
+    ],
+    "doc_ids": [
+      20771
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 7,
+    "question": "¿Se ha publicado alguna modificación del tribunal de técnico de laboratorio?",
+    "gold_sets": [
+      [
+        13692
+      ]
+    ],
+    "doc_ids": [
+      13692
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 8,
+    "question": "¿Se publicó el decreto de luto oficial por el accidente ferroviario de Adamuz (Córdoba)?",
+    "gold_sets": [
+      [
+        44120
+      ]
+    ],
+    "doc_ids": [
+      44120
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 9,
+    "question": "¿Se aprobó la oferta de empleo público de 2025 para personal gestionado por la Conselleria de Sanidad?",
+    "gold_sets": [
+      [
+        21469
+      ]
+    ],
+    "doc_ids": [
+      21469
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 10,
+    "question": "¿Se convocó el concurso ordinario 152/2025 para puestos de ingeniería de la Generalitat?",
+    "gold_sets": [
+      [
+        44101
+      ]
+    ],
+    "doc_ids": [
+      44101
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 11,
+    "question": "¿Se publicó la corrección de errores del Decreto 1/2026 sobre cese y nombramiento de altos cargos?",
+    "gold_sets": [
+      [
+        44028
+      ]
+    ],
+    "doc_ids": [
+      44028
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 12,
+    "question": "Segons el DECRETO 126/2025 (ref 2025/38864), se incrementó el importe de las ayudas por vehículos siniestrados por la DANA y se habilitó un nuevo plazo de solicitud?",
+    "gold_sets": [
+      [
+        18162
+      ]
+    ],
+    "doc_ids": [
+      18162
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 13,
+    "question": "¿Dónde puedo ver las bases de la plaza de ingeniero/a de caminos del Ayuntamiento de L'Eliana?",
+    "gold_sets": [
+      [
+        17877
+      ]
+    ],
+    "doc_ids": [
+      17877
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 14,
+    "question": "¿Se publicaron las listas provisionales y el tribunal de la escala auxiliar administrativa en la UMH?",
+    "gold_sets": [
+      [
+        19844
+      ]
+    ],
+    "doc_ids": [
+      19844
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 15,
+    "question": "¿Se nombró el tribunal para la escala básica de laboratorios (C1)?",
+    "gold_sets": [
+      [
+        21213
+      ]
+    ],
+    "doc_ids": [
+      21213
+    ],
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 16,
+    "question": "S'ha publicat el decret de dol oficial per l'accident ferroviari d'Adamuz (Còrdova)?",
+    "gold_sets": [
+      [
+        44429
+      ]
+    ],
+    "doc_ids": [
+      44429
+    ],
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 17,
+    "question": "S'ha publicat la correcció d'errades del Decret 1/2026 sobre el cessament i el nomenament d'alts càrrecs?",
+    "gold_sets": [
+      [
+        44337
+      ]
+    ],
+    "doc_ids": [
+      44337
+    ],
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 18,
+    "question": "S'ha convocat el concurs ordinari 152/2025 per a llocs d'enginyeria de la Generalitat?",
+    "gold_sets": [
+      [
+        44410
+      ]
+    ],
+    "doc_ids": [
+      44410
+    ],
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 19,
+    "question": "S'ha publicat el nomenament del tribunal per a l'escala bàsica de laboratoris (C1)?",
+    "gold_sets": [
+      [
+        43114
+      ]
+    ],
+    "doc_ids": [
+      43114
+    ],
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null
+  },
+  {
+    "id": 20,
+    "question": "¿On puc consultar el Ayudas Adjudicaciones \"RESOLUCIÓ de 29 de desembre de 2025, per la qual s’aprova la concessió parcial 16 de l’ampliació de les ajudes, per concessió directa, per a reparar les conseqüències econòmiques derivades de la destrucció de vehicles sinistrats durant el\" del 2026-01-13?",
+    "gold_sets": [
+      [
+        44328
+      ]
+    ],
+    "doc_ids": [
+      44328
+    ],
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Adjudicaciones"
+  },
+  {
+    "id": 21,
+    "question": "¿Quin és el Ayudas Bases titulat \"RESOLUCIÓ de 29 de desembre de 2025, de concessió de les ajudes convocades mitjançant el Decret 175/2025, de 26 de novembre, del Consell, pel qual s’aproven les bases reguladores i el procediment de concessió directa d’ajudes urgents de\" (ref 2026/183) del 2026-01-08?",
+    "gold_sets": [
+      [
+        44216
+      ]
+    ],
+    "doc_ids": [
+      44216
+    ],
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Bases"
+  },
+  {
+    "id": 22,
+    "question": "¿Cuál es el Ayudas Convocatoria titulado \"EXTRACTO de la Resolución de 12 de enero de 2026, del Vicerrectorado de Estudios, por la que se establecen las bases reguladoras de la convocatoria abierta de ayudas «Fora de classe» al estudiantado de la Universitat de València para la\" (ref 2026/985) del 2026-01-15?",
+    "gold_sets": [
+      [
+        44078
+      ]
+    ],
+    "doc_ids": [
+      44078
+    ],
+    "language": "es_es",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Convocatoria"
+  },
+  {
+    "id": 23,
+    "question": "¿Quin és el Ayudas Correcciones titulat \"RESOLUCIÓ de 29 de desembre de 2025, per la qual s’aprova la resolució de desestimació parcial 6 de les ajudes, per concessió directa, per a reparar les conseqüències econòmiques derivades de la destrucció de vehicles sinistrats durant el\" (ref 2026/21) del 2026-01-12?",
+    "gold_sets": [
+      [
+        44258
+      ]
+    ],
+    "doc_ids": [
+      44258
+    ],
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Correcciones"
+  },
+  {
+    "id": 24,
+    "question": "¿Quin és el Ayudas Listas titulat \"RESOLUCIÓ de 27 d’octubre de 2025, de la Direcció General d'Indústria, per la qual s'aprova la llista de reserva reordenada definitiva després de l'execució de les resolucions estimatòries dels recursos de reposició interposats contra la\" (ref 2025/44503) del 2025-10-30?",
+    "gold_sets": [
+      [
+        41651
+      ]
+    ],
+    "doc_ids": [
+      41651
+    ],
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Listas"
+  },
+  {
+    "id": 25,
+    "question": "¿Se publicó \"RESOLUCIÓN de 9 de diciembre de 2025, por la que se autoriza una generación de créditos por la financiación relativa al mecanismo de apoyo a la liquidez, por un importe global de 2.624.207,14 euros (expediente 06.030/25 II parte).\" (ref 2025/51817) en el DOGV del 2026-01-12?",
+    "gold_sets": [
+      [
+        43966
+      ]
+    ],
+    "doc_ids": [
+      43966
+    ],
+    "language": "es_es",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "OPE"
+  },
+  {
+    "id": 26,
+    "question": "¿Cuál es el Ayudas Resultados titulado \"RESOLUCIÓN de 4 de diciembre 2025, de denegación de las ayudas convocadas por la Resolución de 14 de agosto de 2025, de la Dirección General de Comercio, Artesanía y Consumo, por la que se efectúa la convocatoria de las ayudas en materia\" (ref 2025/49804) del 2025-12-11?",
+    "gold_sets": [
+      [
+        21032
+      ]
+    ],
+    "doc_ids": [
+      21032
+    ],
+    "language": "es_es",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Resultados"
+  },
+  {
+    "id": 27,
+    "question": "¿Quin és el Ayudas titulat \"RESOLUCIÓ de 30 de maig de 2025, per la qual es prorroga fins al 8 de juny de 2025 la validesa dels suports no personalitzats dels títols temporals gratuïts per a jóvens a l'empara del que es disposa en el Decret llei 2/2025, de 28 de\" (ref 2025/19781) del 2025-06-03?",
+    "gold_sets": [
+      [
+        36851
+      ]
+    ],
+    "doc_ids": [
+      36851
+    ],
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": null
+  },
+  {
+    "id": 28,
+    "question": "¿Quin és el Becas Adjudicaciones titulat \"RESOLUCIÓ de 14 de novembre de 2025, de la Direcció General d’Inclusió i Cooperació al Desenrotllament, per la qual es prorroguen cinc beques per a la realització de pràctiques professionals en matèria de cooperació al desenrotllament,\" (ref 2025/50601) del 2025-12-17?",
+    "gold_sets": [
+      [
+        43091
+      ]
+    ],
+    "doc_ids": [
+      43091
+    ],
+    "language": "va_va",
+    "doc_kind": "Becas",
+    "doc_subkind": "Adjudicaciones"
+  },
+  {
+    "id": 29,
+    "question": "¿Se publicó \"RESOLUCIÓN de 10 de diciembre de 2025, por la que se compensa a las personas beneficiarias de las universidades que integran el Sistema Universitario Valenciano o centros adscritos, la parte no financiada con cargo a los presupuestos\" (ref 2025/50505) en el DOGV del 2025-12-15?",
+    "gold_sets": [
+      [
+        21070
+      ]
+    ],
+    "doc_ids": [
+      21070
+    ],
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Bases"
+  },
+  {
+    "id": 30,
+    "question": "¿On puc consultar el Becas Convocatoria \"EXTRACTE de la Resolució de 7 de gener de 2026, del Vicerectorat d'Internacionalització i Multilingüisme, per la qual es convoquen les beques Santander Mobilitat Internacional No Eramus destinades a l'alumnat de doble titulació\" del 2026-01-15?",
+    "gold_sets": [
+      [
+        44382
+      ]
+    ],
+    "doc_ids": [
+      44382
+    ],
+    "language": "va_va",
+    "doc_kind": "Becas",
+    "doc_subkind": "Convocatoria"
+  },
+  {
+    "id": 31,
+    "question": "¿Cuál es el Becas Correcciones titulado \"EXTRACTO de la Resolución de 8 de enero de 2026, del Rectorado, por la que se modifica la convocatoria a Movilidad Erasmus+ Estudios Dimensión Europea (Acción KA131), de la Universidad de Alicante. Curso 2026-2027.\" (ref 2026/695) del 2026-01-12?",
+    "gold_sets": [
+      [
+        43967
+      ]
+    ],
+    "doc_ids": [
+      43967
+    ],
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Correcciones"
+  },
+  {
+    "id": 32,
+    "question": "¿On puc consultar el Becas Listas \"RESOLUCIÓ de 26 de maig de 2025, de la Direcció General d’Esport, per la qual s'acorda donar publicitat a les subvencions concedides per estimació de recursos de reposició interposats contra la Resolució de 28 de novembre de 2024, del\" del 2025-06-05?",
+    "gold_sets": [
+      [
+        36924
+      ]
+    ],
+    "doc_ids": [
+      36924
+    ],
+    "language": "va_va",
+    "doc_kind": "Becas",
+    "doc_subkind": "Listas"
+  },
+  {
+    "id": 33,
+    "question": "¿Se publicó \"ACUERDO de 14 de octubre de 2025, del Consell, de autorización del incremento del límite para comprometer gasto plurianual en la línea de subvención S0225, Becas y ayudas al alumnado de enseñanzas universitarias y estudios superiores de\" (ref 2025/42449) en el DOGV del 2025-10-17?",
+    "gold_sets": [
+      [
+        19348
+      ]
+    ],
+    "doc_ids": [
+      19348
+    ],
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "OPE"
+  },
+  {
+    "id": 34,
+    "question": "¿Se publicó \"RESOLUCIÓN de 22 de octubre 2025, por la que se acepta una renuncia para la realización de prácticas profesionales en la Dirección General de Dependencia y de las Personas Mayores.\" (ref 2025/43985) en el DOGV del 2025-10-24?",
+    "gold_sets": [
+      [
+        19633
+      ]
+    ],
+    "doc_ids": [
+      19633
+    ],
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Resultados"
+  },
+  {
+    "id": 35,
+    "question": "¿Cuál es el Becas Tribunales titulado \"RESOLUCIÓN de 13 de octubre de 2025, de la Dirección General de Universidades, por la que se emplaza a los interesados en el procedimiento ordinario 209/2025 a comparecer en la vía jurisdiccional.\" (ref 2025/42621) del 2025-10-17?",
+    "gold_sets": [
+      [
+        19352
+      ]
+    ],
+    "doc_ids": [
+      19352
+    ],
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Tribunales"
+  },
+  {
+    "id": 36,
+    "question": "¿Quin és el Empleo Publico Adjudicaciones titulat \"RESOLUCIÓ de 16 de gener de 2026, de la Direcció General de Funció Pública, per la qual s'adjudiquen destinacions a les persones que han superat les proves selectives d'accés al cos superior d'intervenció i auditoria de la Generalitat,\" (ref 2026/1468) del 2026-01-19?",
+    "gold_sets": [
+      [
+        44417
+      ]
+    ],
+    "doc_ids": [
+      44417
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Adjudicaciones"
+  },
+  {
+    "id": 37,
+    "question": "¿Quin és el Empleo Publico Bases titulat \"ANUNCI de les bases que han de regir les proves de selecció d'una plaça de funcionari o funcionària de carrera com a oficial o oficiala de cementeri i altres servicis municipals.\" (ref 2026/1305) del 2026-01-19?",
+    "gold_sets": [
+      [
+        44426
+      ]
+    ],
+    "doc_ids": [
+      44426
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Bases"
+  },
+  {
+    "id": 38,
+    "question": "¿S'ha publicat \"RESOLUCIÓ de 12 de gener de 2026, per la qual es convoca l'oferta pública de diferents places amb contracte laboral a càrrec de diverses línies d’investigació.\" (ref 2026/906) al DOGV del 2026-01-19?",
+    "gold_sets": [
+      [
+        44428
+      ]
+    ],
+    "doc_ids": [
+      44428
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Convocatoria"
+  },
+  {
+    "id": 39,
+    "question": "¿Quin és el Empleo Publico Correcciones titulat \"CORRECCIÓ D'ERRADES de la Resolució de 16 de desembre de 2025, per la qual es convoca un procés de selecció per a l'ingrés com a personal fix en el lloc de treball de l'Institut Valencià d'Art Modern (IVAM) de naturalesa laboral número 11,\" (ref 2026/1361) del 2026-01-19?",
+    "gold_sets": [
+      [
+        44423
+      ]
+    ],
+    "doc_ids": [
+      44423
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Correcciones"
+  },
+  {
+    "id": 40,
+    "question": "¿On puc consultar el Empleo Publico Listas \"RESOLUCIÓ de 9 de gener de 2026, per la qual es publiquen les llistes provisionals d’admesos i exclosos en el procés selectiu per a l’ingrés en l’escala bàsica de laboratoris de ciències i tecnològics (referència C15/25), pel sistema\" del 2026-01-15?",
+    "gold_sets": [
+      [
+        44400
+      ]
+    ],
+    "doc_ids": [
+      44400
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Listas"
+  },
+  {
+    "id": 41,
+    "question": "¿Quin és el Empleo Publico OPE titulat \"DECRET 4/2026, de 16 de gener, del Consell, pel qual es disposen el cessament i el nomenament de la persona titular de la Direcció General de Coordinació dels Servicis de Prevenció, Extinció d'Incendis i Salvament de la Comunitat\" (ref 2026/1421) del 2026-01-16?",
+    "gold_sets": [
+      [
+        44408
+      ]
+    ],
+    "doc_ids": [
+      44408
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "OPE"
+  },
+  {
+    "id": 42,
+    "question": "¿S'ha publicat \"RESOLUCIÓ de 14 de gener de 2026, de la Direcció General, per la qual es declara desert el procés selectiu per a cobrir el lloc de naturalesa laboral número 2055, cap de Comunicació i Màrqueting, corresponent a l’oferta d’ocupació pública\" (ref 2026/1290) al DOGV del 2026-01-19?",
+    "gold_sets": [
+      [
+        44425
+      ]
+    ],
+    "doc_ids": [
+      44425
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Resultados"
+  },
+  {
+    "id": 43,
+    "question": "¿Quin és el Empleo Publico titulat \"RESOLUCIÓ de 14 de gener de 2026, de la Subsecretaria, per la qual es disposa el nomenament de personal eventual.\" (ref 2026/1182) del 2026-01-15?",
+    "gold_sets": [
+      [
+        44390
+      ]
+    ],
+    "doc_ids": [
+      44390
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": ""
+  },
+  {
+    "id": 44,
+    "question": "¿S'ha publicat \"RESOLUCIÓ de 29 de desembre de 2025, de la Direcció General de Personal, per la qual se cita a termini les persones interessades en el procediment ordinari 787/2025, del Tribunal Superior de Justícia de la Comunitat Valenciana, Sala\" (ref 2026/714) al DOGV del 2026-01-15?",
+    "gold_sets": [
+      [
+        44380
+      ]
+    ],
+    "doc_ids": [
+      44380
+    ],
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Tribunales"
+  },
+  {
+    "id": 45,
+    "question": "¿S'ha publicat l'ANUNCI de l'acord adoptat per la sessió plenària del 23 de desembre de 2025 en relació amb el Pla parcial Quijote II (ref 2026/661) al DOGV del 2026-01-15?",
+    "gold_sets": [
+      [
+        44399
+      ]
+    ],
+    "doc_ids": [
+      44399
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Adjudicaciones"
+  },
+  {
+    "id": 46,
+    "question": "¿Quin és el Otros Bases titulat \"ANUNCI sobre el tràmit d'informació pública de l'aprovació del Programa d'actuació integrada de la unitat d'execució Cementeri del Pla general d'ordenació urbana d'Altea, del Projecte de reparcel·lació voluntària i del Projecte\" (ref 2026/1133) del 2026-01-19?",
+    "gold_sets": [
+      [
+        44414
+      ]
+    ],
+    "doc_ids": [
+      44414
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Bases"
+  },
+  {
+    "id": 47,
+    "question": "¿On puc consultar el Otros Convocatoria \"ANUNCI de la convocatòria del procediment de pública concurrència número 05C25002, per a l'adjudicació de la concessió demanial per a l'ocupació i explotació del port esportiu de la Pobla de Farnals.\" del 2026-01-14?",
+    "gold_sets": [
+      [
+        44343
+      ]
+    ],
+    "doc_ids": [
+      44343
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Convocatoria"
+  },
+  {
+    "id": 48,
+    "question": "¿On puc consultar el Otros Correcciones \"CORRECCIÓ D'ERRADES del Decret 186/2025, de 5 de desembre, del Consell, pel qual establix l'estructura orgànica bàsica de la Presidència i de les conselleries de la Generalitat.\" del 2026-01-19?",
+    "gold_sets": [
+      [
+        44415
+      ]
+    ],
+    "doc_ids": [
+      44415
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Correcciones"
+  },
+  {
+    "id": 49,
+    "question": "¿S'ha publicat la RESOLUCIÓ de 17 de novembre de 2025 sobre el calendari de fires comercials de 2026 (ref 2025/46948) al DOGV del 2025-12-10?",
+    "gold_sets": [
+      [
+        42887
+      ]
+    ],
+    "doc_ids": [
+      42887
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Listas"
+  },
+  {
+    "id": 50,
+    "question": "¿On puc consultar el Otros N/A \"RESOLUCIÓ de 26 de maig de 2025, de la Direcció General d'Urbanisme, Paisatge i Avaluació Ambiental, per la qual es formula un informe d'impacte ambiental del Projecte d'àrea d'aparcament d'autocaravanes en el terme municipal de Busot\" del 2025-07-10?",
+    "gold_sets": [
+      [
+        38133
+      ]
+    ],
+    "doc_ids": [
+      38133
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "N/A"
+  },
+  {
+    "id": 51,
+    "question": "¿On puc consultar el Otros OPE \"RESOLUCIÓ de 12 de desembre de 2025, per la qual s'autoritza una ampliació de crèdit, en virtut del que es preveu en l'article 48 de la Llei 1/2015, d'hisenda pública, del sector públic instrumental i de subvencions, i en l'article 25.1.i)\" del 2026-01-15?",
+    "gold_sets": [
+      [
+        44388
+      ]
+    ],
+    "doc_ids": [
+      44388
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "OPE"
+  },
+  {
+    "id": 52,
+    "question": "¿S'ha publicat l'ACORD de 4 de novembre de 2025 del Consell sobre la línia T0078 «Fons de transició al nou model de finançament de les universitats públiques» (ref 2025/45484) al DOGV del 2025-11-07?",
+    "gold_sets": [
+      [
+        41863
+      ]
+    ],
+    "doc_ids": [
+      41863
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Otros"
+  },
+  {
+    "id": 53,
+    "question": "¿S'ha publicat l'ANUNCIO del informe ambiental y territorial estratégico favorable relatiu a la modificación puntual del Plan general del área de reparto 97 y del sector E-9 de Elche (ref 2025/52249) al DOGV del 2026-01-15?",
+    "gold_sets": [
+      [
+        44093
+      ]
+    ],
+    "doc_ids": [
+      44093
+    ],
+    "language": "es_es",
+    "doc_kind": "Otros",
+    "doc_subkind": "Resultados"
+  },
+  {
+    "id": 54,
+    "question": "¿Quin és el Otros Tribunales titulat \"RESOLUCIÓ de 29 de desembre de 2025, de la Direcció General de Personal, per la qual se cita les persones interessades en el procediment abreujat 516/2025 del Jutjat Contenciós Administratiu número 7 de València.\" (ref 2026/713) del 2026-01-15?",
+    "gold_sets": [
+      [
+        44375
+      ]
+    ],
+    "doc_ids": [
+      44375
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Tribunales"
+  },
+  {
+    "id": 55,
+    "question": "¿S'ha publicat el DECRET 16/2025, de 3 de desembre, del President de la Generalitat, sobre nombre i denominació de les conselleries (ref 2025/49243) al DOGV del 2025-12-03?",
+    "gold_sets": [
+      [
+        42755
+      ]
+    ],
+    "doc_ids": [
+      42755
+    ],
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "{}"
+  },
+  {
+    "id": 56,
+    "question": "¿Quin és el Premios Adjudicaciones titulat \"RESOLUCIÓ de 8 de gener de 2026, per la qual es modifica la concessió dels premis d’excel·lència acadèmica destinats a les persones que hagen conclòs, durant els cursos 2023-2024 i 2024-2025, estudis de grau en les universitats públiques\" (ref 2026/729) del 2026-01-19?",
+    "gold_sets": [
+      [
+        44420
+      ]
+    ],
+    "doc_ids": [
+      44420
+    ],
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Adjudicaciones"
+  },
+  {
+    "id": 57,
+    "question": "¿Quin és el Premios Bases titulat \"ORDE 1/2025, de 26 de desembre, de la Vicepresidència Segona i Conselleria de Presidència, de modificació del Decret 40/2022, de 30 de desembre, del President de la Generalitat, pel qual es creen els premis President i els premis\" (ref 2025/52562) del 2025-12-31?",
+    "gold_sets": [
+      [
+        43373
+      ]
+    ],
+    "doc_ids": [
+      43373
+    ],
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Bases"
+  },
+  {
+    "id": 58,
+    "question": "¿On puc consultar el Premios Convocatoria \"EXTRACTE de la Resolució de 12 de gener de 2026, del Rectorat, per la qual es convoca IV Concurs de microrelats expressos de la Universitat d'Alacant - 2026.\" del 2026-01-19?",
+    "gold_sets": [
+      [
+        44424
+      ]
+    ],
+    "doc_ids": [
+      44424
+    ],
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Convocatoria"
+  },
+  {
+    "id": 59,
+    "question": "¿On puc consultar el Premios Correcciones \"CORRECCIÓ D’ERRADES de la Resolució de 18 de novembre de 2025, de la Direcció General d'Ordenació Educativa i Política Lingüística, per la qual es publica l'annex definitiu de la Resolució de 15 de setembre de 2025, de la Direcció General\" del 2025-12-15?",
+    "gold_sets": [
+      [
+        42966
+      ]
+    ],
+    "doc_ids": [
+      42966
+    ],
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Correcciones"
+  },
+  {
+    "id": 60,
+    "question": "¿S'ha publicat \"RESOLUCIÓ de 5 de novembre de 2025, de la Direcció, per la qual es publica la relació de les distincions i les condecoracions concedides per la Generalitat al personal dels cossos de policia local de la Comunitat Valenciana.\" (ref 2025/45807) al DOGV del 2025-11-11?",
+    "gold_sets": [
+      [
+        41962
+      ]
+    ],
+    "doc_ids": [
+      41962
+    ],
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Listas"
+  },
+  {
+    "id": 61,
+    "question": "¿On puc consultar el Premios OPE \"DECRET 116/2025, de 5 d'agost, del Consell, pel qual es concedixen condecoracions i distincions de la Generalitat al mèrit policial de la Unitat del Cos Nacional de Policia adscrita a la Comunitat Valenciana.\" del 2025-08-13?",
+    "gold_sets": [
+      [
+        39507
+      ]
+    ],
+    "doc_ids": [
+      39507
+    ],
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "OPE"
+  },
+  {
+    "id": 62,
+    "question": "¿Cuál es el Premios Otros titulado \"RESOLUCIÓN de 24 de julio de 2025, de la Dirección General de Formación Profesional, por la que se otorga el reconocimiento de logros de los diferentes programas a determinados centros docentes públicos no universitarios de titularidad de\" (ref 2025/30462) del 2025-07-31?",
+    "gold_sets": [
+      [
+        17294
+      ]
+    ],
+    "doc_ids": [
+      17294
+    ],
+    "language": "es_es",
+    "doc_kind": "Premios",
+    "doc_subkind": "Otros"
+  },
+  {
+    "id": 63,
+    "question": "¿Cuál es el Premios Resultados titulado \"RESOLUCIÓN de 8 de enero de 2026, por la que se modifica la concesión de los premios de excelencia académica destinados a las personas que hayan concluido, durante los cursos 2023-2024 y 2024-2025, estudios de grado en las universidades\" (ref 2026/729) del 2026-01-19?",
+    "gold_sets": [
+      [
+        44111
+      ]
+    ],
+    "doc_ids": [
+      44111
+    ],
+    "language": "es_es",
+    "doc_kind": "Premios",
+    "doc_subkind": "Resultados"
+  },
+  {
+    "id": 64,
+    "question": "¿S'ha publicat \"DECRET 143/2025, de 7 d’octubre, del Consell, pel qual concedix l'Alta Distinció de la Generalitat a les comunitats autònomes.\" (ref 2025/42021) al DOGV del 2025-10-08?",
+    "gold_sets": [
+      [
+        40975
+      ]
+    ],
+    "doc_ids": [
+      40975
+    ],
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": ""
+  },
+  {
+    "id": 65,
+    "question": "¿Quin és el Subvenciones Adjudicaciones titulat \"RESOLUCIÓ de 26 de desembre de 2025, per la qual s'aprova la setzena concessió parcial de les ajudes previstes en el Decret 190/2024, de 17 de desembre, del Consell, pel qual s'aproven les bases reguladores i la concessió d'ajudes directes\" (ref 2026/685) del 2026-01-13?",
+    "gold_sets": [
+      [
+        44321
+      ]
+    ],
+    "doc_ids": [
+      44321
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Adjudicaciones"
+  },
+  {
+    "id": 66,
+    "question": "¿S'ha publicat \"RESOLUCIÓ de 13 de gener de 2026, de la Direcció, per la qual s'amplia el termini de justificació de les ajudes per a la cooperació en el marc del Pla estratègic de la política agrària comuna per al període 2023-2027.\" (ref 2026/1140) al DOGV del 2026-01-19?",
+    "gold_sets": [
+      [
+        44422
+      ]
+    ],
+    "doc_ids": [
+      44422
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Bases"
+  },
+  {
+    "id": 67,
+    "question": "¿S'ha publicat \"EXTRACTE de la Resolució de 12 de enero de 2026, del Vicerectorat de Relacions Internacionals, per la qual es convoca el programa de mobilitat de grau «Erasmus+ estudis» (KA131) i doble títol internacional per al curs 2026/2027.\" (ref 2026/853) al DOGV del 2026-01-14?",
+    "gold_sets": [
+      [
+        44365
+      ]
+    ],
+    "doc_ids": [
+      44365
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Convocatoria"
+  },
+  {
+    "id": 68,
+    "question": "¿On puc consultar el Subvenciones Correcciones \"CORRECCIÓ D'ERRADES de la Resolució de 17 de desembre de 2025, de la Direcció General de Producció Agrícola i Ramadera, per la qual s'establix la convocatòria anticipada, per al pla 2026, de les ajudes de la Comunitat Valenciana destinades\" del 2026-01-19?",
+    "gold_sets": [
+      [
+        44418
+      ]
+    ],
+    "doc_ids": [
+      44418
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Correcciones"
+  },
+  {
+    "id": 69,
+    "question": "¿S'ha publicat \"RESOLUCIÓ de 13 de gener de 2026, de la Secretaria Autonòmica d’Educació, per la qual es publiquen la relació de centres educatius participants i la dotació econòmica assignada en el programa «#VegaRenHace», en el marc del Pla de\" (ref 2026/992) al DOGV del 2026-01-15?",
+    "gold_sets": [
+      [
+        44395
+      ]
+    ],
+    "doc_ids": [
+      44395
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Listas"
+  },
+  {
+    "id": 70,
+    "question": "¿S'ha publicat la RESOLUCIÓ de 20 de setembre de 2025 de transferència de crèdit entre projectes AT345, EM345, QN345 i QR345 (ref 2026/703) al DOGV del 2026-01-15?",
+    "gold_sets": [
+      [
+        44398
+      ]
+    ],
+    "doc_ids": [
+      44398
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "OPE"
+  },
+  {
+    "id": 71,
+    "question": "¿Quin és el Subvenciones Otros titulat \"RESOLUCIÓ de 24 de novembre de 2025, per la qual s'autoritza una ampliació de crèdit, en virtut del que es preveu en l'article 48 de la Llei 1/2015, d'hisenda pública, del sector públic instrumental i de subvencions, i en l'article 25.1.f)\" (ref 2025/48468) del 2025-12-22?",
+    "gold_sets": [
+      [
+        43220
+      ]
+    ],
+    "doc_ids": [
+      43220
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Otros"
+  },
+  {
+    "id": 72,
+    "question": "¿Cuál es el Subvenciones Resultados titulado \"RESOLUCIÓN de 20 de noviembre de 2025, por la que se conceden las subvenciones a entidades locales y entidades sin ánimo de lucro para proyectos de inversión en materia de obras de centros en el ámbito de los servicios sociales, convocadas\" (ref 2025/47924) del 2025-11-26?",
+    "gold_sets": [
+      [
+        20531
+      ]
+    ],
+    "doc_ids": [
+      20531
+    ],
+    "language": "es_es",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Resultados"
+  },
+  {
+    "id": 73,
+    "question": "¿S'ha publicat la RESOLUCIÓ de 9 de desembre de 2025 sobre generació de crèdits (expedient 06.030/25 part II, ref 2025/51817) al DOGV del 2026-01-12?",
+    "gold_sets": [
+      [
+        44275
+      ]
+    ],
+    "doc_ids": [
+      44275
+    ],
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": null
+  },
+  {
+    "id": 74,
+    "question": "¿Cuál es el Subvenciones Tribunales titulado \"RESOLUCIÓN de 26 de marzo de 2025, de la Dirección General, sobre el recurso de reposición interpuesto por Kinépolis Paterna, SA, contra la resolución para la concesión de ayudas a la exhibición en salas de cine de la Comunitat Valenciana\" (ref 2025/8445) del 2025-04-14?",
+    "gold_sets": [
+      [
+        13190
+      ]
+    ],
+    "doc_ids": [
+      13190
+    ],
+    "language": "es_es",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Tribunales"
+  },
+  {
+    "id": 75,
+    "question": "¿On puc consultar el Ayudas Adjudicaciones \"RESOLUCIÓ de 23 de juny de 2025, per la qual s'aprova la concessió parcial 37 de les ajudes, per concessió directa, per a reparar les conseqüències econòmiques derivades de la destrucció de vehicles sinistrats durant el temporal de vent i\" del 2025-07-23?",
+    "gold_sets": [
+      [
+        38823
+      ]
+    ],
+    "doc_ids": [
+      38823
+    ],
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Adjudicaciones"
+  }
+]

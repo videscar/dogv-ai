@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     ask_read_expand_docs: int = 2
     ask_read_coverage_docs: int = 2
     ask_read_eligibility_docs: int = 1
+    ask_read_amount_docs: int = 1
     full_doc_max_chars: int = 120000
     full_doc_max_docs: int = 2
     full_doc_total_chars: int = 200000

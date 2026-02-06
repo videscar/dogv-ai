@@ -401,11 +401,11 @@ def _should_continue_after_temporal(state: QAState) -> str:
 
 
 def online_ingest_node(state: QAState) -> QAState:
-    start = time.monotonic()
+    started_at = time.monotonic()
     request_id = state.get("request_id")
     try:
         if not settings.auto_ingest_enabled:
-            logger.info("ingest.skip req=%s reason=disabled elapsed=%.2fs", request_id, time.monotonic() - start)
+            logger.info("ingest.skip req=%s reason=disabled elapsed=%.2fs", request_id, time.monotonic() - started_at)
             return {"online_ingest_done": True}
 
         intent = state.get("intent") or {}
@@ -413,10 +413,10 @@ def online_ingest_node(state: QAState) -> QAState:
         until_date = intent.get("until_date")
 
         if since_date or until_date:
-            start = since_date or until_date
-            end = until_date or since_date
-            if start and end:
-                ensure_range_ingested(start, end, DEFAULT_LANGS)
+            ingest_start = since_date or until_date
+            ingest_end = until_date or since_date
+            if ingest_start and ingest_end:
+                ensure_range_ingested(ingest_start, ingest_end, DEFAULT_LANGS)
         else:
             today = date.today()
             with SessionLocal() as db:
@@ -424,10 +424,10 @@ def online_ingest_node(state: QAState) -> QAState:
                 max_date = row["max_date"]
             if not max_date or max_date < today:
                 ensure_recent_ingested(settings.auto_ingest_max_days, DEFAULT_LANGS)
-        logger.info("ingest.done req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
+        logger.info("ingest.done req=%s elapsed=%.2fs", request_id, time.monotonic() - started_at)
         return {"online_ingest_done": True}
     except Exception:
-        logger.exception("ingest.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
+        logger.exception("ingest.error req=%s elapsed=%.2fs", request_id, time.monotonic() - started_at)
         raise
 
 

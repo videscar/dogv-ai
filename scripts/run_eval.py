@@ -6,6 +6,7 @@ from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta, timezone
 import json
 import os
+import re
 import time
 from typing import Any
 
@@ -158,6 +159,99 @@ def _merge_with_budget(
     return result
 
 
+def _extract_ref_tokens(text: str) -> list[str]:
+    if not text:
+        return []
+    tokens = re.findall(r"\b\d{4}/\d+\b", text)
+    out: list[str] = []
+    seen: set[str] = set()
+    for token in tokens:
+        if token in seen:
+            continue
+        seen.add(token)
+        out.append(token)
+    return out[:6]
+
+
+def _find_ref_hits(
+    db: Session,
+    question: str,
+    filters: RetrievalFilters,
+    per_token_limit: int = 5,
+) -> list[dict[str, Any]]:
+    tokens = _extract_ref_tokens(question)
+    if not tokens:
+        return []
+
+    found: list[dict[str, Any]] = []
+    seen: set[int] = set()
+
+    def _run_for_token(token: str, use_language: bool) -> list[dict[str, Any]]:
+        params: dict[str, Any] = {
+            "exact_ref": token,
+            "like_ref": f"%{token}%",
+            "limit": per_token_limit,
+        }
+        clauses = ["(dd.ref = :exact_ref OR dd.ref ILIKE :like_ref OR dd.title ILIKE :like_ref)"]
+        if use_language and filters.language:
+            clauses.append("di.language = :language")
+            params["language"] = filters.language
+        if filters.since_date:
+            clauses.append("di.date >= :since_date")
+            params["since_date"] = filters.since_date
+        if filters.until_date:
+            clauses.append("di.date <= :until_date")
+            params["until_date"] = filters.until_date
+
+        where_sql = " AND ".join(clauses)
+        rows = db.execute(
+            sa_text(
+                f"""
+                SELECT
+                    dd.id AS document_id,
+                    dd.title,
+                    dd.ref,
+                    dd.type,
+                    dd.doc_kind,
+                    dd.doc_subkind,
+                    dd.pdf_url,
+                    dd.html_url,
+                    di.date AS issue_date
+                FROM dogv_documents dd
+                JOIN dogv_issues di ON di.id = dd.issue_id
+                WHERE {where_sql}
+                ORDER BY
+                    CASE
+                        WHEN dd.ref = :exact_ref THEN 0
+                        WHEN dd.ref ILIKE :like_ref THEN 1
+                        ELSE 2
+                    END,
+                    di.date DESC,
+                    dd.id DESC
+                LIMIT :limit
+                """
+            ),
+            params,
+        ).mappings().all()
+        return [dict(row) for row in rows]
+
+    for token in tokens:
+        token_hits = _run_for_token(token, use_language=True)
+        if not token_hits and filters.language:
+            token_hits = _run_for_token(token, use_language=False)
+        for rank, row in enumerate(token_hits, start=1):
+            doc_id = int(row["document_id"])
+            if doc_id in seen:
+                continue
+            seen.add(doc_id)
+            enriched = dict(row)
+            # Strong lexical anchor for ref/CVE-style lookups.
+            enriched["score"] = max(1.0, 5.0 - (rank * 0.1))
+            found.append(enriched)
+
+    return found
+
+
 def _collect_facet_specs(
     question: str,
     intent: dict[str, Any],
@@ -238,10 +332,68 @@ def _format_rerank(doc_ids: list[int], limit: int) -> list[dict[str, Any]]:
     return formatted
 
 
-def _compute_hits(doc_ids: list[int], target_id: int, k_values: list[int]) -> dict[str, bool]:
-    hits = {}
+def _normalize_gold_sets(entry: dict[str, Any]) -> list[list[int]]:
+    raw_sets = entry.get("gold_sets")
+    sets: list[list[int]] = []
+
+    def _normalize(items: Any) -> list[int]:
+        if not isinstance(items, list):
+            return []
+        seen: set[int] = set()
+        out: list[int] = []
+        for value in items:
+            try:
+                doc_id = int(value)
+            except (TypeError, ValueError):
+                continue
+            if doc_id in seen:
+                continue
+            seen.add(doc_id)
+            out.append(doc_id)
+        return sorted(out)
+
+    if isinstance(raw_sets, list):
+        seen_sets: set[tuple[int, ...]] = set()
+        for item in raw_sets:
+            normalized = _normalize(item)
+            if not normalized:
+                continue
+            key = tuple(normalized)
+            if key in seen_sets:
+                continue
+            seen_sets.add(key)
+            sets.append(normalized)
+        if sets:
+            return sets
+
+    raw_doc_ids = entry.get("doc_ids")
+    doc_ids = _normalize(raw_doc_ids)
+    if doc_ids:
+        return [doc_ids]
+
+    raw_doc_id = entry.get("doc_id")
+    if raw_doc_id is not None:
+        try:
+            return [[int(raw_doc_id)]]
+        except (TypeError, ValueError):
+            return []
+    return []
+
+
+def _compute_hits(doc_ids: list[int], gold_sets: list[list[int]], k_values: list[int]) -> dict[str, bool]:
+    hits: dict[str, bool] = {}
+    if not gold_sets:
+        for k in k_values:
+            hits[str(k)] = False
+        return hits
+    gold = [set(group) for group in gold_sets if group]
+    if not gold:
+        for k in k_values:
+            hits[str(k)] = False
+        return hits
     for k in k_values:
-        hits[str(k)] = target_id in doc_ids[:k]
+        topk = set(doc_ids[:k])
+        hits[str(k)] = any(group.issubset(topk) for group in gold)
     return hits
 
 
@@ -368,6 +520,7 @@ def _combine_sources(
 
 def _run_sources_all_facets(
     db: Session,
+    question: str,
     query_embedding: list[float],
     bm25_specs: list[tuple[str, str | None]],
     filters: RetrievalFilters,
@@ -401,11 +554,18 @@ def _run_sources_all_facets(
     secondary_sources = [run[1] for run in bm25_runs[1:] if run[1]]
     secondary_hits = _combine_sources(secondary_sources, max_docs=BM25_LIMIT) if secondary_sources else []
     bm25_hits = _merge_with_budget(bm25_primary, secondary_hits, BM25_LIMIT)
+    ref_hits = _find_ref_hits(db, question, filters, per_token_limit=5)
+    if ref_hits:
+        # Inject deterministic ref matches as high-confidence anchors.
+        bm25_hits = _merge_docs(ref_hits, bm25_hits)
+        title_hits = _merge_docs(ref_hits, title_hits)
+        title_lexical_hits = _merge_docs(ref_hits, title_lexical_hits)
     counts = {
         "vector": len(vector_hits),
         "bm25": len(bm25_hits),
         "title": len(title_hits),
         "title_lexical": len(title_lexical_hits),
+        "ref_hits": len(ref_hits),
         "facets": len(bm25_specs),
         "bm25_prf": 1 if prf_used else 0,
     }
@@ -414,6 +574,7 @@ def _run_sources_all_facets(
 
 def _compute_hybrid(
     db: Session,
+    question: str,
     query_embedding: list[float],
     bm25_specs: list[tuple[str, str | None]],
     filters: RetrievalFilters,
@@ -431,7 +592,7 @@ def _compute_hybrid(
         vector_hits, bm25_hits, title_hits, title_lexical_hits, counts = precomputed
     else:
         vector_hits, bm25_hits, title_hits, title_lexical_hits, counts = _run_sources_all_facets(
-            db, query_embedding, bm25_specs, filters, limit
+            db, question, query_embedding, bm25_specs, filters, limit
         )
     min_docs = max(1, getattr(settings, "ask_min_docs", 3))
     sources: list[list[dict[str, Any]]] = []
@@ -469,7 +630,7 @@ def _compute_hybrid(
                 relaxed_title,
                 relaxed_title_lexical,
                 relaxed_counts,
-            ) = _run_sources_all_facets(db, query_embedding, bm25_specs, relaxed_filters, limit)
+            ) = _run_sources_all_facets(db, question, query_embedding, bm25_specs, relaxed_filters, limit)
             if "vector" in LANES:
                 sources.append(relaxed_vector)
                 weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
@@ -506,6 +667,7 @@ def _compute_hybrid(
 
 def _compute_hybrid_with_fallbacks(
     db: Session,
+    question: str,
     query_embedding: list[float],
     bm25_specs: list[tuple[str, str | None]],
     filters: RetrievalFilters,
@@ -520,7 +682,7 @@ def _compute_hybrid_with_fallbacks(
     | None = None,
 ) -> tuple[list[dict[str, Any]], RetrievalFilters, list[str], dict[str, int], bool]:
     fused, counts, rrf_expanded, soft_language = _compute_hybrid(
-        db, query_embedding, bm25_specs, filters, limit, precomputed=precomputed
+        db, question, query_embedding, bm25_specs, filters, limit, precomputed=precomputed
     )
     fallbacks: list[str] = []
     if soft_language:
@@ -541,7 +703,7 @@ def _compute_hybrid_with_fallbacks(
                 return
         current_filters = new_filters
         fused, counts, rrf_expanded_inner, soft_language_inner = _compute_hybrid(
-            db, query_embedding, bm25_specs, current_filters, limit
+            db, question, query_embedding, bm25_specs, current_filters, limit
         )
         if soft_language_inner:
             fallbacks.append("soft_language")
@@ -597,6 +759,7 @@ def _rerank(
     candidates: list[dict[str, Any]],
     top_n: int,
     max_candidates: int,
+    skip_llm: bool = False,
 ) -> list[int]:
     expand_ratio = getattr(settings, "ask_rrf_expand_margin_ratio", 0.12)
     expand_probe = getattr(settings, "ask_rrf_margin_probe", 5)
@@ -606,13 +769,43 @@ def _rerank(
         max_candidates = min(len(candidates), max_candidates + expand_candidates)
         top_n = min(len(candidates), top_n + expand_top_n)
     trimmed = candidates[:max_candidates] if len(candidates) > max_candidates else candidates
+    base_ids = [int(item["document_id"]) for item in trimmed]
+    if skip_llm:
+        return base_ids
     trimmed = _attach_snippets(db, trimmed, embeddings)
     if len(trimmed) <= 5:
-        return [int(item["document_id"]) for item in trimmed][:top_n]
-    doc_ids = rerank_titles(question, trimmed, top_n=top_n)
+        return base_ids
+    coverage_keep = max(0, int(getattr(settings, "ask_rerank_coverage_keep", 0)))
+    doc_ids = rerank_titles(
+        question,
+        trimmed,
+        top_n=max(top_n, coverage_keep),
+        return_all=True,
+    )
     if not doc_ids:
-        doc_ids = [int(item["document_id"]) for item in trimmed][:top_n]
-    return doc_ids
+        doc_ids = base_ids
+
+    merged: list[int] = []
+    seen: set[int] = set()
+    for doc_id in doc_ids + base_ids:
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
+        merged.append(doc_id)
+
+    # Guardrail: keep a small hybrid head visible in the early rerank window
+    # without overriding the model's top-1 decision.
+    if coverage_keep > 0 and merged:
+        window = max(top_n, coverage_keep * 2)
+        for doc_id in reversed(base_ids[:coverage_keep]):
+            if doc_id in merged[:window]:
+                continue
+            if doc_id in merged:
+                merged.remove(doc_id)
+            insert_at = min(len(merged), window - 1 if window > 0 else 0)
+            merged.insert(insert_at, doc_id)
+
+    return merged
 
 
 def _safe_analyze_intent(question: str) -> dict[str, Any]:
@@ -634,13 +827,16 @@ def _safe_analyze_intent(question: str) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="data/eval_set_v1.json")
+    parser.add_argument("--input", default="data/eval_set.json")
     parser.add_argument("--output-dir", default="data/eval_reports")
     parser.add_argument("--run-id", default="")
     parser.add_argument("--k-values", default="1,3,5,10,20,50")
     parser.add_argument("--max-candidates", type=int, default=50)
     parser.add_argument("--rerank-top-n", type=int, default=5)
     parser.add_argument("--include-nofilter", action="store_true")
+    parser.add_argument("--write-csv", action="store_true")
+    parser.add_argument("--fast-intent", action="store_true")
+    parser.add_argument("--skip-rerank-llm", action="store_true")
     args = parser.parse_args()
 
     with open(args.input, "r", encoding="utf-8") as fh:
@@ -684,14 +880,29 @@ def main() -> int:
         total = len(eval_set)
         for idx, entry in enumerate(eval_set, start=1):
             question = entry["question"]
-            target_id = int(entry["doc_id"])
+            gold_sets = _normalize_gold_sets(entry)
+            if not gold_sets:
+                raise SystemExit(f"Entry id={entry.get('id')} has no valid gold_sets/doc_ids/doc_id")
+            gold_doc_ids = sorted({doc_id for group in gold_sets for doc_id in group})
             doc_kind = entry.get("doc_kind")
             doc_subkind = entry.get("doc_subkind")
             language = entry.get("language")
 
             timings = StageTimings()
 
-            intent = _safe_analyze_intent(question)
+            if args.fast_intent:
+                intent = {
+                    "language": None,
+                    "doc_kind": None,
+                    "doc_subkind": None,
+                    "keywords": [],
+                    "since_date": None,
+                    "until_date": None,
+                    "needs_online": False,
+                    "entities": {},
+                }
+            else:
+                intent = _safe_analyze_intent(question)
             filters = _normalize_intent_filters(question, intent, has_kind)
             embed_start = time.perf_counter()
             embeddings, bm25_specs = _collect_facet_specs(question, intent, client, embed_cache)
@@ -707,6 +918,7 @@ def main() -> int:
                 counts_sources,
             ) = _run_sources_all_facets(
                 db,
+                question,
                 embeddings[0],
                 bm25_specs,
                 filters,
@@ -722,6 +934,7 @@ def main() -> int:
             hybrid_start = time.perf_counter()
             hybrid_final, final_filters, fallbacks, counts_final, rrf_expanded = _compute_hybrid_with_fallbacks(
                 db,
+                question,
                 embeddings[0],
                 bm25_specs,
                 filters,
@@ -732,6 +945,7 @@ def main() -> int:
 
             hybrid_filtered, counts_filtered, rrf_expanded_initial, _ = _compute_hybrid(
                 db,
+                question,
                 embeddings[0],
                 bm25_specs,
                 filters,
@@ -743,7 +957,12 @@ def main() -> int:
             if args.include_nofilter:
                 nofilter_start = time.perf_counter()
                 hybrid_nofilter, _, _, _ = _compute_hybrid(
-                    db, embeddings[0], bm25_specs, RetrievalFilters(), args.max_candidates
+                    db,
+                    question,
+                    embeddings[0],
+                    bm25_specs,
+                    RetrievalFilters(),
+                    args.max_candidates,
                 )
                 timings.hybrid_nofilter = time.perf_counter() - nofilter_start
 
@@ -756,6 +975,7 @@ def main() -> int:
                 hybrid_final,
                 top_n=args.rerank_top_n,
                 max_candidates=rerank_base_candidates,
+                skip_llm=args.skip_rerank_llm,
             )
             timings.rerank = time.perf_counter() - rerank_start
 
@@ -784,7 +1004,7 @@ def main() -> int:
                     row["document_id"] for row in candidates["hybrid_nofilter"]
                 ]
 
-            hits = {stage: _compute_hits(doc_ids, target_id, k_values) for stage, doc_ids in stage_docs.items()}
+            hits = {stage: _compute_hits(doc_ids, gold_sets, k_values) for stage, doc_ids in stage_docs.items()}
 
             for stage, stage_hits in hits.items():
                 summary_counts.setdefault(stage, {str(k): 0 for k in k_values})
@@ -800,7 +1020,7 @@ def main() -> int:
                         miss_samples[stage].append(
                             {
                                 "id": entry.get("id"),
-                                "doc_id": target_id,
+                                "gold_sets": gold_sets,
                                 "question": question,
                                 "doc_kind": doc_kind,
                                 "doc_subkind": doc_subkind,
@@ -829,7 +1049,8 @@ def main() -> int:
                 {
                     "id": entry.get("id"),
                     "question": question,
-                    "doc_id": target_id,
+                    "gold_sets": gold_sets,
+                    "gold_doc_ids": gold_doc_ids,
                     "doc_kind": doc_kind,
                     "doc_subkind": doc_subkind,
                     "language": language,
@@ -856,7 +1077,7 @@ def main() -> int:
                             "rank": row.get("rank"),
                             "document_id": row.get("document_id"),
                             "score": row.get("score"),
-                            "hit": row.get("document_id") == target_id,
+                            "in_gold": row.get("document_id") in gold_doc_ids,
                         }
                     )
 
@@ -906,6 +1127,8 @@ def main() -> int:
             "chunk_overlap_tokens": settings.chunk_overlap_tokens,
             "ollama_model": settings.ollama_model,
             "ollama_embed_model": settings.ollama_embed_model,
+            "fast_intent": args.fast_intent,
+            "skip_rerank_llm": args.skip_rerank_llm,
         },
         "summary": {
             "recall": summary,
@@ -920,17 +1143,17 @@ def main() -> int:
     with open(report_path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, ensure_ascii=False, indent=2, sort_keys=True)
 
-    csv_path = os.path.join(args.output_dir, f"{run_id}.csv")
-    with open(csv_path, "w", encoding="utf-8", newline="") as fh:
-        writer = csv.DictWriter(
-            fh,
-            fieldnames=["query_id", "stage", "rank", "document_id", "score", "hit"],
-        )
-        writer.writeheader()
-        writer.writerows(rows_for_csv)
-
     print(f"Wrote report to {report_path}")
-    print(f"Wrote candidates to {csv_path}")
+    if args.write_csv:
+        csv_path = os.path.join(args.output_dir, f"{run_id}.csv")
+        with open(csv_path, "w", encoding="utf-8", newline="") as fh:
+            writer = csv.DictWriter(
+                fh,
+                fieldnames=["query_id", "stage", "rank", "document_id", "score", "in_gold"],
+            )
+            writer.writeheader()
+            writer.writerows(rows_for_csv)
+        print(f"Wrote candidates to {csv_path}")
     return 0
 
 
