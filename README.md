@@ -160,7 +160,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000
 - Run eval: `python scripts/run_eval.py --input data/eval_set.json --include-nofilter`
 - (Opcional) Exportar candidatos CSV: `python scripts/run_eval.py --input data/eval_set.json --write-csv`
 - Inicializar baseline: `python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json --set-baseline`
-- Regression gate: `python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json`
+- Regression gate (por defecto KPI final: `hybrid,rerank` en `k=5,10`): `python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json`
 
 ## Embeddings a nivel documento
 - Tabla nueva: `rag_doc` (ver `sql/2026-03-doc-embeddings.sql`).

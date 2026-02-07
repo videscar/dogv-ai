@@ -20,8 +20,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--baseline", default="data/eval_baseline.json")
     parser.add_argument("--report", required=True)
-    parser.add_argument("--stages", default="vector,bm25,title,hybrid,rerank")
-    parser.add_argument("--k", default="5")
+    parser.add_argument("--stages", default="hybrid,rerank")
+    parser.add_argument("--k", default="5,10")
     parser.add_argument("--tolerance", type=float, default=0.0)
     parser.add_argument(
         "--set-baseline",

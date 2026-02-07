@@ -779,6 +779,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         fallbacks: list[str] = []
         if soft_language:
             fallbacks.append("soft_language")
+        allow_margin_fallback = bool(getattr(settings, "ask_fallback_allow_margin", False))
 
         def _relax(new_filters: RetrievalFilters, reason: str, allow_margin: bool = False) -> None:
             nonlocal filters, fused, top_chunks, chunk_candidates, counts, rrf_expanded
@@ -806,7 +807,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                     until_date=filters.until_date,
                 ),
                 "drop_doc_kind",
-                allow_margin=True,
+                allow_margin=allow_margin_fallback,
             )
         if filters.language:
             _relax(
@@ -818,7 +819,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                     until_date=filters.until_date,
                 ),
                 "drop_language",
-                allow_margin=True,
+                allow_margin=allow_margin_fallback,
             )
         if filters.since_date or filters.until_date:
             _relax(
@@ -830,7 +831,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                     until_date=None,
                 ),
                 "drop_dates",
-                allow_margin=True,
+                allow_margin=allow_margin_fallback,
             )
         _relax(RetrievalFilters(), "no_filters")
         used_fallback = "+".join(fallbacks) if fallbacks else None

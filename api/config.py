@@ -35,9 +35,10 @@ class Settings(BaseSettings):
     ask_rrf_expand_margin_ratio: float = 0.12
     ask_rrf_margin_probe: int = 5
     ask_rrf_weight_vector: float = 1.0
-    ask_rrf_weight_bm25: float = 0.5
+    ask_rrf_weight_bm25: float = 1.0
     ask_rrf_weight_title: float = 1.0
     ask_rrf_weight_title_lexical: float = 0.8
+    ask_fallback_allow_margin: bool = False
     bm25_fuse_weight_chunk: float = 1.0
     bm25_fuse_weight_strict: float = 1.2
     bm25_fuse_weight_title: float = 0.9

@@ -1,0 +1,902 @@
+[
+  {
+    "id": 1,
+    "question": "Quines ajudes es van aprovar per als vehicles sinistrats per la DANA, de quina quantia eren i qui les podia demanar?",
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        37026
+      ]
+    ]
+  },
+  {
+    "id": 2,
+    "question": "Qui va ser nomenat director general de Tecnologies de la Informació i les Comunicacions i de quina conselleria depén?",
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        42762
+      ]
+    ]
+  },
+  {
+    "id": 3,
+    "question": "Qui és el nou president de la Generalitat Valenciana i des de quan?",
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        42629
+      ]
+    ]
+  },
+  {
+    "id": 4,
+    "question": "¿Se ha publicado la lista de personas admitidas para una plaza de ingeniero de caminos en el Ayuntamiento de Xirivella?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        19294
+      ]
+    ]
+  },
+  {
+    "id": 5,
+    "question": "¿Se ha publicado ya el concurso de traslados para el personal sanitario?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        20397
+      ]
+    ]
+  },
+  {
+    "id": 6,
+    "question": "¿Dónde puedo consultar la convocatoria de educador social y qué requisitos piden para presentarse?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        20771
+      ]
+    ]
+  },
+  {
+    "id": 7,
+    "question": "¿Se ha publicado alguna modificación del tribunal para técnico de laboratorio?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        13692
+      ]
+    ]
+  },
+  {
+    "id": 8,
+    "question": "¿Se publicó el decreto de luto oficial por el accidente ferroviario de Adamuz?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        44120
+      ]
+    ]
+  },
+  {
+    "id": 9,
+    "question": "¿Se aprobó la oferta de empleo público para el personal gestionado por la Conselleria de Sanidad?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        21469
+      ]
+    ]
+  },
+  {
+    "id": 10,
+    "question": "¿Se convocó un concurso ordinario para puestos de ingeniería de la Generalitat?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        44101
+      ]
+    ]
+  },
+  {
+    "id": 11,
+    "question": "¿Se publicó una corrección de errores del decreto sobre cese y nombramiento de altos cargos?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        44028
+      ]
+    ]
+  },
+  {
+    "id": 12,
+    "question": "¿Se incrementó el importe de las ayudas por vehículos siniestrados por la DANA y se abrió un nuevo plazo para pedirlas?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        18162
+      ]
+    ]
+  },
+  {
+    "id": 13,
+    "question": "¿Dónde puedo ver las bases de una plaza de ingeniero o ingeniera de caminos en el Ayuntamiento de l'Eliana?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        17877
+      ]
+    ]
+  },
+  {
+    "id": 14,
+    "question": "¿Se publicaron las listas provisionales y la composición del tribunal para la escala auxiliar administrativa de la UMH?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        19844
+      ]
+    ]
+  },
+  {
+    "id": 15,
+    "question": "¿Se nombró el tribunal para la escala básica de laboratorios, subgrupo C1?",
+    "language": "es_es",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        21213
+      ]
+    ]
+  },
+  {
+    "id": 16,
+    "question": "S'ha publicat el decret de dol oficial per l'accident ferroviari d'Adamuz?",
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        44429
+      ]
+    ]
+  },
+  {
+    "id": 17,
+    "question": "S'ha publicat la correcció d'errades del decret sobre el cessament i el nomenament d'alts càrrecs?",
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        44337
+      ]
+    ]
+  },
+  {
+    "id": 18,
+    "question": "S'ha convocat el concurs ordinari per a llocs d'enginyeria de la Generalitat?",
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        44410
+      ]
+    ]
+  },
+  {
+    "id": 19,
+    "question": "S'ha publicat el nomenament del tribunal de l'escala bàsica de laboratoris, subgrup C1?",
+    "language": "va_va",
+    "doc_kind": null,
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        43114
+      ]
+    ]
+  },
+  {
+    "id": 20,
+    "question": "On puc consultar la resolució de concessió parcial de les ajudes per a reparar danys econòmics per vehicles sinistrats durant el temporal?",
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Adjudicaciones",
+    "gold_sets": [
+      [
+        44328
+      ]
+    ]
+  },
+  {
+    "id": 21,
+    "question": "On puc trobar la resolució de concessió d'ajudes urgents de lloguer per a persones afectades per un incendi a València?",
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Bases",
+    "gold_sets": [
+      [
+        44216
+      ]
+    ]
+  },
+  {
+    "id": 22,
+    "question": "¿Dónde puedo consultar la convocatoria de ayudas 'Fora de classe' para estudiantado de la Universitat de València?",
+    "language": "es_es",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Convocatoria",
+    "gold_sets": [
+      [
+        44078
+      ]
+    ]
+  },
+  {
+    "id": 23,
+    "question": "On puc consultar la resolució de desestimació parcial d'ajudes per vehicles sinistrats del temporal?",
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Correcciones",
+    "gold_sets": [
+      [
+        44258
+      ]
+    ]
+  },
+  {
+    "id": 24,
+    "question": "S'ha publicat la llista de reserva reordenada definitiva relacionada amb recursos de reposició en ajudes d'indústria?",
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Listas",
+    "gold_sets": [
+      [
+        41651
+      ]
+    ]
+  },
+  {
+    "id": 25,
+    "question": "¿Se publicó una autorización de generación de créditos vinculada al mecanismo de apoyo a la liquidez?",
+    "language": "es_es",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "OPE",
+    "gold_sets": [
+      [
+        43966
+      ]
+    ]
+  },
+  {
+    "id": 26,
+    "question": "¿Dónde puedo consultar la resolución de denegación de ayudas en materia de comercio, artesanía y consumo?",
+    "language": "es_es",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Resultados",
+    "gold_sets": [
+      [
+        21032
+      ]
+    ]
+  },
+  {
+    "id": 27,
+    "question": "S'ha prorrogat la validesa dels suports no personalitzats dels títols temporals gratuïts per a joves?",
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        36851
+      ]
+    ]
+  },
+  {
+    "id": 28,
+    "question": "On puc consultar la resolució de pròrroga de beques de pràctiques professionals en cooperació al desenvolupament?",
+    "language": "va_va",
+    "doc_kind": "Becas",
+    "doc_subkind": "Adjudicaciones",
+    "gold_sets": [
+      [
+        43091
+      ]
+    ]
+  },
+  {
+    "id": 29,
+    "question": "¿Se publicó la resolución sobre compensación al alumnado universitario por la parte no financiada de las tasas?",
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Bases",
+    "gold_sets": [
+      [
+        21070
+      ]
+    ]
+  },
+  {
+    "id": 30,
+    "question": "On puc trobar la convocatòria de beques de mobilitat internacional Santander per a estudiantat de doble titulació?",
+    "language": "va_va",
+    "doc_kind": "Becas",
+    "doc_subkind": "Convocatoria",
+    "gold_sets": [
+      [
+        44382
+      ]
+    ]
+  },
+  {
+    "id": 31,
+    "question": "¿Dónde puedo consultar la modificación de la convocatoria de movilidad Erasmus+ Estudios de la Universidad de Alicante?",
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Correcciones",
+    "gold_sets": [
+      [
+        43967
+      ]
+    ]
+  },
+  {
+    "id": 32,
+    "question": "On puc consultar la resolució que dona publicitat a subvencions esportives concedides després de recursos de reposició?",
+    "language": "va_va",
+    "doc_kind": "Becas",
+    "doc_subkind": "Listas",
+    "gold_sets": [
+      [
+        36924
+      ]
+    ]
+  },
+  {
+    "id": 33,
+    "question": "¿Se publicó el acuerdo del Consell para ampliar el límite de gasto plurianual en la línea de becas y ayudas universitarias?",
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "OPE",
+    "gold_sets": [
+      [
+        19348
+      ]
+    ]
+  },
+  {
+    "id": 34,
+    "question": "¿Se publicó la resolución por la que se acepta una renuncia a una beca de prácticas en dependencia y personas mayores?",
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Resultados",
+    "gold_sets": [
+      [
+        19633
+      ]
+    ]
+  },
+  {
+    "id": 35,
+    "question": "¿Cuál es la resolución que emplaza a personas interesadas en un procedimiento ordinario sobre universidades?",
+    "language": "es_es",
+    "doc_kind": "Becas",
+    "doc_subkind": "Tribunales",
+    "gold_sets": [
+      [
+        19352
+      ]
+    ]
+  },
+  {
+    "id": 36,
+    "question": "S'ha publicat l'adjudicació de destinacions per al cos superior d'intervenció i auditoria de la Generalitat?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Adjudicaciones",
+    "gold_sets": [
+      [
+        44417
+      ]
+    ]
+  },
+  {
+    "id": 37,
+    "question": "On puc consultar les bases per a cobrir una plaça d'oficial de cementeri i altres serveis municipals?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Bases",
+    "gold_sets": [
+      [
+        44426
+      ]
+    ]
+  },
+  {
+    "id": 38,
+    "question": "S'ha convocat una oferta de places laborals vinculades a diverses línies d'investigació?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Convocatoria",
+    "gold_sets": [
+      [
+        44428
+      ]
+    ]
+  },
+  {
+    "id": 39,
+    "question": "S'ha publicat una correcció d'errades d'un procés selectiu d'accés a una plaça laboral de l'IVAM?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Correcciones",
+    "gold_sets": [
+      [
+        44423
+      ]
+    ]
+  },
+  {
+    "id": 40,
+    "question": "S'han publicat les llistes provisionals d'admesos i exclosos per a l'escala bàsica de laboratoris de ciències i tecnològics?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Listas",
+    "gold_sets": [
+      [
+        44400
+      ]
+    ]
+  },
+  {
+    "id": 41,
+    "question": "S'ha publicat el decret de cessament i nomenament de la direcció general de coordinació dels serveis d'emergències?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "OPE",
+    "gold_sets": [
+      [
+        44408
+      ]
+    ]
+  },
+  {
+    "id": 42,
+    "question": "S'ha declarat desert el procés selectiu per al lloc de cap de Comunicació i Màrqueting de l'IVAM?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Resultados",
+    "gold_sets": [
+      [
+        44425
+      ]
+    ]
+  },
+  {
+    "id": 43,
+    "question": "S'ha publicat el nomenament de personal eventual per part de la Subsecretaria?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "",
+    "gold_sets": [
+      [
+        44390
+      ]
+    ]
+  },
+  {
+    "id": 44,
+    "question": "S'ha publicat la citació a termini de persones interessades en un procediment ordinari davant el TSJCV?",
+    "language": "va_va",
+    "doc_kind": "Empleo Publico",
+    "doc_subkind": "Tribunales",
+    "gold_sets": [
+      [
+        44380
+      ]
+    ]
+  },
+  {
+    "id": 45,
+    "question": "S'ha publicat l'anunci de l'acord plenari sobre el Pla parcial Quijote II?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Adjudicaciones",
+    "gold_sets": [
+      [
+        44399
+      ]
+    ]
+  },
+  {
+    "id": 46,
+    "question": "On puc consultar l'anunci d'informació pública del programa d'actuació integrada de la unitat d'execució Cementeri d'Altea?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Bases",
+    "gold_sets": [
+      [
+        44414
+      ]
+    ]
+  },
+  {
+    "id": 47,
+    "question": "On puc trobar la convocatòria de concurrència pública per a la concessió demanial del port esportiu de la Pobla de Farnals?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Convocatoria",
+    "gold_sets": [
+      [
+        44343
+      ]
+    ]
+  },
+  {
+    "id": 48,
+    "question": "S'ha publicat una correcció d'errades del decret sobre l'estructura orgànica bàsica de la Presidència i les conselleries?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Correcciones",
+    "gold_sets": [
+      [
+        44415
+      ]
+    ]
+  },
+  {
+    "id": 49,
+    "question": "S'ha publicat la resolució sobre el calendari de fires comercials?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Listas",
+    "gold_sets": [
+      [
+        42887
+      ]
+    ]
+  },
+  {
+    "id": 50,
+    "question": "On puc consultar la resolució ambiental sobre l'àrea d'aparcament d'autocaravanes al terme municipal de Busot?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "N/A",
+    "gold_sets": [
+      [
+        38133
+      ]
+    ]
+  },
+  {
+    "id": 51,
+    "question": "S'ha publicat una autorització d'ampliació de crèdit prevista en la normativa d'hisenda pública i subvencions?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "OPE",
+    "gold_sets": [
+      [
+        44388
+      ]
+    ]
+  },
+  {
+    "id": 52,
+    "question": "S'ha publicat l'acord del Consell sobre el fons de transició al nou model de finançament de les universitats públiques?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Otros",
+    "gold_sets": [
+      [
+        41863
+      ]
+    ]
+  },
+  {
+    "id": 53,
+    "question": "¿Se ha publicado el anuncio del informe ambiental y territorial estratégico favorable para la modificación puntual del plan general del área de reparto 97 y del sector E-9 de Elche?",
+    "language": "es_es",
+    "doc_kind": "Otros",
+    "doc_subkind": "Resultados",
+    "gold_sets": [
+      [
+        44093
+      ]
+    ]
+  },
+  {
+    "id": 54,
+    "question": "On puc consultar la resolució de citació en termini de persones interessades en un procediment abreujat del jutjat contenciós?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "Tribunales",
+    "gold_sets": [
+      [
+        44375
+      ]
+    ]
+  },
+  {
+    "id": 55,
+    "question": "S'ha publicat el decret del president sobre el nombre i la denominació de les conselleries?",
+    "language": "va_va",
+    "doc_kind": "Otros",
+    "doc_subkind": "{}",
+    "gold_sets": [
+      [
+        42755
+      ]
+    ]
+  },
+  {
+    "id": 56,
+    "question": "S'ha publicat la resolució que modifica la concessió dels premis d'excel·lència acadèmica universitària?",
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Adjudicaciones",
+    "gold_sets": [
+      [
+        44420
+      ]
+    ]
+  },
+  {
+    "id": 57,
+    "question": "On puc consultar l'ordre que modifica la regulació dels premis President i dels premis de la Generalitat?",
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Bases",
+    "gold_sets": [
+      [
+        43373
+      ]
+    ]
+  },
+  {
+    "id": 58,
+    "question": "On puc trobar la convocatòria del concurs de microrelats exprés de la Universitat d'Alacant?",
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Convocatoria",
+    "gold_sets": [
+      [
+        44424
+      ]
+    ]
+  },
+  {
+    "id": 59,
+    "question": "S'ha publicat la correcció d'errades de la resolució sobre l'annex definitiu de política lingüística educativa?",
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Correcciones",
+    "gold_sets": [
+      [
+        42966
+      ]
+    ]
+  },
+  {
+    "id": 60,
+    "question": "S'ha publicat la relació de distincions i condecoracions concedides al personal dels cossos de policia local?",
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "Listas",
+    "gold_sets": [
+      [
+        41962
+      ]
+    ]
+  },
+  {
+    "id": 61,
+    "question": "S'ha publicat el decret de concessió de condecoracions i distincions al mèrit policial de la unitat adscrita?",
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "OPE",
+    "gold_sets": [
+      [
+        39507
+      ]
+    ]
+  },
+  {
+    "id": 62,
+    "question": "¿Se publicó la resolución que reconoce logros de programas en centros docentes públicos no universitarios?",
+    "language": "es_es",
+    "doc_kind": "Premios",
+    "doc_subkind": "Otros",
+    "gold_sets": [
+      [
+        17294
+      ]
+    ]
+  },
+  {
+    "id": 63,
+    "question": "¿Se publicó la resolución que modifica la concesión de los premios de excelencia académica en universidades públicas valencianas?",
+    "language": "es_es",
+    "doc_kind": "Premios",
+    "doc_subkind": "Resultados",
+    "gold_sets": [
+      [
+        44111
+      ]
+    ]
+  },
+  {
+    "id": 64,
+    "question": "S'ha publicat el decret que concedix l'Alta Distinció de la Generalitat a comunitats autònomes?",
+    "language": "va_va",
+    "doc_kind": "Premios",
+    "doc_subkind": "",
+    "gold_sets": [
+      [
+        40975
+      ]
+    ]
+  },
+  {
+    "id": 65,
+    "question": "S'ha publicat la setzena concessió parcial d'ajudes directes a empreses per a cobrir costos financers derivats de la dana?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Adjudicaciones",
+    "gold_sets": [
+      [
+        44321
+      ]
+    ]
+  },
+  {
+    "id": 66,
+    "question": "S'ha ampliat el termini de justificació de les ajudes de cooperació del pla estratègic de la PAC?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Bases",
+    "gold_sets": [
+      [
+        44422
+      ]
+    ]
+  },
+  {
+    "id": 67,
+    "question": "S'ha convocat el programa de mobilitat de grau Erasmus+ estudis i doble titulació internacional?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Convocatoria",
+    "gold_sets": [
+      [
+        44365
+      ]
+    ]
+  },
+  {
+    "id": 68,
+    "question": "On puc consultar la correcció d'errades de la convocatòria anticipada d'ajudes per a assegurances agràries?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Correcciones",
+    "gold_sets": [
+      [
+        44418
+      ]
+    ]
+  },
+  {
+    "id": 69,
+    "question": "S'ha publicat la relació de centres participants i la dotació econòmica del programa #VegaRenHace?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Listas",
+    "gold_sets": [
+      [
+        44395
+      ]
+    ]
+  },
+  {
+    "id": 70,
+    "question": "S'ha publicat una resolució de transferència de crèdit entre diferents projectes pressupostaris?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "OPE",
+    "gold_sets": [
+      [
+        44398
+      ]
+    ]
+  },
+  {
+    "id": 71,
+    "question": "S'ha publicat una autorització d'ampliació de crèdit prevista en la llei d'hisenda pública per a una línia de subvencions?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Otros",
+    "gold_sets": [
+      [
+        43220
+      ]
+    ]
+  },
+  {
+    "id": 72,
+    "question": "¿Se publicó la resolución de concesión de subvenciones para proyectos de inversión en centros de servicios sociales?",
+    "language": "es_es",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Resultados",
+    "gold_sets": [
+      [
+        20531
+      ]
+    ]
+  },
+  {
+    "id": 73,
+    "question": "S'ha publicat una resolució de generació de crèdits d'un expedient pressupostari?",
+    "language": "va_va",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": null,
+    "gold_sets": [
+      [
+        44275
+      ]
+    ]
+  },
+  {
+    "id": 74,
+    "question": "¿Dónde puedo consultar la resolución sobre un recurso de reposición relativo a ayudas para exhibición en salas de cine?",
+    "language": "es_es",
+    "doc_kind": "Subvenciones",
+    "doc_subkind": "Tribunales",
+    "gold_sets": [
+      [
+        13190
+      ]
+    ]
+  },
+  {
+    "id": 75,
+    "question": "On puc consultar la concessió parcial d'ajudes directes per a reparar danys econòmics per vehicles sinistrats del temporal?",
+    "language": "va_va",
+    "doc_kind": "Ayudas",
+    "doc_subkind": "Adjudicaciones",
+    "gold_sets": [
+      [
+        38823
+      ]
+    ]
+  }
+]

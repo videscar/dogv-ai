@@ -691,6 +691,7 @@ def _compute_hybrid_with_fallbacks(
     min_docs = max(1, getattr(settings, "ask_min_docs", 3))
     expand_ratio = getattr(settings, "ask_rrf_expand_margin_ratio", 0.12)
     expand_probe = getattr(settings, "ask_rrf_margin_probe", 5)
+    allow_margin_fallback = bool(getattr(settings, "ask_fallback_allow_margin", False))
     current_filters = filters
 
     def _relax(new_filters: RetrievalFilters, reason: str, allow_margin: bool = False) -> None:
@@ -721,7 +722,7 @@ def _compute_hybrid_with_fallbacks(
                 until_date=filters.until_date,
             ),
             "drop_doc_kind",
-            allow_margin=True,
+            allow_margin=allow_margin_fallback,
         )
     if filters.language:
         _relax(
@@ -733,7 +734,7 @@ def _compute_hybrid_with_fallbacks(
                 until_date=current_filters.until_date,
             ),
             "drop_language",
-            allow_margin=True,
+            allow_margin=allow_margin_fallback,
         )
     if current_filters.since_date or current_filters.until_date:
         _relax(
@@ -745,7 +746,7 @@ def _compute_hybrid_with_fallbacks(
                 until_date=None,
             ),
             "drop_dates",
-            allow_margin=True,
+            allow_margin=allow_margin_fallback,
         )
     _relax(RetrievalFilters(), "no_filters")
 

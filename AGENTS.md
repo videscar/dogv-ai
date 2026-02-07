@@ -26,7 +26,7 @@ This file guides coding agents working in this repo.
 ## Evaluation
 - Build eval set: `python scripts/build_eval_set.py --size 200 --output data/eval_set_v1.json`.
 - Run eval: `python scripts/run_eval.py --input data/eval_set_v1.json --include-nofilter`.
-- Regression gate: `python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json`.
+- Regression gate (default KPI: `hybrid,rerank` at `k=5,10`): `python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json`.
 
 ## Code style
 - Follow Python best practices: clear naming, small functions, type hints where helpful, and minimal side effects.
