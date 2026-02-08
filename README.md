@@ -100,11 +100,13 @@ Usa `.env.example` como plantilla. Ejemplos (valores reales en `api/config.py` y
 - `ASK_READ_AMOUNT_DOCS=1`
 - `ASK_BM25_MAX_DOCS=50`
 - `ASK_MAX_FACETS=3`
-- `ASK_TEMPORAL_POLICY=reject|filter`
+- `ASK_TEMPORAL_POLICY=filter|reject`
+- `TEMPORAL_TIMEZONE=Europe/Madrid`
+- `TEMPORAL_WEEK_START=monday`
 - `ASK_LLM_EXPAND=true|false`
 - `ASK_RERANK_COVERAGE_KEEP=4`
 - `ASK_RRF_WEIGHT_VECTOR=1.0`
-- `ASK_RRF_WEIGHT_BM25=0.5`
+- `ASK_RRF_WEIGHT_BM25=1.0`
 - `ASK_RRF_WEIGHT_TITLE=1.0`
 - `ASK_RRF_WEIGHT_TITLE_LEXICAL=0.8`
 - `BM25_FUSE_WEIGHT_CHUNK=1.0`
@@ -118,6 +120,13 @@ Usa `.env.example` como plantilla. Ejemplos (valores reales en `api/config.py` y
 - `FULL_DOC_TOTAL_CHARS=200000`
 - `AUTO_INGEST_ENABLED=true|false`
 - `AUTO_INGEST_MAX_DAYS=15`
+- `AUTO_INGEST_KEEP_MONTHS=12`
+- `AUTO_INGEST_LANGUAGES=es_es,va_va`
+- `AUTO_INGEST_STARTUP_ENABLED=true|false`
+- `AUTO_INGEST_STARTUP_BLOCKING=true|false`
+- `AUTO_INGEST_STARTUP_PURGE_OLD=true|false`
+- `AUTO_INGEST_STARTUP_REPAIR_GAPS=true|false`
+- `AUTO_INGEST_STARTUP_LOCK_ID=190021`
 - `BACKFILL_ENABLED=true|false`
 - `WARM_INDEX_MONTHS=24`
 - `CHUNK_MIN_TOKENS=300`
@@ -168,7 +177,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000
 - Flag opcional: `--skip-doc-embeddings`.
 
 ## Endpoints
-- `GET /health`
+- `GET /health` (incluye frescura del indice y estado de sync de arranque)
 - `GET /issues`
 - `GET /issues/{issue_id}/documents`
 - `POST /ask`

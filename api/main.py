@@ -8,6 +8,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
+from .auto_ingest import get_freshness_status, get_startup_sync_status, start_startup_sync
 from .config import enabled_lanes, get_settings
 from .db import SessionLocal
 from .models import DogvDocument, DogvIssue
@@ -88,7 +89,21 @@ class AskResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    payload: dict[str, object] = {"status": "ok"}
+    try:
+        payload["freshness"] = get_freshness_status()
+    except Exception:
+        logger.exception("health.freshness.error")
+    payload["startup_sync"] = get_startup_sync_status()
+    return payload
+
+
+@app.on_event("startup")
+def _startup_sync():
+    try:
+        start_startup_sync()
+    except Exception:
+        logger.exception("startup.sync.error")
 
 
 @app.get("/issues", response_model=list[IssueSummary])

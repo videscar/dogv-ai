@@ -41,6 +41,7 @@ from api.retrieval import (
     vector_search,
 )
 from api.taxonomy import canonical_doc_kind
+from api.temporal import local_today, resolve_relative_date_range
 
 settings = get_settings()
 LANES = enabled_lanes(settings)
@@ -432,13 +433,23 @@ def _normalize_intent_filters(
         language = guess_language(question)
     since_date = intent.get("since_date")
     until_date = intent.get("until_date")
-    if is_relative_time_query(question) and (settings.ask_temporal_policy or "").lower() == "filter":
-        today = date.today()
-        window_start = today - timedelta(days=settings.feed_recent_days)
-        if since_date is None or since_date > window_start:
-            since_date = window_start
-        if until_date is None:
-            until_date = today
+    relative_range = resolve_relative_date_range(
+        question,
+        timezone_name=settings.temporal_timezone,
+        week_start=settings.temporal_week_start,
+    )
+    if (relative_range or is_relative_time_query(question)) and (settings.ask_temporal_policy or "").lower() == "filter":
+        if relative_range:
+            since_date, until_date = relative_range
+        else:
+            today = local_today(settings.temporal_timezone)
+            window_start = today - timedelta(days=settings.feed_recent_days)
+            if since_date is None or since_date > window_start:
+                since_date = window_start
+            if until_date is None:
+                until_date = today
+    if since_date and until_date and since_date > until_date:
+        since_date, until_date = until_date, since_date
     return RetrievalFilters(
         language=language,
         doc_kind=None,
@@ -602,7 +613,7 @@ def _compute_hybrid(
         weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
     if "bm25" in LANES:
         sources.append(bm25_hits)
-        weights.append(getattr(settings, "ask_rrf_weight_bm25", 0.5))
+        weights.append(getattr(settings, "ask_rrf_weight_bm25", 1.0))
     if "title" in LANES:
         sources.append(title_hits)
         weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
@@ -636,7 +647,7 @@ def _compute_hybrid(
                 weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
             if "bm25" in LANES:
                 sources.append(relaxed_bm25)
-                weights.append(getattr(settings, "ask_rrf_weight_bm25", 0.5))
+                weights.append(getattr(settings, "ask_rrf_weight_bm25", 1.0))
             if "title" in LANES:
                 sources.append(relaxed_title)
                 weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
@@ -693,6 +704,13 @@ def _compute_hybrid_with_fallbacks(
     expand_probe = getattr(settings, "ask_rrf_margin_probe", 5)
     allow_margin_fallback = bool(getattr(settings, "ask_fallback_allow_margin", False))
     current_filters = filters
+    preserve_temporal_window = bool(
+        resolve_relative_date_range(
+            question,
+            timezone_name=settings.temporal_timezone,
+            week_start=settings.temporal_week_start,
+        )
+    ) and bool(filters.since_date or filters.until_date)
 
     def _relax(new_filters: RetrievalFilters, reason: str, allow_margin: bool = False) -> None:
         nonlocal fused, counts, current_filters, rrf_expanded
@@ -736,7 +754,7 @@ def _compute_hybrid_with_fallbacks(
             "drop_language",
             allow_margin=allow_margin_fallback,
         )
-    if current_filters.since_date or current_filters.until_date:
+    if not preserve_temporal_window and (current_filters.since_date or current_filters.until_date):
         _relax(
             RetrievalFilters(
                 language=current_filters.language,
@@ -748,7 +766,19 @@ def _compute_hybrid_with_fallbacks(
             "drop_dates",
             allow_margin=allow_margin_fallback,
         )
-    _relax(RetrievalFilters(), "no_filters")
+    if preserve_temporal_window:
+        _relax(
+            RetrievalFilters(
+                language=None,
+                doc_kind=None,
+                doc_subkind=None,
+                since_date=current_filters.since_date,
+                until_date=current_filters.until_date,
+            ),
+            "no_filters_keep_dates",
+        )
+    else:
+        _relax(RetrievalFilters(), "no_filters")
 
     return fused, current_filters, fallbacks, counts, rrf_expanded
 

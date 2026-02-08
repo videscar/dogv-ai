@@ -1,0 +1,672 @@
+{
+  "run_id": "temporal_suite_after_gap_guard_20260207T175705Z",
+  "notes": "Post-gap-repair validation. AUTO_INGEST_ENABLED=false only for this run to avoid re-running ingest per query.",
+  "started_at": "2026-02-07T17:57:05+00:00",
+  "queries": [
+    {
+      "id": "va_hui",
+      "question": "Fes un resum del que s'ha publicat hui",
+      "ok": true,
+      "elapsed_sec": 11.619,
+      "feed_query": true,
+      "filters": {
+        "language": null,
+        "since_date": "2026-02-07",
+        "until_date": "2026-02-07"
+      },
+      "selected_doc_ids": [],
+      "citations": [],
+      "answer": "No s'han trobat evidencies suficients al DOGV. Indica mes detalls (organisme, municipi, data aproximada) per ampliar la cerca."
+    },
+    {
+      "id": "es_hoy",
+      "question": "Haz un resumen de lo publicado hoy",
+      "ok": true,
+      "elapsed_sec": 5.46,
+      "feed_query": true,
+      "filters": {
+        "language": null,
+        "since_date": "2026-02-07",
+        "until_date": "2026-02-07"
+      },
+      "selected_doc_ids": [],
+      "citations": [],
+      "answer": "No se han encontrado evidencias suficientes en el DOGV. Indica mas detalles (organismo, municipio, fecha aproximada) para ampliar la busqueda."
+    },
+    {
+      "id": "va_ahir",
+      "question": "Què s'ha publicat ahir?",
+      "ok": true,
+      "elapsed_sec": 56.905,
+      "feed_query": true,
+      "filters": {
+        "language": "va_va",
+        "since_date": "2026-02-06",
+        "until_date": "2026-02-06"
+      },
+      "selected_doc_ids": [
+        46398,
+        46361,
+        46362,
+        46369,
+        46373,
+        46397,
+        46399,
+        46364,
+        46370,
+        46371,
+        46376,
+        46380,
+        46381,
+        46388,
+        46391,
+        46396
+      ],
+      "citations": [
+        {
+          "document_id": 46362,
+          "title": "ANUNCI pel qual se sotmet a informació pública la declaració d'interés comunitari per a una atribució d'ús i aprofitament en sòl no urbanitzable relativa a la implantació d'una activitat de centre formatiu i social per a persones amb discapacitat (expedient 4250145) en el terme municipal de Buñol, en el polígon 25, en la parcel·la 118, i en el terme municipal de Yátova, en el polígon 1, en les parcel·les 3 i 4.",
+          "ref": "2026/1409",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_1409_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46369,
+          "title": "RESOLUCIÓ de 3 de febrer de 2026, per la qual es concedixen les ajudes convocades pel Decret 171/2025, de 18 de novembre, del Consell, pel qual s’aproven les bases reguladores i el procediment de concessió directa d’ajudes de caràcter excepcional pel naixement, l'adopció o la guarda amb finalitats d’adopció de fills o filles en els municipis afectats per la dana del 29 d’octubre de 2024, i es fa públic.",
+          "ref": "2026/3863",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_3863_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46370,
+          "title": "ANUNCI pel qual se sotmet a informació pública l'estructura de costos a efectes de la fórmula de revisió de preus en la licitació de la concessió de servici de l'aparcament subterrani del centre sanitari Campanar II.",
+          "ref": "2026/1463",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_1463_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46371,
+          "title": "ANUNCI pel qual se sotmet a informació pública la declaració d'interés comunitari per a una atribució d'ús i aprofitament en sòl no urbanitzable, relativa a la regularització d'una activitat d'estacionament i compravenda de vehicles lleugers (expedient 4088693), en el terme municipal d'Alboraia, situada en el polígon 10, en les parcel·les 4 i 123.",
+          "ref": "2026/1424",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_1424_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46373,
+          "title": "RESOLUCIÓ de 2 de febrer de 2026, de la Direcció General, per la qual es dona publicitat al nomenament de personal directiu.",
+          "ref": "2026/3524",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_3524_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46376,
+          "title": "ANUNCI pel qual se sotmet a informació pública la declaració d’interés comunitari per a una atribució d’ús i aprofitament en sòl no urbanitzable, relativa a la regularització d’un taller mecànic (expedient 4276306), en el terme municipal d’Enguera, situada en el polígon DS 270, en la parcel·la 1A, amb referència cadastral 001090700XJ91F0001BZ.",
+          "ref": "2026/1444",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_1444_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46380,
+          "title": "RESOLUCIÓ de 13 de gener de 2026, de la Direcció General d’Urbanisme, Paisatge i Avaluació Ambiental, per la qual s’ordena la publicació de l’informe ambiental i territorial estratègic de la modificació puntual del Pla parcial SUP-T4 a Benimaclet. Expedient 006/2024-EAE.",
+          "ref": "2026/1483",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_1483_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46398,
+          "title": "ANUNCI sobre el tràmit d'informació pública de la modificació puntual número 34 del Pla general d'ordenació urbana de Llíria. ",
+          "ref": "2026/3307",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_3307_va.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "Ahir, el 6 de febrer de 2026, es van publicar diverses resolucions i anuncis a la Diària Oficial de la Generalitat Valenciana:\n\n1. **ANUNCI** sobre la modificació puntual núm. 34 del Pla general d’ordenació urbana de Llíria (doc_id 46398).\n2. **ANUNCI** sobre la declaració d’interès comunitari per a una atribució d’ús i aprofitament en sòl no urbanitzable relativa a la implantació d’una activitat de centre formatiu i social per a persones amb discapacitat (doc_id 46362).\n3. **RESOLUCIÓ** de 3 de febrer de 2026 que concedeix les ajudes convocades pel Decret 171/2025 per a naixement, adopció o guarda amb finalitats d’adopció (doc_id 46369).\n4. **RESOLUCIÓ** de 2 de febrer de 2026 que dóna publicitat al nomenament de personal directiu de la Corporació Audiovisual de la Comunitat Valenciana (doc_id 46373).\n5. **ANUNCI** sobre la estructura de costos de la fórmula de revisió de preus en la licitació de la concessió de servei d’aparcament subterrani del centre sanitari Campanar II (doc_id 46370).\n6. **ANUNCI** sobre la declaració d’interès comunitari per a una atribució d’ús i aprofitament en sòl no urbanitzable relativa a la regularització d’una activitat d’estacionament i compravenda de vehicles lleugers (doc_id 46371).\n7. **ANUNCI** sobre la declaració d’interès comunitari per a una atribució d’ús i aprofitament en sòl no urbanitzable relativa a la regularització d’un taller mecànic (doc_id 46376).\n8. **RESOLUCIÓ** de 13 de gener de 2026 que ordena la publicació de l’informe ambiental i territorial estratègic de la modificació puntual del Pla parcial SUP‑T4 a Benimaclet (doc_id 46380)."
+    },
+    {
+      "id": "es_ayer",
+      "question": "¿Qué se publicó ayer?",
+      "ok": true,
+      "elapsed_sec": 37.962,
+      "feed_query": true,
+      "filters": {
+        "language": "es_es",
+        "since_date": "2026-02-06",
+        "until_date": "2026-02-06"
+      },
+      "selected_doc_ids": [
+        46326,
+        46353,
+        46317,
+        46318,
+        46320,
+        46325,
+        46327,
+        46329,
+        46332,
+        46336,
+        46337,
+        46344,
+        46347,
+        46352,
+        46354,
+        46355,
+        46398,
+        46362,
+        46369,
+        46370
+      ],
+      "citations": [
+        {
+          "document_id": 46318,
+          "title": "ANUNCIO por el cual se somete a información pública la declaración de interés comunitario para una atribución de uso y aprovechamiento en suelo no urbanizable relativa a la implantación de una actividad de centro formativo y social para personas con discapacidad (expediente 4250145) en el término municipal de Buñol, en el polígono 25, en la parcela 118, y en el término municipal de Yátova, en el polígono 1, en las parcelas 3 y 4.",
+          "ref": "2026/1409",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_1409_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46320,
+          "title": "RESOLUCIÓN de 10 de diciembre de 2025, de la Dirección General, por la que se da publicidad al nombramiento de personal directivo.",
+          "ref": "2026/3284",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_3284_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46326,
+          "title": "ANUNCIO por el que se somete a información pública la estructura de costes a efectos de la fórmula de revisión de precios en la licitación de la concesión de servicio del aparcamiento subterráneo del centro sanitario Campanar II.",
+          "ref": "2026/1463",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_1463_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46353,
+          "title": "CORRECCIÓN DE ERRORES de la Resolución de 21 de enero de 2026, de la Dirección General, por la cual se hace pública la convocatoria del programa de oferta concertada en las modalidades Viu l’Estiu i Viu l’Hivern, para estancias de 2026-2027.",
+          "ref": "2026/3881",
+          "issue_date": "2026-02-06",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/06/pdf/2026_3881_es.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "Ayer, 6 de febrero de 2026, se publicaron los siguientes actos en el Diari Oficial de la Generalitat Valenciana:\n\n1. Un anuncio que somete a información pública la estructura de costes a efectos de la fórmula de revisión de precios en la licitación de la concesión de servicio del aparcamiento subterráneo del centro sanitario Campanar II (Conselleria de Sanidad). \n2. Una corrección de errores de la Resolución de 21 de enero de 2026, que publica la convocatoria del programa de oferta concertada en las modalidades Viu l’Estiu i Viu l’Hivern para estancias 2026‑2027 (Institut Valencià de la Joventut). \n3. Un anuncio que somete a información pública la declaración de interés comunitario para una atribución de uso y aprovechamiento en suelo no urbanizable relativa a la implantación de una actividad de centro formativo y social para personas con discapacidad (expediente 4250145) (Vicepresidencia Tercera y Conselleria de Medio Ambiente, Infraestructuras, Territorio y de la Recuperación). \n4. Una resolución que da publicidad al nombramiento de personal directivo de la Corporación Audiovisual de la Comunitat Valenciana (Dirección General)."
+    },
+    {
+      "id": "va_esta_setmana",
+      "question": "Resumeix què s'ha publicat esta setmana",
+      "ok": true,
+      "elapsed_sec": 43.591,
+      "feed_query": true,
+      "filters": {
+        "language": "va_va",
+        "since_date": "2026-02-02",
+        "until_date": "2026-02-07"
+      },
+      "selected_doc_ids": [
+        47066,
+        47128,
+        47001,
+        47020,
+        47123,
+        47114,
+        46997,
+        47021,
+        47044,
+        47103
+      ],
+      "citations": [
+        {
+          "document_id": 47001,
+          "title": "EXTRACTE de la Resolució de 23 de gener de 2026, del Rectorat, per la qual es convoquen ajudes per a gastos de publicació en una revista científica indexada en JCR d'accés obert, de la Facultat de Ciències de la Salut de la Universitat d'Alacant.",
+          "ref": "2026/3228",
+          "issue_date": "2026-02-02",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/02/pdf/2026_3228_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 47020,
+          "title": "ANUNCI pel qual es publiquen el cessament i el nomenament de director general i el nomenament de subdirectora de Valenciana d'Estratègies i Recursos per a la Sostenibilitat Ambiental, SA.",
+          "ref": "2026/3185",
+          "issue_date": "2026-02-02",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/02/pdf/2026_3185_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 47066,
+          "title": "RESOLUCIÓ de 26 de gener de 2026, del Rectorat, per la qual es convoca un procés selectiu per a la contractació indefinida de personal d’investigació de la categoria de personal tecnòleg superior per a col·laborar amb la línia d’investigació finançada «Seguiment de les poblacions d'alosa becuda a la Comunitat Valenciana». Referència: I-PTGAI 18-26.",
+          "ref": "2026/2822",
+          "issue_date": "2026-02-03",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/03/pdf/2026_2822_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 47128,
+          "title": "ANUNCI d'aprovació definitiva del compte de liquidació definitiva de la unitat d'execució número 5 del Pla parcial industrial.",
+          "ref": "2026/3191",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_3191_va.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "S'han publicat quatre actes aquesta setmana:\n\n1. Una resolució de la Universitat d'Alacant (26 de gener de 2026) que convoca un procés selectiu per a la contractació indefinida de personal d'investigació de la categoria de tecnòleg superior, amb retribució de 1.422,90 € bruts mensuals i dues pagues extres anuals, i que exigeix experiència en el sector privat a través d'un informe de vida laboral expedit per la Tresoreria General de la Seguretat Social i els contractes de treball.\n\n2. Un anunci d'aprovació definitiva del compte de liquidació de la unitat d'execució número 5 del Pla parcial industrial, publicat el 5 de febrer de 2026, que confirma el nou compte de liquidació definitiva de les càrregues d'urbanització i indica que, una vegada abonades les indemnitzacions compensatòries, es pot interposar un recurs de reposició potestatiu.\n\n3. Un extracte de la resolució de 23 de gener de 2026 de la Universitat d'Alacant que convoca ajudes per a gastos de publicació en una revista científica indexada en JCR d'accés obert, amb una dotació màxima de 3.000 € i tres terminis de presentació de sol·licituds.\n\n4. Un anunci de cessament i nomenament de director general i subdirectora de Valenciana d'Estratègies i Recursos per a la Sostenibilitat Ambiental, SA, que publica el cessament de José Alberto Comos Guillem i la nomenació de Víctor Doménech Hellín com a director general i de Lucía Guirado Pérez com a subdirectora."
+    },
+    {
+      "id": "es_esta_semana",
+      "question": "Resume qué se ha publicado esta semana",
+      "ok": true,
+      "elapsed_sec": 32.187,
+      "feed_query": true,
+      "filters": {
+        "language": "es_es",
+        "since_date": "2026-02-02",
+        "until_date": "2026-02-07"
+      },
+      "selected_doc_ids": [
+        46921,
+        46962,
+        46918,
+        46912,
+        46856,
+        46836,
+        46841,
+        46832,
+        46907,
+        46873
+      ],
+      "citations": [
+        {
+          "document_id": 46832,
+          "title": "ANUNCIO sobre levantamiento de la suspensión de la tramitación y otorgamiento de viviendas de uso turístico.",
+          "ref": "2026/441",
+          "issue_date": "2026-02-02",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/02/pdf/2026_441_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46836,
+          "title": "EXTRACTO de la Resolución de 23 de enero de 2026, del Rectorado, por la que se convocan ayudas para gastos de publicación en una revista científica indexada en JCR de acceso abierto, de la Facultad de Ciencias de la Salud de la Universidad de Alicante.",
+          "ref": "2026/3228",
+          "issue_date": "2026-02-02",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/02/pdf/2026_3228_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46856,
+          "title": "RESOLUCIÓN de 20 de enero de 2026, de la Dirección, por la que se acuerda la publicación del convenio de colaboración entre la Agencia Tributaria Valenciana y la Federación Valenciana de Municipios y Provincias en el ámbito de la Comunitat Valenciana, en materia de embargos por deudas correspondientes a ingresos de derecho público a realizar fuera de sus respectivos ámbitos de competencia territorial.",
+          "ref": "2026/3042",
+          "issue_date": "2026-02-02",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/02/pdf/2026_3042_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46873,
+          "title": "ANUNCIO por el que se somete a información pública el expediente 127/22, de solicitud de nueva autorización ambiental integrada con adecuación a las mejores técnicas disponibles (MTD), con estudio de impacto ambiental, para una explotación porcina de cebo ubicada en la partida La Hoya, en el polígono 1, parcela 114, del municipio de Fuenterrobles (Valencia).",
+          "ref": "2026/1044",
+          "issue_date": "2026-02-03",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/03/pdf/2026_1044_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46918,
+          "title": "RESOLUCIÓN de 9 de enero de 2026, de la Dirección General de Urbanismo, Paisaje y Evaluación Ambiental, por la cual se ordena la publicación del informe ambiental y territorial estratégico del Plan de movilidad urbana sostenible de Náquera (Valencia). Expediente 156/2022-EAE.",
+          "ref": "2026/1163",
+          "issue_date": "2026-02-04",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/04/pdf/2026_1163_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46921,
+          "title": "RESOLUCIÓN de 9 de enero de 2026, de la Dirección General de Urbanismo, Paisaje y Evaluación Ambiental, por la cual se ordena la publicación del informe ambiental y territorial estratégico de la modificación puntual número 21 de las normas subsidiarias de Gata de Gorgos (Alicante). Expediente 13/2023-EAE.",
+          "ref": "2026/1186",
+          "issue_date": "2026-02-04",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/04/pdf/2026_1186_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46962,
+          "title": "RESOLUCIÓN de 9 de enero de 2026, de la Dirección General de Urbanismo, Paisaje y Evaluación Ambiental, por la cual se ordena la publicación del informe ambiental y territorial estratégico de la modificación puntual número 4 de las normas subsidiarias de Vall de Almonacid (Castellón). Expediente 179/2022-EAE.",
+          "ref": "2026/1289",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_1289_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46963,
+          "title": "ANUNCIO de aprobación definitiva de la cuenta de liquidación definitiva de la unidad de ejecución número 5 del Plan parcial industrial.",
+          "ref": "2026/3191",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_3191_es.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "Esta semana se han publicado los siguientes actos:\n\n- Anuncio de aprobación definitiva de la cuenta de liquidación definitiva de la unidad de ejecución número 5 del Plan parcial industrial. (doc 46963)\n- Orden de publicación del informe ambiental y territorial estratégico de la modificación puntual número 21 de las normas subsidiarias de Gata de Gorgos (Alicante). (doc 46921)\n- Orden de publicación del informe ambiental y territorial estratégico de la modificación puntual número 4 de las normas subsidiarias de Vall de Almonacid (Castellón). (doc 46962)\n- Orden de publicación del informe ambiental y territorial estratégico del Plan de movilidad urbana sostenible de Náquera (Valencia). (doc 46918)\n- Acuerdo de publicación del convenio de colaboración entre la Agencia Tributaria Valenciana y la Federación Valenciana de Municipios y Provincias en materia de embargos por deudas. (doc 46856)\n- Anuncio sobre levantamiento de la suspensión de la tramitación y otorgamiento de viviendas de uso turístico. (doc 46832)\n- Somisión a información pública del expediente 127/22, solicitud de nueva autorización ambiental integrada con adecuación a las mejores técnicas disponibles (MTD) y estudio de impacto ambiental para una explotación porcina de cebo. (doc 46873)\n- Extracto de la Resolución de 23 de enero de 2026, del Rectorado, convocando ayudas para gastos de publicación en una revista científica indexada en JCR de acceso abierto. (doc 46836)"
+    },
+    {
+      "id": "va_setmana_passada",
+      "question": "Què es va publicar la setmana passada?",
+      "ok": true,
+      "elapsed_sec": 213.182,
+      "feed_query": true,
+      "filters": {
+        "language": "va_va",
+        "since_date": "2026-01-26",
+        "until_date": "2026-02-01"
+      },
+      "selected_doc_ids": [
+        46719,
+        46728,
+        46819,
+        46635,
+        46795,
+        46744,
+        46701,
+        46697,
+        46692,
+        46735
+      ],
+      "citations": [
+        {
+          "document_id": 46819,
+          "title": "ACORD de 30 de gener de 2026, del Consell, de publicació de les taules retributives de l'Administració de la Generalitat i dels seus organismes autònoms.",
+          "ref": "2026/3145",
+          "issue_date": "2026-01-30",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/30/pdf/2026_3145_va.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "Evidencies disponibles:\n- (46819) ACORD de 30 de gener de 2026, del Consell, de publicació de les taules retributives de l'Administració de la Generalitat i dels seus organismes autònoms.\n- (46819) Núm. 10292 bis / 30.01.2026 1 / 53 CVE: DOGV-V-2026-3145 https://dogv.gva.es/ II. AUTORITATS I PERSONAL C) ALTRES ASSUMPTES Conselleria d'Economia, Hisenda i Administració Pública ACORD de 30 de gener de 2026, del Consell, de publicació de les taules retributives de l'Administració de la Generalitat i dels seus organismes autònoms. En data 31 de maig de 2025 es va publicar en el Diari Oficial de la Generalitat Valenciana la Llei 6/2025, de 30 de maig, de pressupostos de la Generalitat per a l'exercici 2025, prorrogada d'acord amb el que preveu el Decret 204/2025, de 26 de desembre, del Consell, pel qual s'establixen els criteris aplicables de la pròrroga automàtica dels pressupostos de la Generalitat per a 2025 fins a l'entrada en vigor dels pressupostos per a 2026, norma que inclou, en el"
+    },
+    {
+      "id": "es_semana_pasada",
+      "question": "¿Qué se publicó la semana pasada?",
+      "ok": true,
+      "elapsed_sec": 55.719,
+      "feed_query": true,
+      "filters": {
+        "language": "es_es",
+        "since_date": "2026-01-26",
+        "until_date": "2026-02-01"
+      },
+      "selected_doc_ids": [
+        46677,
+        46653,
+        46664,
+        46607,
+        46602,
+        46586,
+        46635,
+        46577,
+        46559,
+        46583
+      ],
+      "citations": [
+        {
+          "document_id": 46602,
+          "title": "RESOLUCIÓN de 16 de enero de 2026, del Rectorado, por la que se hace pública la lista con una nueva persona aprobada en las pruebas selectivas de acceso al grupo C, subgrupo C1, escala técnica básica de investigación, subescala básica de informática, sector de administración especial, por el turno libre, de esta universidad (TLO24_C1_37), convocadas por la Resolución de 1 de octubre de 2024 (BOE 15.10.2024).",
+          "ref": "2026/2581",
+          "issue_date": "2026-01-27",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/27/pdf/2026_2581_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46607,
+          "title": "RESOLUCIÓN de 29 de diciembre de 2025, por la que se autoriza una transferencia de crédito del capítulo 2 al capítulo 4 del programa presupuestario 134A00, Cooperación internacional y desarrollo sostenible, de la Conselleria de Servicios Sociales, Familia e Infancia, por un importe de 150.000 euros (expediente 06.086/25).",
+          "ref": "2026/328",
+          "issue_date": "2026-01-28",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/28/pdf/2026_328_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46653,
+          "title": "ANUNCIO de la consulta pública previa del proyecto de orden de la Vicepresidencia Tercera y Conselleria de Medio Ambiente, Infraestructuras, Territorio y de la Recuperación por la cual se aprueba el Catálogo de playas de la Comunitat Valenciana.",
+          "ref": "2026/1405",
+          "issue_date": "2026-01-29",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/29/pdf/2026_1405_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46664,
+          "title": "RESOLUCIÓN de 22 de enero de 2026, por la que se publica, con carácter definitivo, el nombre de la aspirante que ha superado el proceso selectivo para el ingreso en la escala superior de instrumentación e infraestructuras científico-técnicas (referencia A06/25) de la Universidad de Alicante, por el sistema general de acceso libre.",
+          "ref": "2026/2421",
+          "issue_date": "2026-01-29",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/29/pdf/2026_2421_es.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "La semana pasada se publicaron cuatro actos en el Diari Oficial de la Generalitat Valenciana:\n\n1. Un anuncio sobre la autorización administrativa para la ocupación temporal de la plaza del Puerto de Alicante destinada a la instalación del mercadillo de Semana Santa 2026.\n2. Un anuncio de la consulta pública previa del proyecto de orden de la Vicepresidencia Tercera y Conselleria de Medio Ambiente, Infraestructuras, Territorio y de la Recuperación por la cual se aprueba el Catálogo de playas de la Comunitat Valenciana.\n3. Una resolución que autoriza una transferencia de crédito de 150.000 € del capítulo 2 al capítulo 4 del programa presupuestario 134A00, Cooperación internacional y desarrollo sostenible, de la Conselleria de Servicios Sociales, Familia e Infancia.\n4. Una resolución que publica la lista con una nueva persona aprobada en las pruebas selectivas de acceso al grupo C, subgrupo C1, escala técnica básica de investigación, subescala básica de informática, sector de administración especial, de la Universitat de València."
+    },
+    {
+      "id": "va_darrers_3_dies",
+      "question": "Què s'ha publicat en els darrers 3 dies?",
+      "ok": true,
+      "elapsed_sec": 52.694,
+      "feed_query": true,
+      "filters": {
+        "language": "va_va",
+        "since_date": "2026-02-05",
+        "until_date": "2026-02-07"
+      },
+      "selected_doc_ids": [
+        47122,
+        47145,
+        47114,
+        47123,
+        47128,
+        47132,
+        47135,
+        47141,
+        47143,
+        47133,
+        47125,
+        47109,
+        47116,
+        47127,
+        47120,
+        47111,
+        46957,
+        47137,
+        47115,
+        47131
+      ],
+      "citations": [
+        {
+          "document_id": 47114,
+          "title": "ANUNCI pel qual se sotmet a informació pública el Programa d'actuació integrada per a la finalització del desenvolupament de la unitat d'execució B-2 de sòl urbà residencial del Pla general de Borriana per gestió directa municipal, promogut per l'Ajuntament de Borriana.",
+          "ref": "2026/1284",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_1284_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 47122,
+          "title": "ANUNCI de l'aprovació definitiva del Programa d’actuació aïllada Grup Safor, així com els projectes i documents que l’integren.",
+          "ref": "2026/1306",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_1306_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 47123,
+          "title": "ANUNCI pel qual se sotmet a informació pública el projecte de decret del Consell pel qual es regula la història social única i s'implementa el sistema d'informació per a la gestió dels servicis socials del sistema públic valencià de servicis socials.",
+          "ref": "2026/3680",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_3680_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 47145,
+          "title": "RESOLUCIÓ de 17 de desembre de 2025, per la qual s’autoritza una generació de crèdit procedent del Ministeri d’Educació, Formació Professional i Esports en el capítol II del programa 422M00, MRR Educació i formació professional, de la Conselleria d’Educació, Cultura i Universitats, per un import d’1.710.000 euros (expedient 09.070/25).",
+          "ref": "2026/1292",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_1292_va.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "En els darrers tres dies s’han publicat quatre anuncis i resolucions en el Diari Oficial de la Generalitat Valenciana (DOGV) el 5 de febrer de 2026:\n\n1. **ANUNCI de l’aprovació definitiva del Programa d’actuació aïllada Grup Safor** – resolució de l’Ajuntament de Gandia que aprova el programa i els projectes que el integren.\n2. **RESOLUCIÓ de 17 de desembre de 2025** – autorització d’una generació de crèdit per part del Ministeri d’Educació, Formació Professional i Esports, per un import de 1.710.000 euros.\n3. **ANUNCI pel qual se sotmet a informació pública el Programa d’actuació integrada per a la finalització del desenvolupament de la unitat d’execució B‑2 de sòl urbà residencial** – resolució de l’Ajuntament de Borriana.\n4. **ANUNCI pel qual se sotmet a informació pública el projecte de decret del Consell pel qual es regula la història social única** – anunci de la Conselleria de Servicis Socials, Família i Infància.\n\nTots aquests documents es publiquen el 5 de febrer de 2026 i constitueixen les publicacions més recents del DOGV."
+    },
+    {
+      "id": "es_ultimos_3_dias",
+      "question": "¿Qué se ha publicado en los últimos 3 días?",
+      "ok": true,
+      "elapsed_sec": 49.114,
+      "feed_query": true,
+      "filters": {
+        "language": "es_es",
+        "since_date": "2026-02-05",
+        "until_date": "2026-02-07"
+      },
+      "selected_doc_ids": [
+        46949,
+        46958,
+        46957,
+        46963,
+        46968,
+        46980,
+        46946,
+        46950,
+        47123,
+        46962,
+        46955,
+        47111,
+        46967,
+        46944,
+        46966,
+        46976,
+        46969,
+        46982,
+        46960,
+        46953
+      ],
+      "citations": [
+        {
+          "document_id": 46949,
+          "title": "ANUNCIO por el que se somete a información pública el Programa de actuación integrada para la finalización del desarrollo de la unidad de ejecución B-2 de suelo urbano residencial del Plan general de Burriana por gestión directa municipal, promovido por el Ayuntamiento de Burriana.",
+          "ref": "2026/1284",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_1284_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46957,
+          "title": "ANUNCIO de la aprobación definitiva del Programa de actuación aislada Grupo Safor, así como los proyectos y documentos que lo integran.",
+          "ref": "2026/1306",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_1306_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46958,
+          "title": "ANUNCIO por el que se somete a información pública el proyecto de decreto del Consell por el que se regula la historia social única y se implementa el sistema de información para la gestión de los servicios sociales del sistema público valenciano de servicios sociales.",
+          "ref": "2026/3680",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_3680_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46963,
+          "title": "ANUNCIO de aprobación definitiva de la cuenta de liquidación definitiva de la unidad de ejecución número 5 del Plan parcial industrial.",
+          "ref": "2026/3191",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_3191_es.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46968,
+          "title": "RESOLUCIÓN de 3 de febrero de 2026, de la Dirección General, por la cual se da publicidad al resultado final del proceso selectivo para la cobertura del puesto de naturaleza laboral número 5003, de jefa técnica o jefe técnico de escenario, correspondiente a la oferta pública de empleo de 2024 de la entidad, por el turno de promoción interna.",
+          "ref": "2026/3721",
+          "issue_date": "2026-02-05",
+          "pdf_url": "https://dogv.gva.es/datos/2026/02/05/pdf/2026_3721_es.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "En los últimos tres días se han publicado los siguientes documentos en el Diari Oficial de la Generalitat Valenciana:\n\n- **5 de febrero de 2026**:\n  - Anuncio de la somisión a información pública del Programa de actuación integrada para la finalización del desarrollo de la unidad de ejecución B‑2 de suelo urbano residencial del Plan general de Burriana (doc_id 46949).\n  - Anuncio de la somisión a información pública del proyecto de decreto del Consell por el que se regula la historia social única y se implementa el sistema de información para la gestión de los servicios sociales (doc_id 46958).\n  - Anuncio de la aprobación definitiva del Programa de actuación aislada Grupo Safor, así como los proyectos y documentos que lo integran (doc_id 46957).\n  - Anuncio de aprobación definitiva de la cuenta de liquidación definitiva de la unidad de ejecución número 5 del Plan parcial industrial (doc_id 46963).\n\n- **3 de febrero de 2026**:\n  - Resolución de 3 de febrero de 2026 de la Dirección General, por la cual se da publicidad al resultado final del proceso selectivo para la cobertura del puesto de naturaleza laboral número 5003 (doc_id 46968).\n\nNo se dispone de evidencia de otras publicaciones en los últimos tres días."
+    },
+    {
+      "id": "va_mes_anterior",
+      "question": "Què es va publicar el mes anterior?",
+      "ok": true,
+      "elapsed_sec": 100.727,
+      "feed_query": true,
+      "filters": {
+        "language": "va_va",
+        "since_date": "2026-01-01",
+        "until_date": "2026-01-31"
+      },
+      "selected_doc_ids": [
+        46483,
+        46719,
+        46728,
+        46819,
+        44401,
+        44248,
+        46701,
+        44372,
+        44287,
+        44264
+      ],
+      "citations": [
+        {
+          "document_id": 43462,
+          "title": "RESOLUCIÓ de 5 de desembre de 2025, de la Direcció General de Patrimoni, per la qual es declara la caducitat del procediment iniciat en relació amb l'herència intestada de José Carlos Velasco Clemente i s'acorda la incoació d'un nou procediment per a la declaració administrativa d'herència intestada a favor de la Generalitat i adjudicació dels béns i drets de l'herència.",
+          "ref": "2025/50303",
+          "issue_date": "2026-01-02",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/02/pdf/2025_50303_va.pdf",
+          "html_url": null
+        },
+        {
+          "document_id": 46819,
+          "title": "ACORD de 30 de gener de 2026, del Consell, de publicació de les taules retributives de l'Administració de la Generalitat i dels seus organismes autònoms.",
+          "ref": "2026/3145",
+          "issue_date": "2026-01-30",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/30/pdf/2026_3145_va.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "Evidencies disponibles:\n- (43462) RESOLUCIÓ de 5 de desembre de 2025, de la Direcció General de Patrimoni, per la qual es declara la caducitat del procediment iniciat en relació amb l'herència intestada de José Carlos Velasco Clemente i s'acorda la incoació d'un nou procediment per a la declaració administrativa d'herència intestada a favor de la Generalitat i adjudicació dels béns i drets de l'herència.\n- (46819) Núm. 10292 bis / 30.01.2026 1 / 53 CVE: DOGV-V-2026-3145 https://dogv.gva.es/ II. AUTORITATS I PERSONAL C) ALTRES ASSUMPTES Conselleria d'Economia, Hisenda i Administració Pública ACORD de 30 de gener de 2026, del Consell, de publicació de les taules retributives de l'Administració de la Generalitat i dels seus organismes autònoms. En data 31 de maig de 2025 es va publicar en el Diari Oficial de la Generalitat Valenciana la Llei 6/2025, de 30 de maig, de pressupostos de la Generalitat per a l'exercici 2025, prorrogada d'acord amb el que preveu el Decret 204/2025, de 26 de desembre, del Consell, pel qual s'establixen els criteris aplicables de la pròrroga automàtica dels pressupostos de la Generalitat per a 2025 fins a l'entrada en vigor dels pressupostos per a 2026, norma que inclou, en el\n- (43462) comunicació telemàtica de data 5 de desembre de 2023, el Jutjat de Primera Instància número 4 d'Elx presenta diligència d'ordenació de data 1 de desembre de 2023 a la que s'adjunta el certificat de defunció de José Carlos Velasco Clemente i el certificat d'actes d'última voluntat del causant, en el qual consta que no va atorgar testament. De les actuacions dutes a terme per esta direcció general, es constata, mitjançant certificat històric d'empadronament de data d'entrada 13 de febrer de 2024, que José Carlos Velasco Clemente va estar empadronat a l'Ajuntament d'Elx (Alacant). Com que no consta, en principi, l'existència de persones amb dret a heretar, el 6 de juny de 2024, el director general de Patrimoni va dictar un acord d'incoació del procediment per a la declaració administrativa d'\n- (43462) l'adopció de l'acord d'incoació de l'expedient de declaració administrativa d'hereus abintestat del causant. Segon Acordar l'inici d'un nou procediment de declaració de la Generalitat com a hereua abintestada de José Carlos Velasco Clemente, per no haver-se produït la prescripció. Tercer Incorporar els actes i tràmits el contingut dels quals s'haja mantingut igual, si no s'ha produït la caducitat. Quart Publicar este acord en el Diari Oficial de la Generalitat Valenciana, en la pàgina web d'esta conselleria i, durant el termini d'un mes, en els taulers d'anuncis dels ajuntaments corresponents a l'últim domicili de la persona causant, al del lloc de la defunció i on estiga la major part dels seus béns. Quint Obrir el termini per a presentar-hi al·legacions o qualsevol informació en relació"
+    },
+    {
+      "id": "es_mes_anterior",
+      "question": "¿Qué se publicó el mes anterior?",
+      "ok": true,
+      "elapsed_sec": 78.529,
+      "feed_query": true,
+      "filters": {
+        "language": "es_es",
+        "since_date": "2026-01-01",
+        "until_date": "2026-01-31"
+      },
+      "selected_doc_ids": [
+        46415,
+        46677,
+        46635,
+        44092,
+        43955,
+        43978,
+        43983,
+        43863,
+        44086,
+        44098
+      ],
+      "citations": [
+        {
+          "document_id": 46677,
+          "title": "ACUERDO de 30 de enero de 2026, del Consell, de publicación de las tablas retributivas de la Administración de la Generalitat y sus organismos autónomos.",
+          "ref": "2026/3145",
+          "issue_date": "2026-01-30",
+          "pdf_url": "https://dogv.gva.es/datos/2026/01/30/pdf/2026_3145_es.pdf",
+          "html_url": null
+        }
+      ],
+      "answer": "El mes anterior se publicó el ACUERDO de 30 de enero de 2026, del Consell, de publicación de las tablas retributivas de la Administración de la Generalitat y sus organismos autónomos."
+    }
+  ],
+  "finished_at": "2026-02-07T18:09:23+00:00"
+}

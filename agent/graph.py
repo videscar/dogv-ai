@@ -10,7 +10,12 @@ from langgraph.graph import END, StateGraph
 from sqlalchemy import text as sa_text
 
 from api.answer import build_answer, no_evidence_answer
-from api.auto_ingest import ensure_month_ingested, ensure_range_ingested, ensure_recent_ingested
+from api.auto_ingest import (
+    ensure_month_ingested,
+    ensure_range_ingested,
+    ensure_recent_ingested,
+    get_startup_sync_status,
+)
 from api.config import enabled_lanes, get_settings
 from api.dogv_urls import build_html_url, build_pdf_url
 from api.intent import analyze_intent
@@ -35,6 +40,7 @@ from api.retrieval import (
     title_vector_search,
     vector_search,
 )
+from api.temporal import local_today, resolve_relative_date_range
 from api.db import SessionLocal
 from api.models import DogvDocument, DogvIssue
 
@@ -280,14 +286,22 @@ def analyze_intent_node(state: QAState) -> QAState:
         )
         since_date = intent.get("since_date")
         until_date = intent.get("until_date")
-        feed_query = is_relative_time_query(state["question"])
+        relative_range = resolve_relative_date_range(
+            state["question"],
+            timezone_name=settings.temporal_timezone,
+            week_start=settings.temporal_week_start,
+        )
+        feed_query = bool(relative_range) or is_relative_time_query(state["question"])
         if feed_query and (settings.ask_temporal_policy or "").lower() == "filter":
-            today = date.today()
-            window_start = today - timedelta(days=settings.feed_recent_days)
-            if since_date is None or since_date > window_start:
-                since_date = window_start
-            if until_date is None:
-                until_date = today
+            if relative_range:
+                since_date, until_date = relative_range
+            else:
+                today = local_today(settings.temporal_timezone)
+                window_start = today - timedelta(days=settings.feed_recent_days)
+                if since_date is None or since_date > window_start:
+                    since_date = window_start
+                if until_date is None:
+                    until_date = today
         filters = RetrievalFilters(
             language=lang_filter,
             doc_kind=None,
@@ -346,12 +360,20 @@ def analyze_intent_node(state: QAState) -> QAState:
         )
         since_date = None
         until_date = None
-        feed_query = is_relative_time_query(state["question"])
+        relative_range = resolve_relative_date_range(
+            state["question"],
+            timezone_name=settings.temporal_timezone,
+            week_start=settings.temporal_week_start,
+        )
+        feed_query = bool(relative_range) or is_relative_time_query(state["question"])
         if feed_query and (settings.ask_temporal_policy or "").lower() == "filter":
-            today = date.today()
-            window_start = today - timedelta(days=settings.feed_recent_days)
-            since_date = window_start
-            until_date = today
+            if relative_range:
+                since_date, until_date = relative_range
+            else:
+                today = local_today(settings.temporal_timezone)
+                window_start = today - timedelta(days=settings.feed_recent_days)
+                since_date = window_start
+                until_date = today
         filters = RetrievalFilters(
             language=lang,
             doc_kind=None,
@@ -407,10 +429,25 @@ def online_ingest_node(state: QAState) -> QAState:
         if not settings.auto_ingest_enabled:
             logger.info("ingest.skip req=%s reason=disabled elapsed=%.2fs", request_id, time.monotonic() - started_at)
             return {"online_ingest_done": True}
+        startup_state = (get_startup_sync_status().get("state") or "").lower()
+        if startup_state == "running":
+            logger.info(
+                "ingest.skip req=%s reason=startup_sync_running elapsed=%.2fs",
+                request_id,
+                time.monotonic() - started_at,
+            )
+            return {"online_ingest_done": True}
 
         intent = state.get("intent") or {}
+        filters = state.get("filters")
         since_date = intent.get("since_date")
         until_date = intent.get("until_date")
+        if since_date is None and filters:
+            since_date = filters.since_date
+        if until_date is None and filters:
+            until_date = filters.until_date
+        if since_date and until_date and since_date > until_date:
+            since_date, until_date = until_date, since_date
 
         if since_date or until_date:
             ingest_start = since_date or until_date
@@ -418,7 +455,7 @@ def online_ingest_node(state: QAState) -> QAState:
             if ingest_start and ingest_end:
                 ensure_range_ingested(ingest_start, ingest_end, DEFAULT_LANGS)
         else:
-            today = date.today()
+            today = local_today(settings.temporal_timezone)
             with SessionLocal() as db:
                 row = db.execute(sa_text("SELECT MAX(date) AS max_date FROM dogv_issues")).mappings().one()
                 max_date = row["max_date"]
@@ -704,7 +741,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
             if "bm25" in lanes:
                 sources.append(bm25_hits)
-                weights.append(getattr(settings, "ask_rrf_weight_bm25", 0.5))
+                weights.append(getattr(settings, "ask_rrf_weight_bm25", 1.0))
             if "title" in lanes:
                 sources.append(title_hits)
                 weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
@@ -739,7 +776,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                         weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
                     if "bm25" in lanes:
                         sources.append(relaxed_bm25)
-                        weights.append(getattr(settings, "ask_rrf_weight_bm25", 0.5))
+                        weights.append(getattr(settings, "ask_rrf_weight_bm25", 1.0))
                     if "title" in lanes:
                         sources.append(relaxed_title)
                         weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
@@ -779,6 +816,9 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         fallbacks: list[str] = []
         if soft_language:
             fallbacks.append("soft_language")
+        preserve_temporal_window = bool(state.get("feed_query")) and bool(
+            filters.since_date or filters.until_date
+        )
         allow_margin_fallback = bool(getattr(settings, "ask_fallback_allow_margin", False))
 
         def _relax(new_filters: RetrievalFilters, reason: str, allow_margin: bool = False) -> None:
@@ -821,7 +861,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 "drop_language",
                 allow_margin=allow_margin_fallback,
             )
-        if filters.since_date or filters.until_date:
+        if not preserve_temporal_window and (filters.since_date or filters.until_date):
             _relax(
                 RetrievalFilters(
                     language=filters.language,
@@ -833,7 +873,19 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 "drop_dates",
                 allow_margin=allow_margin_fallback,
             )
-        _relax(RetrievalFilters(), "no_filters")
+        if preserve_temporal_window:
+            _relax(
+                RetrievalFilters(
+                    language=None,
+                    doc_kind=None,
+                    doc_subkind=None,
+                    since_date=filters.since_date,
+                    until_date=filters.until_date,
+                ),
+                "no_filters_keep_dates",
+            )
+        else:
+            _relax(RetrievalFilters(), "no_filters")
         used_fallback = "+".join(fallbacks) if fallbacks else None
 
         logger.info(

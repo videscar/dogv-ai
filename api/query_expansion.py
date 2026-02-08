@@ -4,6 +4,7 @@ from typing import Any
 import re
 
 from .ollama import OllamaClient
+from .temporal import has_relative_time_expression
 
 _STOPWORDS = {
     "que",
@@ -199,38 +200,6 @@ _LOW_SIGNAL_TERMS = {
     "modificada",
     "modificar",
 }
-
-_FEED_PATTERNS = [
-    r"\besta\s+semana\b",
-    r"\baquesta\s+setmana\b",
-    r"\besta\s+setmana\b",
-    r"\bultim[oa]s?\s+semana[s]?\b",
-    r"\búltim[oa]s?\s+semana[s]?\b",
-    r"\bultim[oa]s?\s+d[ií]as\b",
-    r"\búltim[oa]s?\s+d[ií]as\b",
-    r"\bdarrers?\s+dies\b",
-    r"\bnovedades?\b",
-    r"\bnuevas?\s+convocatorias?\b",
-    r"\búltimes?\s+convocatòries\b",
-]
-
-_RELATIVE_TIME_PATTERNS = _FEED_PATTERNS + [
-    r"\bhoy\b",
-    r"\bahir\b",
-    r"\bayer\b",
-    r"\bmañana\b",
-    r"\bmanana\b",
-    r"\besta\s+setmana\b",
-    r"\besta\s+semana\b",
-    r"\bla\s+semana\s+pasada\b",
-    r"\bsemana\s+pasada\b",
-    r"\bsemana\s+anterior\b",
-    r"\beste\s+mes\b",
-    r"\bmes\s+pasado\b",
-    r"\bmes\s+anterior\b",
-    r"\bultima\s+semana\b",
-    r"\búltima\s+semana\b",
-]
 
 EXPAND_SYSTEM = (
     "Eres un asistente para expandir consultas del DOGV. "
@@ -612,10 +581,7 @@ def is_feed_query(text: str) -> bool:
 
 
 def is_relative_time_query(text: str) -> bool:
-    if not text:
-        return False
-    lower = text.lower()
-    return any(re.search(pattern, lower) for pattern in _RELATIVE_TIME_PATTERNS)
+    return has_relative_time_expression(text or "")
 
 
 _VALENCIAN_MARKERS = {

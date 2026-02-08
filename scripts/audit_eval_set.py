@@ -241,7 +241,7 @@ def _retrieve_candidate_ids(
         weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
     if "bm25" in lanes:
         sources.append(bm25_hits)
-        weights.append(getattr(settings, "ask_rrf_weight_bm25", 0.5))
+        weights.append(getattr(settings, "ask_rrf_weight_bm25", 1.0))
     if "title" in lanes:
         sources.append(title_hits)
         weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
