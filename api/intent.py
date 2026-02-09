@@ -4,6 +4,7 @@ from datetime import date, datetime
 from typing import Any
 
 from .ollama import OllamaClient
+from .query_expansion import normalize_expansion_terms
 from .taxonomy import canonical_doc_kind, canonical_doc_subkind, normalize_text
 
 
@@ -17,6 +18,41 @@ INTENT_SYSTEM = (
 )
 
 INTENT_USER = """Pregunta del usuario:
+{question}
+
+Categorias principales permitidas para doc_kind (si dudas, usa Otros/Desconocido):
+- Empleo Publico
+- Ayudas
+- Subvenciones
+- Premios
+- Becas
+- Otros
+
+Subcategorias frecuentes para doc_subkind (si aplica; si dudas, usa Otros/Desconocido):
+- OPE
+- Convocatoria
+- Listas
+- Tribunales
+- Resultados
+- Correcciones
+- Bases
+- Adjudicaciones
+- Otros
+"""
+
+INTENT_EXPAND_SYSTEM = (
+    "Eres un analista de intencion para consultas del DOGV. "
+    "Devuelve SOLO JSON con estos campos: "
+    "language (es|ca), doc_kind, doc_subkind, keywords (lista), "
+    "since_date (YYYY-MM-DD o null), until_date (YYYY-MM-DD o null), "
+    "needs_online (true|false), entities (objeto con organismo, municipio, cuerpo), "
+    "expansion_keywords (lista), expansion_phrases (lista). "
+    "expansion_keywords: solo palabras sueltas, evitando terminos genericos. "
+    "expansion_phrases: frases de 2 a 5 palabras relevantes para recuperar documentos. "
+    "Si no puedes determinar doc_kind o doc_subkind, usa Otros o Desconocido."
+)
+
+INTENT_EXPAND_USER = """Pregunta del usuario:
 {question}
 
 Categorias principales permitidas para doc_kind (si dudas, usa Otros/Desconocido):
@@ -148,6 +184,12 @@ def normalize_intent(raw: Any) -> dict[str, Any]:
     }
 
 
+def _string_list(value: Any) -> list[str]:
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, str)]
+    return []
+
+
 def analyze_intent(question: str) -> dict[str, Any]:
     client = OllamaClient()
     messages = [
@@ -156,3 +198,48 @@ def analyze_intent(question: str) -> dict[str, Any]:
     ]
     result = client.chat_json(messages, temperature=0.0)
     return normalize_intent(result)
+
+
+def analyze_intent_and_expand(
+    question: str,
+    max_keywords: int = 6,
+    max_phrases: int = 4,
+    max_tokens: int = 8,
+) -> tuple[dict[str, Any], dict[str, list[str]]]:
+    client = OllamaClient()
+    messages = [
+        {"role": "system", "content": INTENT_EXPAND_SYSTEM},
+        {"role": "user", "content": INTENT_EXPAND_USER.format(question=question)},
+    ]
+    try:
+        result = client.chat_json(messages, temperature=0.0)
+        intent = normalize_intent(result)
+        expansion_obj = result.get("expansion") if isinstance(result, dict) else None
+        raw_keywords = _string_list(result.get("expansion_keywords") if isinstance(result, dict) else None)
+        raw_phrases = _string_list(result.get("expansion_phrases") if isinstance(result, dict) else None)
+        if isinstance(expansion_obj, dict):
+            if not raw_keywords:
+                raw_keywords = _string_list(expansion_obj.get("keywords"))
+            if not raw_phrases:
+                raw_phrases = _string_list(expansion_obj.get("phrases"))
+        expansion = normalize_expansion_terms(
+            question,
+            raw_keywords,
+            raw_phrases,
+            max_keywords=max_keywords,
+            max_phrases=max_phrases,
+            max_tokens=max_tokens,
+        )
+        return intent, expansion
+    except Exception:
+        intent = analyze_intent(question)
+        from .query_expansion import llm_expand_query
+
+        expansion = llm_expand_query(
+            question,
+            intent,
+            max_keywords=max_keywords,
+            max_phrases=max_phrases,
+            max_tokens=max_tokens,
+        )
+        return intent, expansion

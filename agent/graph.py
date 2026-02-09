@@ -18,7 +18,7 @@ from api.auto_ingest import (
 )
 from api.config import enabled_lanes, get_settings
 from api.dogv_urls import build_html_url, build_pdf_url
-from api.intent import analyze_intent
+from api.intent import analyze_intent, analyze_intent_and_expand
 from api.ollama import OllamaClient
 from api.query_expansion import (
     build_bm25_queries,
@@ -26,7 +26,6 @@ from api.query_expansion import (
     decompose_question,
     guess_language,
     is_relative_time_query,
-    llm_expand_query,
 )
 from api.reader import extract_evidence
 from api.rerank import rerank_titles
@@ -269,7 +268,11 @@ def analyze_intent_node(state: QAState) -> QAState:
     request_id = state.get("request_id")
     debug = bool(state.get("debug"))
     try:
-        intent = analyze_intent(state["question"])
+        if settings.ask_llm_expand:
+            intent, expansion = analyze_intent_and_expand(state["question"])
+        else:
+            intent = analyze_intent(state["question"])
+            expansion = {}
         intent_lang = intent.get("language")
         if intent_lang in ("es", "ca"):
             lang = _map_language(intent_lang)
@@ -278,7 +281,6 @@ def analyze_intent_node(state: QAState) -> QAState:
         lang_filter = lang
         doc_kind = intent.get("doc_kind")
         doc_subkind = intent.get("doc_subkind")
-        expansion = llm_expand_query(state["question"], intent) if settings.ask_llm_expand else {}
         bm25_query, bm25_strict_query = build_bm25_queries(
             state["question"],
             intent,
@@ -352,11 +354,10 @@ def analyze_intent_node(state: QAState) -> QAState:
             "entities": {},
         }
         lang = guess_language(state["question"])
-        expansion = llm_expand_query(state["question"], intent) if settings.ask_llm_expand else {}
         bm25_query, bm25_strict_query = build_bm25_queries(
             state["question"],
             intent,
-            expansion=expansion,
+            expansion={},
         )
         since_date = None
         until_date = None

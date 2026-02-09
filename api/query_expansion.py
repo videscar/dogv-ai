@@ -405,6 +405,24 @@ def _filter_expansion_terms(
     return {"keywords": selected_keywords, "phrases": selected_phrases}
 
 
+def normalize_expansion_terms(
+    question: str,
+    raw_keywords: list[str],
+    raw_phrases: list[str],
+    max_keywords: int = 6,
+    max_phrases: int = 4,
+    max_tokens: int = 8,
+) -> dict[str, list[str]]:
+    return _filter_expansion_terms(
+        question,
+        raw_keywords,
+        raw_phrases,
+        max_keywords=max_keywords,
+        max_phrases=max_phrases,
+        max_tokens=max_tokens,
+    )
+
+
 def llm_expand_query(
     question: str,
     intent: dict[str, Any] | None = None,
@@ -448,7 +466,7 @@ def llm_expand_query(
     keyword_list = [item for item in raw_keywords if isinstance(item, str)] if isinstance(raw_keywords, list) else []
     phrase_list = [item for item in raw_phrases if isinstance(item, str)] if isinstance(raw_phrases, list) else []
 
-    return _filter_expansion_terms(
+    return normalize_expansion_terms(
         question,
         keyword_list,
         phrase_list,

@@ -20,7 +20,7 @@ from sqlalchemy.orm import Session
 
 from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
-from api.intent import analyze_intent
+from api.intent import analyze_intent, analyze_intent_and_expand
 from api.ollama import OllamaClient
 from api.query_expansion import (
     build_bm25_queries,
@@ -28,7 +28,6 @@ from api.query_expansion import (
     decompose_question,
     guess_language,
     is_relative_time_query,
-    llm_expand_query,
 )
 from api.rerank import rerank_titles
 from api.retrieval import (
@@ -256,6 +255,7 @@ def _find_ref_hits(
 def _collect_facet_specs(
     question: str,
     intent: dict[str, Any],
+    expansion: dict[str, list[str]] | None,
     client: OllamaClient,
     embed_cache: dict[str, list[float]],
 ) -> tuple[list[list[float]], list[tuple[str, str | None]]]:
@@ -279,14 +279,13 @@ def _collect_facet_specs(
         embedding = client.embed(question)
         embed_cache[question] = embedding
         embeddings = [embedding]
-    expansion = llm_expand_query(question, intent) if settings.ask_llm_expand else {}
     specs: list[tuple[str, str | None]] = []
     for idx, facet_question in enumerate(facet_questions):
         if idx == 0:
             bm25_query, bm25_strict_query = build_bm25_queries(
                 facet_question,
                 intent,
-                expansion=expansion,
+                expansion=expansion or {},
             )
         else:
             bm25_query, bm25_strict_query = build_bm25_queries(facet_question, intent)
@@ -856,6 +855,26 @@ def _safe_analyze_intent(question: str) -> dict[str, Any]:
         }
 
 
+def _safe_analyze_intent_and_expand(question: str) -> tuple[dict[str, Any], dict[str, list[str]]]:
+    try:
+        return analyze_intent_and_expand(question)
+    except Exception as exc:
+        print(f"[warn] intent+expand failed: {exc} question={question!r}")
+        return (
+            {
+                "language": None,
+                "doc_kind": None,
+                "doc_subkind": None,
+                "keywords": [],
+                "since_date": None,
+                "until_date": None,
+                "needs_online": False,
+                "entities": {},
+            },
+            {"keywords": [], "phrases": []},
+        )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default="data/eval_set.json")
@@ -932,11 +951,16 @@ def main() -> int:
                     "needs_online": False,
                     "entities": {},
                 }
+                expansion = {"keywords": [], "phrases": []}
             else:
-                intent = _safe_analyze_intent(question)
+                if settings.ask_llm_expand:
+                    intent, expansion = _safe_analyze_intent_and_expand(question)
+                else:
+                    intent = _safe_analyze_intent(question)
+                    expansion = {"keywords": [], "phrases": []}
             filters = _normalize_intent_filters(question, intent, has_kind)
             embed_start = time.perf_counter()
-            embeddings, bm25_specs = _collect_facet_specs(question, intent, client, embed_cache)
+            embeddings, bm25_specs = _collect_facet_specs(question, intent, expansion, client, embed_cache)
             timings.embed = time.perf_counter() - embed_start
             bm25_query_main = bm25_specs[0][0] if bm25_specs else question
 

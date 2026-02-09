@@ -12,7 +12,8 @@ ANSWER_SYSTEM = (
     "Usa solo las citas textuales (quote) para responder. "
     "Adapta el formato a la pregunta; si hay varias subpreguntas, cubrelas una por una. "
     "No inventes beneficiarios, cuantias o plazos si no aparecen en las evidencias "
-    "o en los documentos completos. Si falta informacion, indica 'No consta'. "
+    "o en los documentos completos. Si falta un dato concreto, indica 'No consta' solo para ese dato, "
+    "no como respuesta completa cuando haya evidencia relacionada. "
     "Devuelve SOLO JSON con campos: answer (texto), citations (lista de doc_id)."
 )
 
@@ -113,6 +114,22 @@ def _fallback_from_evidence(language: str, evidence: list[dict[str, Any]] | None
     return header + "\n" + "\n".join(lines) if lines else _no_evidence_fallback(language)
 
 
+_NO_CONSTA_ONLY_PATTERNS = (
+    r"^no consta[\s\.\!\?]*$",
+    r"^no consta(?: en (?:la|las) evidencia(?:s)?(?: proporcionada(?:s)?)?)?[\s\.\!\?]*$",
+    r"^no se (?:ha |han )?encontrado evidencias? suficientes.*$",
+    r"^no s['’]?han trobat evid[eè]ncies suficients.*$",
+    r"^no hay publicaciones encontradas.*$",
+)
+
+
+def _is_no_consta_only_answer(answer: str) -> bool:
+    if not answer:
+        return True
+    text = re.sub(r"\s+", " ", answer.strip().lower())
+    return any(re.match(pattern, text) for pattern in _NO_CONSTA_ONLY_PATTERNS)
+
+
 def _needs_amount(question: str) -> bool:
     return bool(re.search(r"\b(quantia|cuant[ií]a|importe|cantidad|euros?|€)\b", question, re.IGNORECASE))
 
@@ -164,7 +181,7 @@ def build_answer(
         },
     ]
     try:
-        result = client.chat_json(messages, temperature=0.2)
+        result = client.chat_json(messages, temperature=0.0)
         citations_raw = result.get("citations")
         normalized: list[int] = []
         if isinstance(citations_raw, list):
@@ -177,6 +194,9 @@ def build_answer(
                         normalized.append(int(text))
         if not normalized:
             normalized = _collect_citation_ids(evidence)
+        answer_text = str(result.get("answer") or "").strip()
+        if evidence and _is_no_consta_only_answer(answer_text):
+            result["answer"] = _fallback_from_evidence(language, evidence)
         result["citations"] = normalized
         return result
     except Exception:
