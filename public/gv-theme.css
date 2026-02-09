@@ -1,0 +1,43 @@
+:root {
+  --gv-red: #c80f2e;
+  --gv-red-dark: #9d0c25;
+}
+
+body {
+  background:
+    radial-gradient(1200px 520px at 90% -10%, rgba(200, 15, 46, 0.14), transparent 60%),
+    radial-gradient(1000px 420px at -10% 110%, rgba(200, 15, 46, 0.1), transparent 55%);
+}
+
+header {
+  border-bottom: 1px solid rgba(200, 15, 46, 0.38);
+  background: linear-gradient(
+    90deg,
+    rgba(200, 15, 46, 0.14) 0%,
+    rgba(200, 15, 46, 0.05) 22%,
+    rgba(0, 0, 0, 0) 62%
+  );
+}
+
+a {
+  color: var(--gv-red) !important;
+}
+
+a:hover {
+  color: var(--gv-red-dark) !important;
+}
+
+textarea,
+input[type="text"] {
+  border-color: rgba(200, 15, 46, 0.4) !important;
+}
+
+button[data-testid="send-button"],
+button[class*="bg-primary"] {
+  background-color: var(--gv-red) !important;
+}
+
+button[data-testid="send-button"]:hover,
+button[class*="bg-primary"]:hover {
+  background-color: var(--gv-red-dark) !important;
+}

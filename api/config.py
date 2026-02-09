@@ -69,6 +69,8 @@ class Settings(BaseSettings):
     backfill_enabled: bool = True
     hot_index_months: int = 6
     warm_index_months: int = 24
+    demo_enforce_ready_gate: bool = True
+    demo_request_timeout_seconds: int = 60
     trace_enabled: bool = False
 
     model_config = SettingsConfigDict(

@@ -29,11 +29,38 @@ This file guides coding agents working in this repo.
 - Regression gate (default KPI: `hybrid,rerank` at `k=5,10`): `python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json`.
 
 ## Code style
-- Follow Python best practices: clear naming, small functions, type hints where helpful, and minimal side effects.
-- Prefer explicit, readable code over cleverness; keep functions cohesive and testable.
-- Keep error handling robust and logs informative but not noisy.
-- Maintain consistent formatting (PEP 8); avoid introducing new linting/formatting tools unless requested.
-- Update documentation or comments when behavior changes.
+
+### Keep it simple (no over-engineering)
+- Prefer the simplest correct solution. Don’t add abstractions, frameworks, factories, plugin systems, or “future-proof” layers unless they solve a current, concrete problem.
+- Avoid clever or overly generic code. Optimize for readability and maintainability.
+- Make changes minimal and local; avoid broad refactors unless required for the task.
+
+### Clean, readable Python
+- Follow PEP 8 and keep formatting consistent with the existing repo style (do not introduce new formatters/linters unless requested).
+- Use clear, descriptive names (`snake_case` for functions/vars, `PascalCase` for classes).
+- Use type hints for public functions and non-trivial logic where it improves clarity. Don’t over-annotate trivial code.
+- Prefer small, cohesive functions and straightforward control flow (guard clauses over deep nesting).
+
+### DRY without forcing abstractions
+- Remove true duplication, but don’t extract helpers so early that the code becomes harder to read.
+- Only factor out shared logic when it repeats meaningfully or reduces bug risk (“rule of three” as a guideline).
+
+### No dead code or redundancy
+- Do not leave commented-out code, unused helpers, unused imports, or unused parameters.
+- Delete leftovers from experiments and temporary debugging once the change is complete.
+- If something might be useful later, rely on version control instead of keeping dead code around.
+
+### Keep files small and focused
+- Avoid large “god” modules. Split by responsibility.
+- If a file grows beyond ~300–500 lines or a function beyond ~40–60 lines, refactor by extracting well-named modules/helpers.
+- Don’t create grab-bag `utils.py` files; prefer domain-specific modules.
+
+### Errors, logs, and side effects
+- Validate inputs at boundaries (API, DB, external services). Raise specific errors with actionable messages.
+- Don’t swallow exceptions; catch only when you can add context or recover safely.
+- Prefer `logging` over `print`. Keep logs informative and not noisy.
+- Minimize side effects; keep core logic testable (pure functions where practical).
+
 
 ## Agent tips
 - Most scripts assume repo root as CWD (they import `scripts/_path.py`).

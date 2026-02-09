@@ -23,6 +23,11 @@ Current repo baseline:
 - Release gate: hard dual gate.
 - Persistent plan path: `docs/demo_plan.md`.
 
+## Demo Non-Goals
+- No guaranteed multi-turn memory continuity between questions.
+- No OpenAI-compatible API adapter for this demo cycle.
+- No multi-host deployment orchestration for the February 26 demo.
+
 ## Public API and Interface Changes
 1. Add `GET /ready` in `api/main.py`.
 - Response shape:
@@ -54,40 +59,74 @@ Current repo baseline:
 
 ## Phase Plan
 
+## Execution Order (Dependency/Risk Priority)
+1. Scope freeze and planning assets.
+2. Backend readiness contract (`/ready`, `/ask` readiness gate, related settings).
+3. Minimal end-to-end Chainlit slice.
+4. Core automated tests and smoke checks.
+5. Ingestion hardening (gap repair retries/persistence and portability fixes).
+6. Dual quality gate (retrieval + answer quality).
+7. Operations packaging and runbook.
+8. Rehearsal and freeze.
+
 ## Phase 1 (Feb 8-9): Scope Freeze and Planning Assets
+Status: Done on February 9, 2026.
 1. Persist this plan in `docs/demo_plan.md`.
 2. Create `docs/demo_script.md` with 5 scripted prompts and expected citation behavior.
 3. Freeze non-goals for demo:
 - no multi-turn memory guarantee
 - no OpenAI-compatible API work
 
-## Phase 2 (Feb 9-13): Chainlit UI Integration
+## Phase 2 (Feb 9-11): Backend Readiness Contract
+Status: Done on February 9, 2026.
+1. Implement `GET /ready`.
+2. Implement `/ask` readiness gating (`503` while warming when enabled).
+3. Add readiness-related settings in `api/config.py` and `.env.example`:
+- `demo_enforce_ready_gate`
+- `demo_request_timeout_seconds`
+
+## Phase 3 (Feb 10-13): Minimal End-to-End Chainlit Slice
+Status: Done on February 9, 2026.
 1. Add dependencies in `requirements.txt`: `chainlit`, `httpx`.
 2. Create `ui/chainlit_app.py`.
 3. Create `ui/backend_client.py` for typed HTTP calls to `/ask` and `/ready`.
 4. Required UI behavior:
-- Readiness banner if backend warming.
-- Deterministic timeout message.
-- Deterministic backend unavailable message.
-- Answer + citations rendering with clickable links.
+- readiness banner if backend warming
+- deterministic timeout message
+- deterministic backend unavailable message
+- answer + citations rendering with clickable links
 5. Launch command:
 - `chainlit run ui/chainlit_app.py --host 0.0.0.0 --port 8501`
 
-## Phase 3 (Feb 11-16): Backend Readiness and Ingestion Hardening
-1. Implement `GET /ready`.
-2. Implement `/ask` readiness gating (`503` while warming when enabled).
-3. Improve gap source checks in `api/auto_ingest.py`:
+## Phase 4 (Feb 11-14): Core Tests and Smoke
+1. Add test deps: `pytest`, `pytest-cov`.
+2. Add tests:
+- `tests/test_health_ready.py`
+- `tests/test_ask_readiness_gate.py`
+- `tests/test_chainlit_citation_render.py`
+3. Add smoke runner `scripts/demo_smoke.py`:
+- `/health`
+- `/ready`
+- one `/ask` happy path
+- one timeout path
+4. Pre-demo check commands:
+- `pytest -q`
+- `python scripts/demo_smoke.py`
+
+## Phase 5 (Feb 13-18): Ingestion Hardening and Portability
+1. Improve gap source checks in `api/auto_ingest.py`:
 - retry/backoff around source checks
 - cap startup scan with `auto_ingest_gap_repair_scan_max_days`
-4. Persist failed checks:
+2. Persist failed checks:
 - new migration `sql/2026-04-gap-source-failures.sql`
-- table `ingest_gap_source_failures` with
-  - `issue_date`, `language`, `attempts`, `last_error`, `last_checked_at`, `next_retry_at`, `resolved_at`
-5. Add `scripts/retry_gap_source_checks.py`.
-6. Replace hardcoded Ollama path in `scripts/run_eval_parallel.py`:
+- table `ingest_gap_source_failures` with `issue_date`, `language`, `attempts`, `last_error`, `last_checked_at`, `next_retry_at`, `resolved_at`
+3. Add `scripts/retry_gap_source_checks.py`.
+4. Add ingestion reliability tests:
+- `tests/test_auto_ingest_gap_retry.py`
+5. Replace hardcoded Ollama path in `scripts/run_eval_parallel.py`:
 - use `OLLAMA_BIN` env var or `shutil.which("ollama")`
 
-## Phase 4 (Feb 14-19): Dual Quality Gate
+## Phase 6 (Feb 16-20): Dual Quality Gate
 1. Keep retrieval gate:
 - `scripts/run_eval.py`
 - `scripts/check_eval_regression.py`
@@ -102,23 +141,7 @@ Current repo baseline:
 5. Add unified gate runner:
 - `scripts/demo_release_gate.sh`
 
-## Phase 5 (Feb 16-22): Tests and Smoke Coverage
-1. Add test deps: `pytest`, `pytest-cov`.
-2. Add tests:
-- `tests/test_health_ready.py`
-- `tests/test_ask_readiness_gate.py`
-- `tests/test_auto_ingest_gap_retry.py`
-- `tests/test_chainlit_citation_render.py`
-3. Add smoke runner `scripts/demo_smoke.py`:
-- `/health`
-- `/ready`
-- one `/ask` happy path
-- one timeout path
-4. Pre-demo check commands:
-- `pytest -q`
-- `python scripts/demo_smoke.py`
-
-## Phase 6 (Feb 20-24): Operations Packaging and Runbook
+## Phase 7 (Feb 20-24): Operations Packaging and Runbook
 1. Add `scripts/demo_ctl.sh` with `start|stop|status|logs|smoke`.
 2. Store pids/logs under `logs/demo/`.
 3. Add model warmup script `scripts/warm_models.py`.
@@ -130,7 +153,7 @@ Current repo baseline:
 - rollback and restart actions
 - known failures and mitigations
 
-## Phase 7 (Feb 24-26): Rehearsal and Freeze
+## Phase 8 (Feb 24-26): Rehearsal and Freeze
 1. Feb 24: full rehearsal on target machine/network.
 2. Feb 25: second rehearsal + restart/failover drill.
 3. Feb 25 end-of-day: code freeze except blocker fixes.

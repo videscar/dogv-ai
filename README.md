@@ -129,6 +129,10 @@ Usa `.env.example` como plantilla. Ejemplos (valores reales en `api/config.py` y
 - `AUTO_INGEST_STARTUP_LOCK_ID=190021`
 - `BACKFILL_ENABLED=true|false`
 - `WARM_INDEX_MONTHS=24`
+- `DEMO_ENFORCE_READY_GATE=true|false`
+- `DEMO_REQUEST_TIMEOUT_SECONDS=60`
+- `CHAINLIT_BACKEND_URL=http://127.0.0.1:8000`
+- `CHAINLIT_ENABLE_DATA_LAYER=false|true`
 - `CHUNK_MIN_TOKENS=300`
 - `CHUNK_MAX_TOKENS=500`
 - `CHUNK_OVERLAP_TOKENS=80`
@@ -163,6 +167,11 @@ API:
 uvicorn api.main:app --host 0.0.0.0 --port 8000
 ```
 
+Chainlit UI (en otra terminal):
+```bash
+chainlit run ui/chainlit_app.py --host 0.0.0.0 --port 8501
+```
+
 ## Evaluacion (recall)
 - Schema eval set: `data/eval_schema.json`
 - Auditar/actualizar ground truth: `python scripts/audit_eval_set.py --input data/eval_set.json --output data/eval_set.json --report data/eval_audit_report.json`
@@ -178,6 +187,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000
 
 ## Endpoints
 - `GET /health` (incluye frescura del indice y estado de sync de arranque)
+- `GET /ready` (estado de disponibilidad para trafico de demo)
 - `GET /issues`
 - `GET /issues/{issue_id}/documents`
 - `POST /ask`

@@ -8,10 +8,11 @@ from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
-from .auto_ingest import get_freshness_status, get_startup_sync_status, start_startup_sync
+from .auto_ingest import start_startup_sync
 from .config import enabled_lanes, get_settings
 from .db import SessionLocal
 from .models import DogvDocument, DogvIssue
+from .readiness import build_readiness_payload
 from .traces import store_trace
 from agent.graph import build_graph
 
@@ -89,12 +90,18 @@ class AskResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    payload: dict[str, object] = {"status": "ok"}
-    try:
-        payload["freshness"] = get_freshness_status()
-    except Exception:
-        logger.exception("health.freshness.error")
-    payload["startup_sync"] = get_startup_sync_status()
+    readiness = build_readiness_payload()
+    payload: dict[str, object] = {
+        "status": "ok",
+        "freshness": readiness.get("freshness"),
+        "startup_sync": readiness.get("startup_sync"),
+    }
+    if not readiness.get("ready"):
+        payload["readiness"] = {
+            "ready": readiness.get("ready"),
+            "status": readiness.get("status"),
+            "reason": readiness.get("reason"),
+        }
     return payload
 
 
@@ -104,6 +111,11 @@ def _startup_sync():
         start_startup_sync()
     except Exception:
         logger.exception("startup.sync.error")
+
+
+@app.get("/ready")
+def ready():
+    return build_readiness_payload()
 
 
 @app.get("/issues", response_model=list[IssueSummary])
@@ -133,6 +145,11 @@ def list_issue_documents(issue_id: int, db: Session = Depends(get_db)):
 
 @app.post("/ask", response_model=AskResponse)
 def ask(payload: AskRequest):
+    if settings.demo_enforce_ready_gate:
+        readiness = build_readiness_payload()
+        if not readiness.get("ready"):
+            raise HTTPException(status_code=503, detail=readiness)
+
     request_id = uuid.uuid4().hex[:8]
     start = time.monotonic()
     logger.info(
