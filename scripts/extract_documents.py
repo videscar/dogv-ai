@@ -9,6 +9,8 @@ If no args: process ALL issues in the DB.
 
 import sys
 from datetime import datetime
+import hashlib
+import json
 from typing import Any, Dict, Iterable
 
 from sqlalchemy.orm import Session
@@ -123,6 +125,62 @@ def _extract_document_fields(doc: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _normalize_key_text(value: Any) -> str:
+    if value is None:
+        return ""
+    return str(value).strip().lower()
+
+
+def _raw_signature(raw_doc: Any) -> str:
+    payload = json.dumps(raw_doc or {}, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+    return hashlib.sha1(payload.encode("utf-8")).hexdigest()
+
+
+def _document_match_key(
+    *,
+    ref: str | None,
+    title: str | None,
+    doc_type: str | None,
+    section: str | None,
+    pdf_url: str | None,
+    html_url: str | None,
+    raw_doc: Any,
+) -> tuple[str, ...]:
+    html = _normalize_key_text(html_url)
+    if html:
+        return ("html", html)
+    pdf = _normalize_key_text(pdf_url)
+    if pdf:
+        return ("pdf", pdf)
+    ref_norm = _normalize_key_text(ref)
+    title_norm = _normalize_key_text(title)
+    if ref_norm:
+        return ("ref", ref_norm, title_norm)
+    if title_norm:
+        type_norm = _normalize_key_text(doc_type)
+        section_norm = _normalize_key_text(section)
+        return ("title", title_norm, type_norm, section_norm)
+    return ("raw", _raw_signature(raw_doc))
+
+
+def _delete_rag_rows(db: Session, doc_id: int) -> None:
+    db.execute(sa_text("DELETE FROM rag_chunk WHERE document_id = :doc_id"), {"doc_id": doc_id})
+    db.execute(sa_text("DELETE FROM rag_title WHERE document_id = :doc_id"), {"doc_id": doc_id})
+    db.execute(sa_text("DELETE FROM rag_doc WHERE document_id = :doc_id"), {"doc_id": doc_id})
+
+
+def _invalidate_doc_for_reindex(db: Session, doc: DogvDocument, *, reset_text: bool) -> None:
+    _delete_rag_rows(db, doc.id)
+    doc.doc_kind = None
+    doc.doc_subkind = None
+    doc.doc_kind_confidence = None
+    doc.doc_tags = None
+    if reset_text:
+        doc.text = None
+        doc.text_source = None
+        doc.text_updated_at = None
+
+
 def process_issue(db: Session, issue: DogvIssue) -> int:
     raw = issue.raw_json or {}
     disposiciones = raw.get("disposicion") or raw.get("disposiciones") or []
@@ -131,18 +189,23 @@ def process_issue(db: Session, issue: DogvIssue) -> int:
         print(f"[WARN] issue id={issue.id}: 'disposicion' is not a list")
         return 0
 
-    # Clear existing docs (and their chunks) for idempotency
-    existing_docs = db.query(DogvDocument.id).filter(DogvDocument.issue_id == issue.id).all()
-    if existing_docs:
-        for (doc_id,) in existing_docs:
-            try:
-                db.execute(sa_text("DELETE FROM rag_chunk WHERE document_id = :doc_id"), {"doc_id": doc_id})
-                db.execute(sa_text("DELETE FROM rag_title WHERE document_id = :doc_id"), {"doc_id": doc_id})
-                db.execute(sa_text("DELETE FROM rag_doc WHERE document_id = :doc_id"), {"doc_id": doc_id})
-            except Exception:
-                pass
-        db.query(DogvDocument).filter(DogvDocument.issue_id == issue.id).delete()
+    existing_docs = db.query(DogvDocument).filter(DogvDocument.issue_id == issue.id).all()
+    existing_by_key: dict[tuple[str, ...], list[DogvDocument]] = {}
+    for existing in existing_docs:
+        key = _document_match_key(
+            ref=existing.ref,
+            title=existing.title,
+            doc_type=existing.type,
+            section=existing.section,
+            pdf_url=existing.pdf_url,
+            html_url=existing.html_url,
+            raw_doc=existing.raw_json,
+        )
+        existing_by_key.setdefault(key, []).append(existing)
 
+    created = 0
+    updated = 0
+    unchanged = 0
     count = 0
     for idx, d in enumerate(disposiciones):
         if not isinstance(d, dict):
@@ -150,22 +213,72 @@ def process_issue(db: Session, issue: DogvIssue) -> int:
             continue
 
         fields = _extract_document_fields(d)
-        doc = DogvDocument(
-            issue_id=issue.id,
-            section=fields["section"],
+        key = _document_match_key(
             ref=fields["ref"],
-            conselleria=fields["conselleria"],
             title=fields["title"],
-            type=fields["type"],
+            doc_type=fields["type"],
+            section=fields["section"],
             pdf_url=fields["pdf_url"],
             html_url=fields["html_url"],
-            raw_json=d,
+            raw_doc=d,
         )
-        db.add(doc)
+        bucket = existing_by_key.get(key)
+        doc = bucket.pop(0) if bucket else None
+
+        if doc is None:
+            doc = DogvDocument(
+                issue_id=issue.id,
+                section=fields["section"],
+                ref=fields["ref"],
+                conselleria=fields["conselleria"],
+                title=fields["title"],
+                type=fields["type"],
+                pdf_url=fields["pdf_url"],
+                html_url=fields["html_url"],
+                raw_json=d,
+            )
+            db.add(doc)
+            created += 1
+            count += 1
+            continue
+
+        changed_columns: set[str] = set()
+        for column_name, new_value in (
+            ("section", fields["section"]),
+            ("ref", fields["ref"]),
+            ("conselleria", fields["conselleria"]),
+            ("title", fields["title"]),
+            ("type", fields["type"]),
+            ("pdf_url", fields["pdf_url"]),
+            ("html_url", fields["html_url"]),
+        ):
+            if getattr(doc, column_name) != new_value:
+                setattr(doc, column_name, new_value)
+                changed_columns.add(column_name)
+        if doc.raw_json != d:
+            doc.raw_json = d
+            changed_columns.add("raw_json")
+
+        if changed_columns:
+            reset_text = "pdf_url" in changed_columns or "html_url" in changed_columns
+            _invalidate_doc_for_reindex(db, doc, reset_text=reset_text)
+            updated += 1
+        else:
+            unchanged += 1
         count += 1
 
+    removed = 0
+    for bucket in existing_by_key.values():
+        for stale_doc in bucket:
+            _delete_rag_rows(db, stale_doc.id)
+            db.delete(stale_doc)
+            removed += 1
+
     db.commit()
-    print(f"[process_issue] issue id={issue.id}, numero={issue.numero}: stored {count} documents")
+    print(
+        f"[process_issue] issue id={issue.id}, numero={issue.numero}: "
+        f"stored {count} documents (new={created}, updated={updated}, unchanged={unchanged}, removed={removed})"
+    )
     return count
 
 

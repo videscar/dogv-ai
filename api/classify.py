@@ -36,11 +36,18 @@ Subcategorias doc_subkind permitidas (si aplica):
 """
 
 
-def classify_document(title: str | None, text: str | None) -> dict[str, Any]:
+def classify_document(
+    title: str | None,
+    text: str | None,
+    *,
+    base_url: str | None = None,
+    model: str | None = None,
+    timeout: int | None = None,
+) -> dict[str, Any]:
     excerpt = (text or "")[:2000]
     messages = [
         {"role": "system", "content": CLASSIFY_SYSTEM},
         {"role": "user", "content": CLASSIFY_USER.format(title=title or "", excerpt=excerpt)},
     ]
-    client = OllamaClient()
+    client = OllamaClient(base_url=base_url, model=model, timeout=timeout)
     return client.chat_json(messages, temperature=0.0)
