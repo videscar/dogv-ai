@@ -66,11 +66,18 @@ class Settings(BaseSettings):
     auto_ingest_startup_purge_old: bool = True
     auto_ingest_startup_repair_gaps: bool = True
     auto_ingest_startup_lock_id: int = 190021
+    auto_ingest_gap_check_retries: int = 3
+    auto_ingest_gap_check_backoff_seconds: float = 1.5
+    auto_ingest_gap_repair_scan_max_days: int = 45
     backfill_enabled: bool = True
     hot_index_months: int = 6
     warm_index_months: int = 24
     demo_enforce_ready_gate: bool = True
     demo_request_timeout_seconds: int = 60
+    answer_mutators_enabled: bool = False
+    answer_missing_notes_enabled: bool = False
+    answer_validator_enabled: bool = True
+    answer_repair_attempts: int = 1
     trace_enabled: bool = False
 
     model_config = SettingsConfigDict(

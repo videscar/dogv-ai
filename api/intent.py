@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime
+import re
 from typing import Any
 
 from .ollama import OllamaClient
@@ -124,7 +125,21 @@ def _normalize_language(value: Any) -> str | None:
     return lang if lang in ("es", "ca") else None
 
 
-def normalize_intent(raw: Any) -> dict[str, Any]:
+_YEAR_PATTERN = re.compile(r"\b(19\d{2}|20\d{2}|2100)\b")
+
+
+def _infer_year_range(question: str | None) -> tuple[date | None, date | None]:
+    if not question:
+        return None, None
+    years = [int(match.group(1)) for match in _YEAR_PATTERN.finditer(question)]
+    if not years:
+        return None, None
+    start_year = min(years)
+    end_year = max(years)
+    return date(start_year, 1, 1), date(end_year, 12, 31)
+
+
+def normalize_intent(raw: Any, question: str | None = None) -> dict[str, Any]:
     data = raw if isinstance(raw, dict) else {}
 
     language = _normalize_language(data.get("language"))
@@ -170,6 +185,10 @@ def normalize_intent(raw: Any) -> dict[str, Any]:
 
     since_date = _parse_date(data.get("since_date"))
     until_date = _parse_date(data.get("until_date"))
+    if since_date is None and until_date is None:
+        inferred_since, inferred_until = _infer_year_range(question)
+        since_date = inferred_since
+        until_date = inferred_until
     needs_online = bool(data.get("needs_online")) if isinstance(data.get("needs_online"), bool) else False
 
     return {
@@ -197,7 +216,7 @@ def analyze_intent(question: str) -> dict[str, Any]:
         {"role": "user", "content": INTENT_USER.format(question=question)},
     ]
     result = client.chat_json(messages, temperature=0.0)
-    return normalize_intent(result)
+    return normalize_intent(result, question=question)
 
 
 def analyze_intent_and_expand(
@@ -213,7 +232,7 @@ def analyze_intent_and_expand(
     ]
     try:
         result = client.chat_json(messages, temperature=0.0)
-        intent = normalize_intent(result)
+        intent = normalize_intent(result, question=question)
         expansion_obj = result.get("expansion") if isinstance(result, dict) else None
         raw_keywords = _string_list(result.get("expansion_keywords") if isinstance(result, dict) else None)
         raw_phrases = _string_list(result.get("expansion_phrases") if isinstance(result, dict) else None)

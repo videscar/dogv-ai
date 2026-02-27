@@ -1,0 +1,62 @@
+[
+  {
+    "id": "A01",
+    "language": "va",
+    "question": "Quines ajudes es van aprovar per als vehicles sinistrats per la DANA, de quina quantia eren i qui les podia demanar?",
+    "must_include": [
+      "ajud",
+      "vehicle"
+    ],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A02",
+    "language": "es",
+    "question": "¿Qué becas o ayudas para estudios universitarios se publicaron en octubre de 2025 y quién podía solicitarlas?",
+    "must_include": [
+      "octubre",
+      "2025"
+    ],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A03",
+    "language": "va",
+    "question": "Quin és el termini de presentació de sol·licituds de la convocatòria que cita la referència 2025/XXXX?",
+    "must_include": [
+      "2025/",
+      "termini"
+    ],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A04",
+    "language": "es",
+    "question": "¿Qué subvenciones de movilidad o transporte se publicaron esta semana?",
+    "must_include": [
+      "movilidad",
+      "transporte"
+    ],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A05",
+    "language": "va",
+    "question": "Resumeix els requisits de beneficiaris i les quanties de la convocatòria més recent relacionada amb habitatge.",
+    "must_include": [
+      "benefici",
+      "quant"
+    ],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  }
+]

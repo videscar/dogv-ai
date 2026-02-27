@@ -3,7 +3,9 @@ from __future__ import annotations
 import copy
 from datetime import date, datetime, timedelta, timezone
 import logging
+import random
 import threading
+import time
 from typing import Any
 
 import requests
@@ -180,6 +182,8 @@ def get_freshness_status() -> dict[str, Any]:
     with SessionLocal() as db:
         min_date, max_date = get_issue_bounds(db)
     lag_days = (today - max_date).days if isinstance(max_date, date) else None
+    if lag_days is not None:
+        lag_days = max(0, lag_days)
     return {
         "today": today.isoformat(),
         "min_issue_date": min_date.isoformat() if isinstance(min_date, date) else None,
@@ -216,6 +220,124 @@ def _iter_dates(start: date, end: date):
         current += timedelta(days=1)
 
 
+def _gap_retry_attempts() -> int:
+    return max(1, int(getattr(settings, "auto_ingest_gap_check_retries", 3) or 3))
+
+
+def _gap_retry_backoff_seconds() -> float:
+    return max(0.0, float(getattr(settings, "auto_ingest_gap_check_backoff_seconds", 1.5) or 1.5))
+
+
+def _gap_scan_window(start: date, end: date) -> tuple[date, date]:
+    max_days = max(1, int(getattr(settings, "auto_ingest_gap_repair_scan_max_days", 45) or 45))
+    capped_start = max(start, end - timedelta(days=max_days - 1))
+    return capped_start, end
+
+
+def _is_transient_source_exception(exc: Exception) -> bool:
+    if isinstance(exc, (requests.Timeout, requests.ConnectionError)):
+        return True
+    if isinstance(exc, requests.HTTPError):
+        response = getattr(exc, "response", None)
+        status_code = getattr(response, "status_code", None)
+        return isinstance(status_code, int) and status_code >= 500
+    return False
+
+
+def _record_gap_source_failure(
+    db: Session | None,
+    issue_date: date,
+    language: str,
+    error_text: str,
+    next_retry_at: datetime,
+) -> None:
+    if db is None:
+        return
+    try:
+        now = datetime.now(timezone.utc)
+        db.execute(
+            sa_text(
+                """
+                INSERT INTO ingest_gap_source_failures (
+                    issue_date,
+                    language,
+                    attempts,
+                    last_error,
+                    last_checked_at,
+                    next_retry_at,
+                    resolved_at
+                )
+                VALUES (
+                    :issue_date,
+                    :language,
+                    1,
+                    :last_error,
+                    :last_checked_at,
+                    :next_retry_at,
+                    NULL
+                )
+                ON CONFLICT (issue_date, language)
+                DO UPDATE SET
+                    attempts = ingest_gap_source_failures.attempts + 1,
+                    last_error = EXCLUDED.last_error,
+                    last_checked_at = EXCLUDED.last_checked_at,
+                    next_retry_at = EXCLUDED.next_retry_at,
+                    resolved_at = NULL
+                """
+            ),
+            {
+                "issue_date": issue_date,
+                "language": language,
+                "last_error": error_text[:1000],
+                "last_checked_at": now,
+                "next_retry_at": next_retry_at,
+            },
+        )
+        db.commit()
+    except Exception:
+        logger.exception(
+            "gap.repair failed to persist source check failure date=%s lang=%s",
+            issue_date.isoformat(),
+            language,
+        )
+
+
+def _mark_gap_source_resolved(
+    db: Session | None,
+    issue_date: date,
+    language: str,
+) -> None:
+    if db is None:
+        return
+    try:
+        now = datetime.now(timezone.utc)
+        db.execute(
+            sa_text(
+                """
+                UPDATE ingest_gap_source_failures
+                SET resolved_at = :resolved_at,
+                    next_retry_at = NULL,
+                    last_error = NULL,
+                    last_checked_at = :resolved_at
+                WHERE issue_date = :issue_date
+                  AND language = :language
+                """
+            ),
+            {
+                "resolved_at": now,
+                "issue_date": issue_date,
+                "language": language,
+            },
+        )
+        db.commit()
+    except Exception:
+        logger.exception(
+            "gap.repair failed to mark source check resolved date=%s lang=%s",
+            issue_date.isoformat(),
+            language,
+        )
+
+
 def _load_doc_counts(
     db: Session, start: date, end: date, languages: list[str]
 ) -> dict[tuple[date, str], int]:
@@ -248,26 +370,97 @@ def _source_has_publications(
     issue_date: date,
     language: str,
     cache: dict[tuple[date, str], bool | None],
+    db: Session | None = None,
 ) -> bool | None:
     key = (issue_date, language)
     if key in cache:
         return cache[key]
     base_url = settings.dogv_base_url.rstrip("/")
-    try:
-        response = requests.get(
-            f"{base_url}/dogv-portal/dogv",
-            params={"date": issue_date.isoformat(), "lang": language},
-            timeout=30,
-        )
-        response.raise_for_status()
-        payload = response.json()
-        has_docs = bool(payload.get("disposiciones") or [])
-        cache[key] = has_docs
-        return has_docs
-    except Exception:
-        logger.exception("gap.repair source check failed date=%s lang=%s", issue_date.isoformat(), language)
-        cache[key] = None
-        return None
+    attempts = _gap_retry_attempts()
+    backoff_seconds = _gap_retry_backoff_seconds()
+    for attempt in range(1, attempts + 1):
+        try:
+            response = requests.get(
+                f"{base_url}/dogv-portal/dogv",
+                params={"date": issue_date.isoformat(), "lang": language},
+                timeout=30,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            has_docs = bool(payload.get("disposiciones") or [])
+            cache[key] = has_docs
+            _mark_gap_source_resolved(db, issue_date, language)
+            return has_docs
+        except Exception as exc:
+            is_transient = _is_transient_source_exception(exc)
+            if is_transient and attempt < attempts:
+                retry_delay = backoff_seconds * (2 ** (attempt - 1))
+                retry_delay += random.uniform(0.0, max(0.01, backoff_seconds * 0.25))
+                logger.warning(
+                    "gap.repair source check transient error date=%s lang=%s attempt=%s/%s retry_in=%.2fs error=%s",
+                    issue_date.isoformat(),
+                    language,
+                    attempt,
+                    attempts,
+                    retry_delay,
+                    exc,
+                )
+                time.sleep(retry_delay)
+                continue
+            error_text = str(exc) or exc.__class__.__name__
+            next_retry_at = datetime.now(timezone.utc) + timedelta(
+                seconds=max(30.0, backoff_seconds * 4)
+            )
+            _record_gap_source_failure(db, issue_date, language, error_text, next_retry_at)
+            if is_transient:
+                logger.warning(
+                    "gap.repair source check failed after retries date=%s lang=%s attempts=%s error=%s",
+                    issue_date.isoformat(),
+                    language,
+                    attempts,
+                    error_text,
+                )
+            else:
+                logger.warning(
+                    "gap.repair source check non-retriable failure date=%s lang=%s error=%s",
+                    issue_date.isoformat(),
+                    language,
+                    error_text,
+                )
+            cache[key] = None
+            return None
+    cache[key] = None
+    return None
+
+
+def check_gap_source_publications(
+    issue_date: date,
+    language: str,
+    db: Session | None = None,
+) -> bool | None:
+    return _source_has_publications(issue_date, language, cache={}, db=db)
+
+
+def record_gap_source_failure(
+    db: Session,
+    issue_date: date,
+    language: str,
+    error_text: str,
+    next_retry_at: datetime | None = None,
+) -> None:
+    retry_at = next_retry_at or (
+        datetime.now(timezone.utc)
+        + timedelta(seconds=max(30.0, _gap_retry_backoff_seconds() * 4))
+    )
+    _record_gap_source_failure(db, issue_date, language, error_text, retry_at)
+
+
+def mark_gap_source_resolved(
+    db: Session,
+    issue_date: date,
+    language: str,
+) -> None:
+    _mark_gap_source_resolved(db, issue_date, language)
 
 
 def _compute_gap_repair_ranges(
@@ -288,9 +481,10 @@ def _compute_gap_repair_ranges(
         }
 
     language_list = [lang.strip() for lang in languages if lang.strip()]
-    doc_counts = _load_doc_counts(db, start, end, language_list)
+    scan_start, scan_end = _gap_scan_window(start, end)
+    doc_counts = _load_doc_counts(db, scan_start, scan_end, language_list)
     candidates: list[tuple[date, str]] = []
-    for issue_date in _iter_dates(start, end):
+    for issue_date in _iter_dates(scan_start, scan_end):
         for language in language_list:
             docs = doc_counts.get((issue_date, language))
             if docs is None or docs == 0:
@@ -303,7 +497,7 @@ def _compute_gap_repair_ranges(
     failed_checks = 0
 
     for issue_date, language in candidates:
-        has_docs = _source_has_publications(issue_date, language, source_cache)
+        has_docs = _source_has_publications(issue_date, language, source_cache, db=db)
         checked_pairs += 1
         if has_docs is None:
             failed_checks += 1
@@ -321,6 +515,8 @@ def _compute_gap_repair_ranges(
         "failed_source_checks": failed_checks,
         "repair_dates": len(repair_dates),
         "repair_ranges": [{"start": s.isoformat(), "end": e.isoformat()} for s, e in ranges],
+        "scan_window_start": scan_start.isoformat(),
+        "scan_window_end": scan_end.isoformat(),
     }
     return ranges, summary
 

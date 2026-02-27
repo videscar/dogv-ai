@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 import re
 import time
@@ -14,6 +14,7 @@ from api.auto_ingest import (
     ensure_month_ingested,
     ensure_range_ingested,
     ensure_recent_ingested,
+    get_issue_bounds,
     get_startup_sync_status,
 )
 from api.config import enabled_lanes, get_settings
@@ -174,10 +175,77 @@ def _coverage_score(text: str, keywords: list[str]) -> int:
     return sum(lower.count(k) for k in keywords)
 
 
+def _asks_most_recent(question: str) -> bool:
+    if not question:
+        return False
+    return bool(
+        re.search(
+            r"(m[aá]s reciente|m[ée]s recent|mes recent|[uú]ltim[oa]?|ultim[oa]?|latest)",
+            question.lower(),
+        )
+    )
+
+
+def _parse_issue_date(value: Any) -> date | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return None
+        try:
+            if len(raw) >= 10:
+                return date.fromisoformat(raw[:10])
+        except ValueError:
+            return None
+    return None
+
+
+def _prepend_recent_relevant_docs(
+    question: str,
+    keywords: list[str],
+    rerank_candidates: list[dict[str, Any]],
+    doc_ids: list[int],
+) -> list[int]:
+    if not _asks_most_recent(question) or not rerank_candidates:
+        return doc_ids
+
+    keep_n = max(1, int(getattr(settings, "ask_rerank_recent_keep", 2)))
+    scored: list[tuple[int, int, int]] = []
+    for item in rerank_candidates:
+        doc_id = int(item["document_id"])
+        issue_date = _parse_issue_date(item.get("issue_date"))
+        if issue_date is None:
+            continue
+        text = f"{item.get('title') or ''} {item.get('snippet') or ''}"
+        coverage = _coverage_score(text, keywords) if keywords else 1
+        if keywords and coverage <= 0:
+            continue
+        scored.append((coverage, issue_date.toordinal(), doc_id))
+
+    if not scored:
+        return doc_ids
+
+    scored.sort(key=lambda row: (row[0], row[1]), reverse=True)
+    recent_doc_ids = [doc_id for _, _, doc_id in scored[:keep_n]]
+    merged: list[int] = []
+    seen: set[int] = set()
+    for doc_id in recent_doc_ids + doc_ids:
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
+        merged.append(doc_id)
+    return merged
+
+
 def _needs_eligibility(question: str) -> bool:
     return bool(
         re.search(
-            r"\b(qui|qu[ií]en|beneficiar|beneficiari|beneficiario|sol·licit|solicitar|requisit|requisito|destinatari|destinatario|pot|puede|poden|pueden)\b",
+            r"\b(qui|qui[eé]n|beneficiar|beneficiari|beneficiario|sol·licit[a-z]*|solicit[a-z]*|requisit|requisito|destinatari|destinatario|pot|puede|poden|pueden)\b",
             question,
             re.IGNORECASE,
         )
@@ -404,6 +472,29 @@ def _temporal_reject_message(language: str | None) -> str:
     )
 
 
+def _missing_ranges_from_bounds(
+    start: date,
+    end: date,
+    min_date: date | None,
+    max_date: date | None,
+) -> list[tuple[date, date]]:
+    if start > end:
+        return []
+    if min_date is None or max_date is None:
+        return [(start, end)]
+
+    missing: list[tuple[date, date]] = []
+    if start < min_date:
+        left_end = min(end, min_date - timedelta(days=1))
+        if start <= left_end:
+            missing.append((start, left_end))
+    if end > max_date:
+        right_start = max(start, max_date + timedelta(days=1))
+        if right_start <= end:
+            missing.append((right_start, end))
+    return missing
+
+
 def temporal_guard_node(state: QAState) -> QAState:
     policy = (settings.ask_temporal_policy or "reject").lower()
     question = state.get("question") or ""
@@ -454,7 +545,28 @@ def online_ingest_node(state: QAState) -> QAState:
             ingest_start = since_date or until_date
             ingest_end = until_date or since_date
             if ingest_start and ingest_end:
-                ensure_range_ingested(ingest_start, ingest_end, DEFAULT_LANGS)
+                with SessionLocal() as db:
+                    min_date, max_date = get_issue_bounds(db)
+
+                missing_ranges = _missing_ranges_from_bounds(
+                    ingest_start,
+                    ingest_end,
+                    min_date=min_date,
+                    max_date=max_date,
+                )
+                if not missing_ranges:
+                    logger.info(
+                        "ingest.skip req=%s reason=range_already_covered start=%s end=%s min=%s max=%s elapsed=%.2fs",
+                        request_id,
+                        ingest_start,
+                        ingest_end,
+                        min_date,
+                        max_date,
+                        time.monotonic() - started_at,
+                    )
+                else:
+                    for missing_start, missing_end in missing_ranges:
+                        ensure_range_ingested(missing_start, missing_end, DEFAULT_LANGS)
         else:
             today = local_today(settings.temporal_timezone)
             with SessionLocal() as db:
@@ -1111,6 +1223,7 @@ def rerank_titles_node(state: QAState) -> QAState:
             doc_ids = merged
         if not doc_ids:
             doc_ids = [item["document_id"] for item in rerank_candidates]
+        doc_ids = _prepend_recent_relevant_docs(question, keywords, rerank_candidates, doc_ids)
         logger.info(
             "rerank.done req=%s selected=%s elapsed=%.2fs",
             request_id,

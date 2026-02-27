@@ -1,0 +1,272 @@
+[
+  {
+    "id": "A01",
+    "language": "va",
+    "question": "Quines ajudes es van aprovar per als vehicles sinistrats per la DANA, de quina quantia eren i qui les podia demanar?",
+    "must_include": ["ajud", "vehicle"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A02",
+    "language": "es",
+    "question": "¿Qué becas o ayudas para estudios universitarios se publicaron en octubre de 2025 y quién podía solicitarlas?",
+    "must_include": ["octubre", "2025"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A03",
+    "language": "va",
+    "question": "Quin és el termini de presentació de sol·licituds de la convocatòria que cita la referència 2025/XXXX?",
+    "must_include": ["2025/", "termini"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A04",
+    "language": "es",
+    "question": "¿Qué subvenciones de movilidad o transporte se publicaron esta semana?",
+    "must_include": ["movilidad", "transporte"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A05",
+    "language": "va",
+    "question": "Resumeix els requisits de beneficiaris i les quanties de la convocatòria més recent relacionada amb habitatge.",
+    "must_include": ["benefici", "quant"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": true
+  },
+  {
+    "id": "A06",
+    "language": "es",
+    "question": "¿Qué ayudas urgentes de alquiler se han publicado para personas afectadas por incendios en Valencia?",
+    "must_include": ["alquiler", "incend"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A07",
+    "language": "va",
+    "question": "S'ha publicat alguna convocatòria d'ajudes per a municipis afectats per pluges intenses?",
+    "must_include": ["ajud", "municip"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A08",
+    "language": "es",
+    "question": "¿Qué plazo tenían las solicitudes de ayudas para vehículos siniestrados publicadas en febrero de 2026?",
+    "must_include": ["plazo", "febrero"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A09",
+    "language": "va",
+    "question": "Quines subvencions de transport escolar s'han convocat enguany i amb quina quantia màxima?",
+    "must_include": ["transport", "quant"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A10",
+    "language": "es",
+    "question": "Resume las bases de las becas universitarias más recientes indicando requisitos y cuantías.",
+    "must_include": ["bases", "cuant"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A11",
+    "language": "va",
+    "question": "Hi ha resolucions de concessió parcial d'ajudes per danys de la DANA?",
+    "must_include": ["concess", "dana"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A12",
+    "language": "es",
+    "question": "¿Qué ayudas para modernización agraria se publicaron en enero de 2026?",
+    "must_include": ["enero", "2026"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A13",
+    "language": "va",
+    "question": "Quines convocatòries de subvencions a entitats locals han eixit este mes?",
+    "must_include": ["subvenc", "entitat"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A14",
+    "language": "es",
+    "question": "¿Se publicó una corrección de errores de alguna convocatoria de ayudas de vivienda?",
+    "must_include": ["corrección", "vivienda"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A15",
+    "language": "va",
+    "question": "Necessite saber si hi ha noves ajudes per a autònoms afectats per inundacions.",
+    "must_include": ["ajud", "autònom"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A16",
+    "language": "es",
+    "question": "¿Qué subvenciones de movilidad sostenible se han convocado para ayuntamientos?",
+    "must_include": ["movilidad", "ayuntamiento"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A17",
+    "language": "va",
+    "question": "Quines beques de formació professional s'han publicat en 2025?",
+    "must_include": ["bequ", "2025"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A18",
+    "language": "es",
+    "question": "¿Qué ayudas para transporte de personas con discapacidad están vigentes según DOGV?",
+    "must_include": ["transporte", "discap"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A19",
+    "language": "va",
+    "question": "Hi ha publicacions sobre subvencions de rehabilitació d'habitatges en municipis xicotets?",
+    "must_include": ["rehabilit", "habitat"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A20",
+    "language": "es",
+    "question": "¿Qué importe máximo tienen las ayudas de alquiler para personas jóvenes en 2026?",
+    "must_include": ["importe", "joven"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A21",
+    "language": "va",
+    "question": "Quins terminis de sol·licitud tenen les ajudes de mobilitat universitària més recents?",
+    "must_include": ["termin", "mobilitat"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A22",
+    "language": "es",
+    "question": "¿Se han publicado ayudas de transporte escolar para alumnado de zonas rurales?",
+    "must_include": ["transporte escolar", "rural"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A23",
+    "language": "va",
+    "question": "Resumeix les condicions de beneficiaris de les ajudes d'emergència habitacional publicades enguany.",
+    "must_include": ["benefici", "emerg"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A24",
+    "language": "es",
+    "question": "¿Qué convocatorias de subvenciones de eficiencia energética en vivienda se publicaron en 2025?",
+    "must_include": ["eficiencia", "vivienda"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A25",
+    "language": "va",
+    "question": "Quines ajudes per a pimes relacionades amb transport sostenible s'han publicat aquest trimestre?",
+    "must_include": ["pime", "transport"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A26",
+    "language": "es",
+    "question": "¿Qué documentos recientes incluyen cuantías para ayudas de vivienda habitual?",
+    "must_include": ["cuant", "vivienda"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A27",
+    "language": "va",
+    "question": "S'han publicat convocatòries d'ajudes de desplaçament per a estudiants universitaris?",
+    "must_include": ["estudiant", "despla"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A28",
+    "language": "es",
+    "question": "¿Qué ayudas de movilidad para personas mayores se han publicado este año?",
+    "must_include": ["movilidad", "mayor"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A29",
+    "language": "va",
+    "question": "Quines subvencions de transport públic per a municipis han tingut ampliació de termini?",
+    "must_include": ["transport públic", "termin"],
+    "must_not_include": [],
+    "required_citations": 1,
+    "critical": false
+  },
+  {
+    "id": "A30",
+    "language": "es",
+    "question": "Resume las ayudas más recientes vinculadas a vivienda y transporte, con requisitos y plazos.",
+    "must_include": ["vivienda", "transporte"],
+    "must_not_include": [],
+    "required_citations": 2,
+    "critical": false
+  }
+]

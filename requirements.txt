@@ -1,4 +1,4 @@
-fastapi==0.115.0
+fastapi==0.116.1
 uvicorn[standard]==0.30.6
 requests==2.32.3
 httpx==0.28.1
@@ -15,3 +15,5 @@ langgraph==0.2.32
 pgvector==0.2.5
 psycopg2-binary==2.9.9
 transformers==4.45.2
+pytest==8.3.3
+pytest-cov==5.0.0
