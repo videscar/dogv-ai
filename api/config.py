@@ -7,11 +7,6 @@ class Settings(BaseSettings):
     dogv_base_url: str = "https://dogv.gva.es"
     database_url: str = "postgresql+psycopg2://dogv_ai:dogv_ai@localhost:5432/dogv_ai"
     dogv_db_dsn: str | None = None
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "gpt-oss-20b-high"
-    ollama_embed_model: str = "bge-m3"
-    ollama_timeout: int = 300
-    ollama_num_ctx: int = 65536
     llm_base_url: str = "http://127.0.0.1:8000"
     llm_model: str = "qwen3.6-27b"
     llm_timeout: int = 300
@@ -95,6 +90,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_prefix="",
         case_sensitive=False,
+        extra="ignore",
     )
 
 @lru_cache()

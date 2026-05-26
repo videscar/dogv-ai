@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 import re
 
-from .ollama import OllamaClient
+from .llm import LlmClient
 from .temporal import has_relative_time_expression
 
 _STOPWORDS = {
@@ -443,7 +443,7 @@ def llm_expand_query(
         if isinstance(raw_keywords, list):
             keywords = [str(item) for item in raw_keywords if isinstance(item, str)]
 
-    client = OllamaClient()
+    client = LlmClient()
     messages = [
         {"role": "system", "content": EXPAND_SYSTEM},
         {

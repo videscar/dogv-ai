@@ -21,7 +21,7 @@ from sqlalchemy.orm import Session
 from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
 from api.intent import analyze_intent, analyze_intent_and_expand
-from api.ollama import OllamaClient
+from api.embed import EmbedClient
 from api.query_expansion import (
     build_bm25_queries,
     build_prf_query,
@@ -256,7 +256,7 @@ def _collect_facet_specs(
     question: str,
     intent: dict[str, Any],
     expansion: dict[str, list[str]] | None,
-    client: OllamaClient,
+    client: EmbedClient,
     embed_cache: dict[str, list[float]],
 ) -> tuple[list[list[float]], list[tuple[str, str | None]]]:
     max_facets = max(1, getattr(settings, "ask_max_facets", 3))
@@ -902,7 +902,7 @@ def main() -> int:
     run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     os.makedirs(args.output_dir, exist_ok=True)
 
-    client = OllamaClient()
+    client = EmbedClient()
     embed_cache: dict[str, list[float]] = {}
 
     summary_counts: dict[str, dict[str, int]] = {}
@@ -1180,8 +1180,8 @@ def main() -> int:
             "chunk_min_tokens": settings.chunk_min_tokens,
             "chunk_max_tokens": settings.chunk_max_tokens,
             "chunk_overlap_tokens": settings.chunk_overlap_tokens,
-            "ollama_model": settings.ollama_model,
-            "ollama_embed_model": settings.ollama_embed_model,
+            "llm_model": settings.llm_model,
+            "embed_model": settings.embed_model,
             "fast_intent": args.fast_intent,
             "skip_rerank_llm": args.skip_rerank_llm,
         },

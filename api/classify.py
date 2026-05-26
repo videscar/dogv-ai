@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .ollama import OllamaClient
+from .llm import LlmClient
 
 
 CLASSIFY_SYSTEM = (
@@ -49,5 +49,5 @@ def classify_document(
         {"role": "system", "content": CLASSIFY_SYSTEM},
         {"role": "user", "content": CLASSIFY_USER.format(title=title or "", excerpt=excerpt)},
     ]
-    client = OllamaClient(base_url=base_url, model=model, timeout=timeout)
+    client = LlmClient(base_url=base_url, model=model, timeout=timeout)
     return client.chat_json(messages, temperature=0.0)

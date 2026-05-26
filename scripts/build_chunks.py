@@ -24,7 +24,7 @@ except ImportError:
 
 from api.config import get_settings
 from api.db import SessionLocal
-from api.ollama import OllamaClient
+from api.embed import EmbedClient
 from api.models import DogvDocument, DogvIssue
 from api.retrieval import ts_config_for_language
 
@@ -40,7 +40,7 @@ _TOKENIZER_MAP = {
 
 
 def _embed_with_retry(
-    client: OllamaClient,
+    client: EmbedClient,
     text: str,
     attempts: int = 4,
     raise_on_fail: bool = True,
@@ -126,7 +126,7 @@ def _prepare_embed_text(text: str) -> str:
 
 
 def _embed_batch_with_retry(
-    client: OllamaClient,
+    client: EmbedClient,
     batch: list[str],
     attempts: int = 3,
 ) -> list[list[float]]:
@@ -154,7 +154,7 @@ def _embed_batch_with_retry(
 
 
 def _embed_chunks_individual(
-    client: OllamaClient,
+    client: EmbedClient,
     chunks: list[str],
     embed_sleep_ms: int = 0,
 ) -> list[list[float]]:
@@ -188,7 +188,7 @@ def _normalize_chunk_text(text: str) -> str:
 def _load_embed_tokenizer() -> Any | None:
     if AutoTokenizer is None:
         return None
-    model = (settings.ollama_embed_model or "").strip()
+    model = (settings.embed_model or "").strip()
     if not model:
         return None
     repo = _TOKENIZER_MAP.get(model, model)
@@ -350,7 +350,7 @@ def build_chunks_for_range(
     use_embed_batch: bool = True,
     embed_sleep_ms: int = 0,
 ) -> int:
-    client = OllamaClient()
+    client = EmbedClient()
     tokenizer = _load_embed_tokenizer()
     if tokenizer is None:
         raise RuntimeError("Tokenizer unavailable. Install transformers and ensure the model tokenizer loads.")

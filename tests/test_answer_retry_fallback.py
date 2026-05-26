@@ -29,7 +29,7 @@ class _AlwaysFailClient:
 
 def test_build_answer_retries_once_before_fallback(monkeypatch):
     _FlakyClient.calls = 0
-    monkeypatch.setattr(answer, "OllamaClient", _FlakyClient)
+    monkeypatch.setattr(answer, "LlmClient", _FlakyClient)
 
     result = answer.build_answer(
         question="Resume las bases y cuantías de las ayudas para jóvenes.",
@@ -43,7 +43,7 @@ def test_build_answer_retries_once_before_fallback(monkeypatch):
 
 
 def test_build_answer_falls_back_after_retry_exhausted(monkeypatch):
-    monkeypatch.setattr(answer, "OllamaClient", _AlwaysFailClient)
+    monkeypatch.setattr(answer, "LlmClient", _AlwaysFailClient)
 
     result = answer.build_answer(
         question="¿Qué importe máximo tienen las ayudas para jóvenes?",

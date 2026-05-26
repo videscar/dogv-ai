@@ -1,10 +1,10 @@
 """
-Classify DOGV documents by topic/subtopic using gpt-oss-20b.
+Classify DOGV documents by topic/subtopic via the local llama-server.
 
 Usage:
     python scripts/classify_documents.py [YYYY-MM-DD [YYYY-MM-DD]]
     python scripts/classify_documents.py [YYYY-MM-DD [YYYY-MM-DD]] --workers 2
-    python scripts/classify_documents.py [YYYY-MM-DD [YYYY-MM-DD]] --workers 2 --ollama-urls http://127.0.0.1:11434,http://127.0.0.1:11435
+    python scripts/classify_documents.py [YYYY-MM-DD [YYYY-MM-DD]] --workers 2 --llm-urls http://127.0.0.1:8000,http://127.0.0.1:8002
 """
 
 import argparse
@@ -33,7 +33,7 @@ def _default_workers() -> int:
         return 2
 
 
-def _parse_ollama_urls(raw: str | None) -> list[str]:
+def _parse_llm_urls(raw: str | None) -> list[str]:
     if not raw:
         return []
     urls = [url.strip().rstrip("/") for url in raw.split(",") if url.strip()]
@@ -95,11 +95,11 @@ def classify_range(
     batch_size: int = 200,
     commit_every: int = 200,
     workers: int | None = None,
-    ollama_urls: list[str] | None = None,
+    llm_urls: list[str] | None = None,
 ) -> int:
     workers = max(1, workers or _default_workers())
-    ollama_urls = ollama_urls or _parse_ollama_urls(os.getenv("DOGV_CLASSIFY_OLLAMA_URLS"))
-    endpoint_count = len(ollama_urls)
+    llm_urls = llm_urls or _parse_llm_urls(os.getenv("DOGV_CLASSIFY_LLM_URLS"))
+    endpoint_count = len(llm_urls)
     total = _count_target_documents(db, start_date, end_date)
     if endpoint_count > 0:
         print(f"Found {total} documents to classify (workers={workers}, endpoints={endpoint_count})")
@@ -122,7 +122,7 @@ def classify_range(
             results: dict[int, tuple[dict[str, Any] | None, str | None]] = {}
             if executor is None:
                 for index, doc in enumerate(docs):
-                    base_url = ollama_urls[index % endpoint_count] if endpoint_count else None
+                    base_url = llm_urls[index % endpoint_count] if endpoint_count else None
                     _, result, error = _classify_task(doc.id, doc.title, doc.text, base_url=base_url)
                     results[doc.id] = (result, error)
             else:
@@ -132,7 +132,7 @@ def classify_range(
                         doc.id,
                         doc.title,
                         doc.text,
-                        ollama_urls[index % endpoint_count] if endpoint_count else None,
+                        llm_urls[index % endpoint_count] if endpoint_count else None,
                     )
                     for index, doc in enumerate(docs)
                 ]
@@ -175,10 +175,10 @@ def main():
     parser.add_argument("--commit-every", type=int, default=200)
     parser.add_argument("--workers", type=int, default=_default_workers())
     parser.add_argument(
-        "--ollama-urls",
+        "--llm-urls",
         type=str,
-        default=os.getenv("DOGV_CLASSIFY_OLLAMA_URLS", ""),
-        help="Comma-separated Ollama base URLs for classification load split.",
+        default=os.getenv("DOGV_CLASSIFY_LLM_URLS", ""),
+        help="Comma-separated llama-server base URLs for classification load split.",
     )
     args = parser.parse_args()
 
@@ -194,7 +194,7 @@ def main():
             batch_size=args.batch_size,
             commit_every=args.commit_every,
             workers=args.workers,
-            ollama_urls=_parse_ollama_urls(args.ollama_urls),
+            llm_urls=_parse_llm_urls(args.llm_urls),
         )
     finally:
         db.close()

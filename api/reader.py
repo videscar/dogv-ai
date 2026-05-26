@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 import re
 
-from .ollama import OllamaClient
+from .llm import LlmClient
 
 
 READER_SYSTEM = (
@@ -806,7 +806,7 @@ def extract_evidence(
             f"extractos:\n{chunks}"
         )
 
-    client = OllamaClient()
+    client = LlmClient()
     messages = [
         {"role": "system", "content": READER_SYSTEM},
         {"role": "user", "content": READER_USER.format(question=question, docs="\n\n---\n\n".join(blocks))},

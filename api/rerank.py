@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from .config import get_settings
-from .ollama import OllamaClient
+from .llm import LlmClient
 
 
 RERANK_SYSTEM = (
@@ -58,7 +58,7 @@ def rerank_titles(
 
     lines = [_format_candidate(item) for item in candidates]
 
-    client = OllamaClient(timeout=min(settings.ollama_timeout, RERANK_TIMEOUT))
+    client = LlmClient(timeout=min(settings.llm_timeout, RERANK_TIMEOUT))
     messages = [
         {"role": "system", "content": RERANK_SYSTEM},
         {

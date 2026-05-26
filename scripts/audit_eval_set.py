@@ -15,7 +15,8 @@ except ImportError:
 
 from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
-from api.ollama import OllamaClient
+from api.embed import EmbedClient
+from api.llm import LlmClient
 from api.query_expansion import build_bm25_queries, guess_language
 from api.retrieval import (
     RetrievalFilters,
@@ -199,7 +200,7 @@ def _retrieve_candidate_ids(
     language: str | None,
     max_candidates: int,
 ) -> tuple[list[int], list[dict[str, Any]], list[float] | None]:
-    client = OllamaClient(timeout=min(settings.ollama_timeout, 90))
+    client = EmbedClient(timeout=min(settings.embed_timeout, 90))
     lanes = enabled_lanes(settings)
     query_embedding: list[float] | None = None
     intent = {
@@ -397,7 +398,7 @@ def _llm_audit(
     existing_doc_ids: list[int],
     candidates: list[dict[str, Any]],
 ) -> tuple[list[list[int]], str, str]:
-    client = OllamaClient(timeout=min(settings.ollama_timeout, 45))
+    client = LlmClient(timeout=min(settings.llm_timeout, 45))
     messages = [
         {"role": "system", "content": AUDIT_SYSTEM},
         {
@@ -430,7 +431,7 @@ def _llm_verify_change(
 ) -> tuple[str, str]:
     if not legacy_set or not proposed_sets:
         return "accept_proposed", ""
-    client = OllamaClient(timeout=min(settings.ollama_timeout, 90))
+    client = LlmClient(timeout=min(settings.llm_timeout, 90))
     candidate_lines = []
     for row in candidates:
         candidate_lines.append(

@@ -111,7 +111,7 @@ class _RepairSuccessClient:
 def test_build_answer_fixes_missing_citations_without_repair(monkeypatch):
     _set_defaults(monkeypatch)
     _StructuralOnlyClient.calls = 0
-    monkeypatch.setattr(answer, "OllamaClient", _StructuralOnlyClient)
+    monkeypatch.setattr(answer, "LlmClient", _StructuralOnlyClient)
 
     result = answer.build_answer(
         question="Cual es la cuantia maxima de la ayuda?",
@@ -130,7 +130,7 @@ def test_build_answer_fixes_missing_citations_without_repair(monkeypatch):
 def test_build_answer_clamps_out_of_scope_citations_without_repair(monkeypatch):
     _set_defaults(monkeypatch)
     _OutOfScopeCitationClient.calls = 0
-    monkeypatch.setattr(answer, "OllamaClient", _OutOfScopeCitationClient)
+    monkeypatch.setattr(answer, "LlmClient", _OutOfScopeCitationClient)
 
     result = answer.build_answer(
         question="Cual es la cuantia maxima de la ayuda?",
@@ -149,7 +149,7 @@ def test_build_answer_clamps_out_of_scope_citations_without_repair(monkeypatch):
 def test_build_answer_uses_conditional_repair_for_semantic_errors(monkeypatch):
     _set_defaults(monkeypatch)
     _RepairSuccessClient.calls = 0
-    monkeypatch.setattr(answer, "OllamaClient", _RepairSuccessClient)
+    monkeypatch.setattr(answer, "LlmClient", _RepairSuccessClient)
 
     result = answer.build_answer(
         question="Cual es la cuantia maxima de la ayuda?",

@@ -20,7 +20,7 @@ from api.auto_ingest import (
 from api.config import enabled_lanes, get_settings
 from api.dogv_urls import build_html_url, build_pdf_url
 from api.intent import analyze_intent, analyze_intent_and_expand
-from api.ollama import OllamaClient
+from api.embed import EmbedClient
 from api.query_expansion import (
     build_bm25_queries,
     build_prf_query,
@@ -673,7 +673,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
     bm25_limit = max(10, settings.ask_bm25_max_docs)
     min_docs = max(1, getattr(settings, "ask_min_docs", 3))
     try:
-        client = OllamaClient()
+        client = EmbedClient()
         max_facets = max(1, getattr(settings, "ask_max_facets", 3))
         embeddings = client.embed_batch([question])
         if not embeddings or len(embeddings) != 1:

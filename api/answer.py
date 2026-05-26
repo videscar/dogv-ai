@@ -5,7 +5,7 @@ import re
 from typing import Any
 
 from .config import get_settings
-from .ollama import OllamaClient
+from .llm import LlmClient
 
 
 ANSWER_SYSTEM = (
@@ -70,7 +70,7 @@ Notas:
 
 settings = get_settings()
 logger = logging.getLogger("dogv.answer")
-ANSWER_TIMEOUT = settings.ollama_timeout
+ANSWER_TIMEOUT = settings.llm_timeout
 ANSWER_CHAT_RETRIES = 1
 
 _REFERENCE_RE = re.compile(r"\b\d{4}/[A-Za-z0-9Xx]+\b")
@@ -660,7 +660,7 @@ def _validate_answer(
 
 
 def _chat_json_with_retry(
-    client: OllamaClient,
+    client: LlmClient,
     messages: list[dict[str, str]],
     temperature: float,
 ) -> dict[str, Any]:
@@ -683,7 +683,7 @@ def _chat_json_with_retry(
 
 def _repair_answer_once(
     *,
-    client: OllamaClient,
+    client: LlmClient,
     question: str,
     language: str,
     evidence_block: str,
@@ -718,7 +718,7 @@ def build_answer(
     evidence: list[dict[str, Any]],
     full_docs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    client = OllamaClient(timeout=ANSWER_TIMEOUT)
+    client = LlmClient(timeout=ANSWER_TIMEOUT)
     evidence_block = _format_evidence(evidence) or "Ninguna."
     full_docs_block = _format_full_docs(full_docs)
     missing_notes = (

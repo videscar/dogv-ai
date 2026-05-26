@@ -18,7 +18,7 @@ class _AlwaysSemanticFailClient:
 
 
 def _set_defaults(monkeypatch) -> None:
-    monkeypatch.setattr(answer, "OllamaClient", _AlwaysSemanticFailClient)
+    monkeypatch.setattr(answer, "LlmClient", _AlwaysSemanticFailClient)
     monkeypatch.setattr(answer.settings, "answer_mutators_enabled", False)
     monkeypatch.setattr(answer.settings, "answer_validator_enabled", True)
     monkeypatch.setattr(answer.settings, "answer_missing_notes_enabled", False)

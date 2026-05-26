@@ -4,7 +4,7 @@ from datetime import date, datetime
 import re
 from typing import Any
 
-from .ollama import OllamaClient
+from .llm import LlmClient
 from .query_expansion import normalize_expansion_terms
 from .taxonomy import canonical_doc_kind, canonical_doc_subkind, normalize_text
 
@@ -210,7 +210,7 @@ def _string_list(value: Any) -> list[str]:
 
 
 def analyze_intent(question: str) -> dict[str, Any]:
-    client = OllamaClient()
+    client = LlmClient()
     messages = [
         {"role": "system", "content": INTENT_SYSTEM},
         {"role": "user", "content": INTENT_USER.format(question=question)},
@@ -225,7 +225,7 @@ def analyze_intent_and_expand(
     max_phrases: int = 4,
     max_tokens: int = 8,
 ) -> tuple[dict[str, Any], dict[str, list[str]]]:
-    client = OllamaClient()
+    client = LlmClient()
     messages = [
         {"role": "system", "content": INTENT_EXPAND_SYSTEM},
         {"role": "user", "content": INTENT_EXPAND_USER.format(question=question)},
