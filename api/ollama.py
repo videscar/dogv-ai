@@ -15,21 +15,65 @@ settings = get_settings()
 logger = logging.getLogger("dogv.ollama")
 
 
+def _extract_first_json_object(text: str) -> str | None:
+    start = text.find("{")
+    while start != -1:
+        depth = 0
+        in_string = False
+        escaped = False
+        for idx in range(start, len(text)):
+            ch = text[idx]
+            if in_string:
+                if escaped:
+                    escaped = False
+                elif ch == "\\":
+                    escaped = True
+                elif ch == '"':
+                    in_string = False
+                continue
+
+            if ch == '"':
+                in_string = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return text[start : idx + 1]
+        start = text.find("{", start + 1)
+    return None
+
+
 def _json_from_text(text: str) -> dict[str, Any] | None:
     """
     Best-effort JSON extraction from model output.
     """
+    text = (text or "").strip()
+    if not text:
+        return None
+
     try:
-        return json.loads(text)
+        parsed = json.loads(text)
+        return parsed if isinstance(parsed, dict) else None
     except json.JSONDecodeError:
         pass
 
-    match = re.search(r"\{.*\}", text, re.DOTALL)
-    if match:
+    fence_match = re.search(r"```(?:json)?\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
+    if fence_match:
         try:
-            return json.loads(match.group(0))
+            parsed = json.loads(fence_match.group(1).strip())
+            return parsed if isinstance(parsed, dict) else None
         except json.JSONDecodeError:
-            return None
+            pass
+
+    candidate = _extract_first_json_object(text)
+    if candidate:
+        try:
+            parsed = json.loads(candidate)
+            return parsed if isinstance(parsed, dict) else None
+        except json.JSONDecodeError:
+            pass
+
     return None
 
 
@@ -74,7 +118,12 @@ class OllamaClient:
         self.embed_model = embed_model or settings.ollama_embed_model
         self.timeout = timeout if timeout is not None else settings.ollama_timeout
 
-    def chat(self, messages: list[dict[str, str]], temperature: float = 0.2) -> str:
+    def chat(
+        self,
+        messages: list[dict[str, str]],
+        temperature: float = 0.2,
+        response_format: str | dict[str, Any] | None = None,
+    ) -> str:
         start = time.monotonic()
         ok = False
         options: dict[str, Any] = {"temperature": temperature}
@@ -86,6 +135,8 @@ class OllamaClient:
             "stream": False,
             "options": options,
         }
+        if response_format is not None:
+            payload["format"] = response_format
         try:
             resp = requests.post(
                 f"{self.base_url}/api/chat",
@@ -98,16 +149,21 @@ class OllamaClient:
             return data.get("message", {}).get("content", "").strip()
         finally:
             logger.info(
-                "ollama.chat ok=%s model=%s messages=%s elapsed=%.2fs",
+                "ollama.chat ok=%s model=%s messages=%s format=%s elapsed=%.2fs",
                 ok,
                 self.model,
                 len(messages),
+                "json" if response_format else "none",
                 time.monotonic() - start,
             )
 
     def chat_json(self, messages: list[dict[str, str]], temperature: float = 0.0) -> dict[str, Any]:
-        text = self.chat(messages, temperature=temperature)
+        text = self.chat(messages, temperature=temperature, response_format="json")
         parsed = _json_from_text(text)
+        if parsed is None:
+            # Fallback pass without explicit format for servers/models that ignore it.
+            text = self.chat(messages, temperature=temperature)
+            parsed = _json_from_text(text)
         if parsed is None:
             raise ValueError(f"Failed to parse JSON from model output: {text[:500]}")
         return parsed
