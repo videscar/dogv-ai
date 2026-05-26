@@ -35,7 +35,7 @@ class BackendHttpError(BackendError):
 @dataclass
 class DogvApiClient:
     base_url: str
-    timeout_seconds: float = 60.0
+    timeout_seconds: float | None = 60.0
 
     async def get_ready(self) -> dict[str, Any]:
         return await self._request_json("GET", "/ready")
@@ -51,8 +51,9 @@ class DogvApiClient:
         json: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         base_url = self.base_url.rstrip("/")
+        timeout = None if self.timeout_seconds is None else float(self.timeout_seconds)
         try:
-            async with httpx.AsyncClient(base_url=base_url, timeout=self.timeout_seconds) as client:
+            async with httpx.AsyncClient(base_url=base_url, timeout=timeout) as client:
                 response = await client.request(method, path, json=json)
         except httpx.TimeoutException as exc:
             raise BackendTimeoutError("Request timed out") from exc
@@ -85,4 +86,3 @@ def _response_detail(response: httpx.Response) -> Any:
         return payload
     except ValueError:
         return response.text
-

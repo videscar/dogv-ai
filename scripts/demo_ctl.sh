@@ -62,7 +62,9 @@ start_chainlit() {
   fi
 
   echo "Starting Chainlit on ${CHAINLIT_HOST}:${CHAINLIT_PORT}"
-  nohup "${CHAINLIT_BIN}" run ui/chainlit_app.py --host "${CHAINLIT_HOST}" --port "${CHAINLIT_PORT}" >"${CHAINLIT_LOG_FILE}" 2>&1 &
+  # Chainlit maps DEBUG env var to its --debug flag and expects a boolean.
+  # Force DEBUG to a valid value and disable auto-browser open in remote sessions.
+  nohup env DEBUG=0 BROWSER= "${CHAINLIT_BIN}" run ui/chainlit_app.py --headless --host "${CHAINLIT_HOST}" --port "${CHAINLIT_PORT}" >"${CHAINLIT_LOG_FILE}" 2>&1 &
   local pid=$!
   echo "${pid}" >"${CHAINLIT_PID_FILE}"
   sleep 1

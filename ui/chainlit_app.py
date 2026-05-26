@@ -51,7 +51,25 @@ except ModuleNotFoundError:
 
 
 BACKEND_URL = os.getenv("CHAINLIT_BACKEND_URL", "http://127.0.0.1:8000")
-REQUEST_TIMEOUT_SECONDS = float(os.getenv("DEMO_REQUEST_TIMEOUT_SECONDS", "60"))
+
+
+def _parse_request_timeout(value: str | None) -> float | None:
+    raw = (value or "").strip()
+    if not raw:
+        return 60.0
+    lowered = raw.lower()
+    if lowered in {"none", "inf", "infinite", "infinity"}:
+        return None
+    try:
+        parsed = float(raw)
+    except ValueError:
+        return 60.0
+    if parsed <= 0:
+        return None
+    return parsed
+
+
+REQUEST_TIMEOUT_SECONDS = _parse_request_timeout(os.getenv("DEMO_REQUEST_TIMEOUT_SECONDS"))
 
 TIMEOUT_MESSAGE = (
     "La consulta ha tardado demasiado y se ha cancelado por timeout. "
