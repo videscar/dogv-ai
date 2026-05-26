@@ -1,7 +1,7 @@
 # DOGV AI Demo Readiness Plan (Chainlit) for February 26, 2026
 
 ## Summary
-This plan targets a single-host demo stack (Postgres + Ollama + FastAPI + Chainlit), with scripted single-turn QA and a hard dual release gate (retrieval + answer quality).
+This plan targets a single-host demo stack (Postgres + local LLM runtime + FastAPI + Chainlit), with scripted single-turn QA and a hard dual release gate (retrieval + answer quality).
 
 Status snapshot updated: February 26, 2026.
 
@@ -16,7 +16,7 @@ Current repo status (as of February 26, 2026):
 - Answer-quality gate artifacts are implemented (`data/eval_answer_demo_v1.json`, `scripts/run_answer_eval.py`, `scripts/check_answer_eval_gate.py`, `scripts/demo_release_gate.sh`).
 - Runtime answer mutators are disabled by default; validator + single repair attempt + fallback is enabled.
 - Automated tests are present and passing in `.venv` (`35 passed`).
-- `scripts/run_eval_parallel.py` still hardcodes `/usr/local/bin/ollama` (deferred because parallel eval is out of scope for this demo run).
+- Parallel eval orchestration is out of scope for this demo run.
 - Retrieval regression run completed and passing:
   - report: `data/eval_reports/ret_20260225T204311Z.json`
   - `check_eval_regression.py`: no recall regressions
@@ -49,7 +49,7 @@ Current repo status (as of February 26, 2026):
 - `auto_ingest_gap_repair_scan_max_days` caps source-check scan window only (not the final repair execution semantics).
 - Persist gap-check failures with one active row per `(issue_date, language)` via upsert semantics.
 - `scripts/retry_gap_source_checks.py` retries checks and triggers ingestion immediately when source is confirmed.
-- Skip parallel eval portability work for this demo cycle (`scripts/run_eval_parallel.py` remains non-blocking).
+- Skip parallel eval portability work for this demo cycle (non-blocking).
 - Answer eval dataset schema uses: `id`, `language`, `question`, `must_include`, `must_not_include`, `required_citations`, `critical`.
 - Answer gate scoring now uses hard faithfulness (`aggregate_hard_score`) with lexical recall diagnostics (non-blocking); pass threshold `>= 0.85`; all critical prompts must pass.
 - Runtime answer mutators are disabled by default and replaced by deterministic validation + one repair attempt + evidence fallback.
@@ -148,7 +148,7 @@ Status: Done on February 9, 2026.
 Status: Done on February 23, 2026.
 Implementation choices:
 - Add `pytest` and `pytest-cov` to `requirements.txt`.
-- Test files should mock external dependencies (Ollama/network-heavy retrieval paths) for deterministic execution.
+- Test files should mock external dependencies (LLM/network-heavy retrieval paths) for deterministic execution.
 - Smoke runner validates live behavior against an already-running API endpoint.
 1. Add test deps: `pytest`, `pytest-cov`.
 2. Add tests:
@@ -199,7 +199,7 @@ Implementation choices:
 3. Add `scripts/retry_gap_source_checks.py`.
 4. Add ingestion reliability tests:
 - `tests/test_auto_ingest_gap_retry.py`
-5. Defer `scripts/run_eval_parallel.py` portability updates to post-demo backlog.
+5. Defer parallel-eval orchestration to a post-demo backlog (no script committed).
 DoD:
 1. `api/config.py` and `.env.example` include:
 - `AUTO_INGEST_GAP_CHECK_RETRIES`
@@ -342,7 +342,7 @@ DoD:
 - finalize February 24 entry status (executed/not executed)
 - finalize February 25 freeze decision
 - run and log February 26 pre-demo checklist
-4. Post-demo backlog: `scripts/run_eval_parallel.py` portability cleanup if parallel eval is needed later.
+4. Post-demo backlog: rebuild a parallel-eval orchestrator on the new llama.cpp runtime if parallel eval is needed later.
 
 ## Test Scenarios
 1. Readiness:

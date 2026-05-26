@@ -9,6 +9,7 @@ __pycache__/
 .venv/
 .env
 .env.*
+!.env.example
 
 # Data
 data/pdf_cache/
@@ -24,4 +25,3 @@ data/missing_chunks_detailed_*.csv
 # Misc
 .ipynb_checkpoints/
 logs/
-ollama/
