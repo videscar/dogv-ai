@@ -17,7 +17,7 @@ RERANK_SYSTEM = (
 )
 
 settings = get_settings()
-RERANK_TIMEOUT = 45
+RERANK_TIMEOUT = 120
 
 RERANK_USER = """Pregunta:
 {question}
@@ -73,7 +73,7 @@ def rerank_titles(
 
     doc_ids: list[int] = []
     try:
-        result = client.chat_json(messages, temperature=0.0)
+        result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
         doc_ids = [int(x) for x in (result.get("doc_ids") or [])]
     except Exception:
         pass
