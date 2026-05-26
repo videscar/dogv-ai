@@ -1,11 +1,11 @@
 # AGENTS.md
 
-Project: DOGV AI local assistant (FastAPI + LangGraph + PostgreSQL + Ollama).
+Project: DOGV AI local assistant (FastAPI + LangGraph + PostgreSQL + llama.cpp).
 This file guides coding agents working in this repo.
 
 ## Environment
 - Python deps: `pip install -r requirements.txt` (prefer existing `.venv`).
-- Copy `.env.example` to `.env` and set `DOGV_DB_DSN`, `DATABASE_URL`, `OLLAMA_BASE_URL`, model names, etc.
+- Copy `.env.example` to `.env` and set `DOGV_DB_DSN`, `DATABASE_URL`, `LLM_BASE_URL`, `EMBED_BASE_URL`, model names, etc.
 - PostgreSQL must have `pgvector` available.
 
 ## Database
@@ -14,7 +14,7 @@ This file guides coding agents working in this repo.
 - Reset tables: `python scripts/reset_db.py [--with-cache]`.
 
 ## Run the API
-- Start server: `uvicorn api.main:app --host 0.0.0.0 --port 8000`.
+- Start server: `uvicorn api.main:app --host 0.0.0.0 --port 8088` (or use `bash scripts/demo_ctl.sh start` for the full stack incl. llama-servers + Chainlit).
 - Endpoints: `GET /health`, `GET /issues`, `GET /issues/{issue_id}/documents`, `POST /ask`.
 
 ## Ingest and indexing

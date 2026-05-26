@@ -67,7 +67,7 @@ def _check_ask_timeout_path(base_url: str, question: str, timeout_seconds: float
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base-url", default="http://127.0.0.1:8000")
+    parser.add_argument("--base-url", default="http://127.0.0.1:8088")
     parser.add_argument(
         "--question",
         default="zzzzzz qqqqq no-match-token-123456789",

@@ -1,11 +1,11 @@
 # DOGV AI (local)
 
 Asistente local para consultas sobre el DOGV (empleo publico, ayudas/subvenciones/premios y becas),
-con ingesta automatizada, busqueda hibrida y respuestas citadas. Funciona 100% en local con Ollama
-y PostgreSQL (pgvector + tsvector).
+con ingesta automatizada, busqueda hibrida y respuestas citadas. Funciona 100% en local con llama.cpp
+(CUDA) y PostgreSQL (pgvector + tsvector).
 
 Estado actual (importante):
-- Ingesta/indexado en local sobre PostgreSQL + Ollama.
+- Ingesta/indexado en local sobre PostgreSQL + llama.cpp.
 - Evaluacion basada en `gold_sets` (multi-documento, cobertura estricta por set).
 
 ## Estado actual (lo que ya funciona)
@@ -64,21 +64,22 @@ Archivo: `agent/graph.py`
   - Evidencia tiene fallback lexico si el extractor LLM no devuelve pruebas.
   - Evidencia puede incluir extractos numericos si la pregunta pide cuantias.
 
-## Modelos (Ollama)
-- LLM: `gpt-oss-20b-high` (Reasoning: high en Modelfile).
-- Embeddings: `bge-m3`.
-- Contexto: `OLLAMA_NUM_CTX` (actual 65536).
-- Timeout: `OLLAMA_TIMEOUT` (segundos).
-
-Modelfile: `ollama/gpt-oss-20b-high.Modelfile`
+## Modelos (llama.cpp)
+- LLM: `qwen3.6-27b` (GGUF, servido por un `llama-server` en el puerto 8000).
+- Embeddings: `bge-m3` (GGUF, servido por un `llama-server` independiente en el puerto 8001).
+- Ambos hablan el API OpenAI-compatible (`/v1/chat/completions`, `/v1/embeddings`).
+- El stack lo orquesta `scripts/demo_ctl.sh` (chat reutilizado si ya esta en marcha, embed siempre gestionado).
 
 ## Configuracion clave (.env)
 Usa `.env.example` como plantilla. Ejemplos (valores reales en `api/config.py` y `.env`):
 - `DOGV_DB_DSN`
-- `OLLAMA_MODEL=gpt-oss-20b-high`
-- `OLLAMA_EMBED_MODEL=bge-m3`
-- `OLLAMA_NUM_CTX=65536`
-- `OLLAMA_TIMEOUT=300`
+- `LLM_BASE_URL=http://127.0.0.1:8000`
+- `LLM_MODEL=qwen3.6-27b`
+- `LLM_TIMEOUT=300`
+- `LLM_MAX_TOKENS=8192`
+- `EMBED_BASE_URL=http://127.0.0.1:8001`
+- `EMBED_MODEL=bge-m3`
+- `EMBED_TIMEOUT=60`
 - `ASK_LANES=vector,bm25,title`
 - `ASK_MAX_DOCS=20`
 - `ASK_MIN_DOCS=3`
@@ -131,7 +132,7 @@ Usa `.env.example` como plantilla. Ejemplos (valores reales en `api/config.py` y
 - `WARM_INDEX_MONTHS=24`
 - `DEMO_ENFORCE_READY_GATE=true|false`
 - `DEMO_REQUEST_TIMEOUT_SECONDS=60`
-- `CHAINLIT_BACKEND_URL=http://127.0.0.1:8000`
+- `CHAINLIT_BACKEND_URL=http://127.0.0.1:8088`
 - `CHAINLIT_ENABLE_DATA_LAYER=false|true`
 - `CHUNK_MIN_TOKENS=300`
 - `CHUNK_MAX_TOKENS=500`
@@ -164,7 +165,7 @@ Rebuild BM25 para valenciano:
 
 API:
 ```bash
-uvicorn api.main:app --host 0.0.0.0 --port 8000
+uvicorn api.main:app --host 0.0.0.0 --port 8088
 ```
 
 Chainlit UI (en otra terminal):
