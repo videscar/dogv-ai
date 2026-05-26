@@ -72,6 +72,30 @@ class QAState(TypedDict, total=False):
     backfill_attempted: bool
     feed_query: bool
     online_ingest_done: bool
+    profile: dict[str, Any]
+
+
+def _merge_profile(
+    state: QAState,
+    stage: str,
+    **metrics: Any,
+) -> dict[str, Any]:
+    profile = dict(state.get("profile") or {})
+    stage_metrics = dict(profile.get(stage) or {})
+    stage_metrics.update(metrics)
+    profile[stage] = stage_metrics
+    return profile
+
+
+def _return_with_profile(
+    state: QAState,
+    stage: str,
+    payload: dict[str, Any],
+    **metrics: Any,
+) -> QAState:
+    result = dict(payload)
+    result["profile"] = _merge_profile(state, stage, **metrics)
+    return result
 
 
 def _map_language(intent_lang: str | None) -> str:
@@ -379,37 +403,46 @@ def analyze_intent_node(state: QAState) -> QAState:
             since_date=since_date,
             until_date=until_date,
         )
+        elapsed = time.monotonic() - start
         logger.info(
             "intent.done req=%s lang=%s doc_kind=%s doc_subkind=%s elapsed=%.2fs",
             request_id,
             lang,
             doc_kind,
             doc_subkind,
-            time.monotonic() - start,
+            elapsed,
         )
-        return {
+        return _return_with_profile(
+            state,
+            "intent",
+            {
             "intent": intent,
             "language": lang,
             "filters": filters,
             "bm25_query": bm25_query,
             "bm25_strict_query": bm25_strict_query,
             "feed_query": feed_query,
-        }
+            },
+            elapsed_seconds=round(elapsed, 3),
+            fallback=False,
+            language=lang,
+        )
     except Exception as exc:
+        elapsed = time.monotonic() - start
         if debug:
             logger.warning(
                 "intent.fallback req=%s reason=%s question=%r elapsed=%.2fs",
                 request_id,
                 exc,
                 state.get("question"),
-                time.monotonic() - start,
+                elapsed,
             )
         else:
             logger.warning(
                 "intent.fallback req=%s reason=%s elapsed=%.2fs",
                 request_id,
                 exc,
-                time.monotonic() - start,
+                elapsed,
             )
         intent = {
             "language": None,
@@ -450,14 +483,22 @@ def analyze_intent_node(state: QAState) -> QAState:
             since_date=since_date,
             until_date=until_date,
         )
-        return {
+        return _return_with_profile(
+            state,
+            "intent",
+            {
             "intent": intent,
             "language": lang,
             "filters": filters,
             "bm25_query": bm25_query,
             "bm25_strict_query": bm25_strict_query,
             "feed_query": feed_query,
-        }
+            },
+            elapsed_seconds=round(elapsed, 3),
+            fallback=True,
+            language=lang,
+            error=type(exc).__name__,
+        )
 
 
 def _temporal_reject_message(language: str | None) -> str:
@@ -496,16 +537,31 @@ def _missing_ranges_from_bounds(
 
 
 def temporal_guard_node(state: QAState) -> QAState:
+    start = time.monotonic()
     policy = (settings.ask_temporal_policy or "reject").lower()
     question = state.get("question") or ""
     if policy == "reject" and is_relative_time_query(question):
         language = state.get("language") or guess_language(question)
-        return {
+        return _return_with_profile(
+            state,
+            "temporal_guard",
+            {
             "answer": _temporal_reject_message(language),
             "citations": [],
             "temporal_reject": True,
-        }
-    return {"temporal_reject": False}
+            },
+            elapsed_seconds=round(time.monotonic() - start, 3),
+            policy=policy,
+            rejected=True,
+        )
+    return _return_with_profile(
+        state,
+        "temporal_guard",
+        {"temporal_reject": False},
+        elapsed_seconds=round(time.monotonic() - start, 3),
+        policy=policy,
+        rejected=False,
+    )
 
 
 def _should_continue_after_temporal(state: QAState) -> str:
@@ -519,16 +575,32 @@ def online_ingest_node(state: QAState) -> QAState:
     request_id = state.get("request_id")
     try:
         if not settings.auto_ingest_enabled:
-            logger.info("ingest.skip req=%s reason=disabled elapsed=%.2fs", request_id, time.monotonic() - started_at)
-            return {"online_ingest_done": True}
+            elapsed = time.monotonic() - started_at
+            logger.info("ingest.skip req=%s reason=disabled elapsed=%.2fs", request_id, elapsed)
+            return _return_with_profile(
+                state,
+                "ingest",
+                {"online_ingest_done": True},
+                elapsed_seconds=round(elapsed, 3),
+                status="skipped",
+                reason="disabled",
+            )
         startup_state = (get_startup_sync_status().get("state") or "").lower()
         if startup_state == "running":
+            elapsed = time.monotonic() - started_at
             logger.info(
                 "ingest.skip req=%s reason=startup_sync_running elapsed=%.2fs",
                 request_id,
-                time.monotonic() - started_at,
+                elapsed,
             )
-            return {"online_ingest_done": True}
+            return _return_with_profile(
+                state,
+                "ingest",
+                {"online_ingest_done": True},
+                elapsed_seconds=round(elapsed, 3),
+                status="skipped",
+                reason="startup_sync_running",
+            )
 
         intent = state.get("intent") or {}
         filters = state.get("filters")
@@ -555,6 +627,7 @@ def online_ingest_node(state: QAState) -> QAState:
                     max_date=max_date,
                 )
                 if not missing_ranges:
+                    elapsed = time.monotonic() - started_at
                     logger.info(
                         "ingest.skip req=%s reason=range_already_covered start=%s end=%s min=%s max=%s elapsed=%.2fs",
                         request_id,
@@ -562,7 +635,7 @@ def online_ingest_node(state: QAState) -> QAState:
                         ingest_end,
                         min_date,
                         max_date,
-                        time.monotonic() - started_at,
+                        elapsed,
                     )
                 else:
                     for missing_start, missing_end in missing_ranges:
@@ -574,8 +647,15 @@ def online_ingest_node(state: QAState) -> QAState:
                 max_date = row["max_date"]
             if not max_date or max_date < today:
                 ensure_recent_ingested(settings.auto_ingest_max_days, DEFAULT_LANGS)
-        logger.info("ingest.done req=%s elapsed=%.2fs", request_id, time.monotonic() - started_at)
-        return {"online_ingest_done": True}
+        elapsed = time.monotonic() - started_at
+        logger.info("ingest.done req=%s elapsed=%.2fs", request_id, elapsed)
+        return _return_with_profile(
+            state,
+            "ingest",
+            {"online_ingest_done": True},
+            elapsed_seconds=round(elapsed, 3),
+            status="done",
+        )
     except Exception:
         logger.exception("ingest.error req=%s elapsed=%.2fs", request_id, time.monotonic() - started_at)
         raise
@@ -1001,6 +1081,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             _relax(RetrievalFilters(), "no_filters")
         used_fallback = "+".join(fallbacks) if fallbacks else None
 
+        elapsed = time.monotonic() - start
         logger.info(
             "retrieve.done req=%s candidates=%s chunks=%s sources=%s fallback=%s rrf_expand=%s elapsed=%.2fs",
             request_id,
@@ -1009,16 +1090,26 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             counts,
             used_fallback,
             rrf_expanded,
-            time.monotonic() - start,
+            elapsed,
         )
-        return {
+        return _return_with_profile(
+            state,
+            "retrieve",
+            {
             "candidate_docs": fused,
             "top_chunks": top_chunks,
             "chunk_candidates": chunk_candidates,
             "query_embedding": query_embedding,
             "query_embeddings": embeddings,
             "filters": filters,
-        }
+            },
+            elapsed_seconds=round(elapsed, 3),
+            candidate_docs=len(fused),
+            chunk_candidates=len(chunk_candidates),
+            fallback=used_fallback,
+            rrf_expanded=bool(rrf_expanded),
+            source_counts=counts,
+        )
     except Exception:
         logger.exception("retrieve.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
         raise
@@ -1029,14 +1120,38 @@ def backfill_node(state: QAState) -> QAState:
     request_id = state.get("request_id")
     try:
         if not settings.backfill_enabled:
-            logger.info("backfill.skip req=%s reason=disabled elapsed=%.2fs", request_id, time.monotonic() - start)
-            return {"backfill_attempted": True}
+            elapsed = time.monotonic() - start
+            logger.info("backfill.skip req=%s reason=disabled elapsed=%.2fs", request_id, elapsed)
+            return _return_with_profile(
+                state,
+                "backfill",
+                {"backfill_attempted": True},
+                elapsed_seconds=round(elapsed, 3),
+                status="skipped",
+                reason="disabled",
+            )
         if state.get("candidate_docs"):
-            logger.info("backfill.skip req=%s reason=candidates elapsed=%.2fs", request_id, time.monotonic() - start)
-            return {"backfill_attempted": True}
+            elapsed = time.monotonic() - start
+            logger.info("backfill.skip req=%s reason=candidates elapsed=%.2fs", request_id, elapsed)
+            return _return_with_profile(
+                state,
+                "backfill",
+                {"backfill_attempted": True},
+                elapsed_seconds=round(elapsed, 3),
+                status="skipped",
+                reason="candidates",
+            )
         if state.get("backfill_attempted"):
-            logger.info("backfill.skip req=%s reason=already_attempted elapsed=%.2fs", request_id, time.monotonic() - start)
-            return {"backfill_attempted": True}
+            elapsed = time.monotonic() - start
+            logger.info("backfill.skip req=%s reason=already_attempted elapsed=%.2fs", request_id, elapsed)
+            return _return_with_profile(
+                state,
+                "backfill",
+                {"backfill_attempted": True},
+                elapsed_seconds=round(elapsed, 3),
+                status="skipped",
+                reason="already_attempted",
+            )
 
         with SessionLocal() as db:
             row = db.execute(
@@ -1048,8 +1163,15 @@ def backfill_node(state: QAState) -> QAState:
             target = min_date - timedelta(days=1)
             ensure_month_ingested(target, DEFAULT_LANGS)
 
-        logger.info("backfill.done req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
-        return {"backfill_attempted": True}
+        elapsed = time.monotonic() - start
+        logger.info("backfill.done req=%s elapsed=%.2fs", request_id, elapsed)
+        return _return_with_profile(
+            state,
+            "backfill",
+            {"backfill_attempted": True},
+            elapsed_seconds=round(elapsed, 3),
+            status="done",
+        )
     except Exception:
         logger.exception("backfill.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
         raise
@@ -1186,13 +1308,22 @@ def rerank_titles_node(state: QAState) -> QAState:
         llm_top_n = min(len(rerank_candidates), max(top_n, read_max_docs))
         if len(rerank_candidates) <= llm_top_n:
             doc_ids = [item["document_id"] for item in rerank_candidates]
+            elapsed = time.monotonic() - start
             logger.info(
                 "rerank.skip req=%s candidates=%s elapsed=%.2fs",
                 request_id,
                 len(rerank_candidates),
-                time.monotonic() - start,
+                elapsed,
             )
-            return {"selected_doc_ids": doc_ids}
+            return _return_with_profile(
+                state,
+                "rerank",
+                {"selected_doc_ids": doc_ids},
+                elapsed_seconds=round(elapsed, 3),
+                skipped=True,
+                selected_docs=len(doc_ids),
+                candidate_docs=len(rerank_candidates),
+            )
         doc_ids = rerank_titles(
             question,
             rerank_candidates,
@@ -1224,13 +1355,22 @@ def rerank_titles_node(state: QAState) -> QAState:
         if not doc_ids:
             doc_ids = [item["document_id"] for item in rerank_candidates]
         doc_ids = _prepend_recent_relevant_docs(question, keywords, rerank_candidates, doc_ids)
+        elapsed = time.monotonic() - start
         logger.info(
             "rerank.done req=%s selected=%s elapsed=%.2fs",
             request_id,
             len(doc_ids),
-            time.monotonic() - start,
+            elapsed,
         )
-        return {"selected_doc_ids": doc_ids}
+        return _return_with_profile(
+            state,
+            "rerank",
+            {"selected_doc_ids": doc_ids},
+            elapsed_seconds=round(elapsed, 3),
+            skipped=False,
+            selected_docs=len(doc_ids),
+            candidate_docs=len(rerank_candidates),
+        )
     except Exception:
         logger.exception("rerank.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
         raise
@@ -1243,8 +1383,21 @@ def read_docs_node(state: QAState) -> QAState:
     request_id = state.get("request_id")
     doc_ids = state.get("selected_doc_ids") or []
     if not doc_ids:
-        logger.info("read.skip req=%s reason=no_docs elapsed=%.2fs", request_id, time.monotonic() - start)
-        return {"evidence": []}
+        elapsed = time.monotonic() - start
+        logger.info("read.skip req=%s reason=no_docs elapsed=%.2fs", request_id, elapsed)
+        return _return_with_profile(
+            state,
+            "read",
+            {"evidence": []},
+            elapsed_seconds=round(elapsed, 3),
+            skipped=True,
+            reason="no_docs",
+            docs=0,
+            chunks=0,
+            tokens_est=0,
+            full_docs=0,
+            full_tokens_est=0,
+        )
     question = state["question"]
     keywords = _extract_keywords_simple(question)
     needs_eligibility = _needs_eligibility(question)
@@ -1438,6 +1591,9 @@ def read_docs_node(state: QAState) -> QAState:
             return payload
 
         def _build_full_docs(target_ids: list[int]) -> list[dict[str, Any]]:
+            max_full_docs = int(getattr(settings, "full_doc_max_docs", 0) or 0)
+            if max_full_docs <= 0:
+                return []
             full_docs_local = []
             total_chars = 0
             for doc_id in target_ids:
@@ -1462,7 +1618,7 @@ def read_docs_node(state: QAState) -> QAState:
                     }
                 )
                 total_chars += len(text)
-                if len(full_docs_local) >= settings.full_doc_max_docs:
+                if len(full_docs_local) >= max_full_docs:
                     break
             return full_docs_local
 
@@ -1483,6 +1639,7 @@ def read_docs_node(state: QAState) -> QAState:
         char_count = sum(len(chunk) for doc in docs_payload for chunk in (doc.get("chunks") or []))
         token_est = sum(_estimate_tokens(chunk) for doc in docs_payload for chunk in (doc.get("chunks") or []))
         full_token_est = sum(_estimate_tokens(doc.get("text") or "") for doc in full_docs)
+        elapsed = time.monotonic() - start
         logger.info(
             "read.done req=%s docs=%s chunks=%s chars=%s tokens~=%s evidence=%s full_docs=%s full_chars=%s full_tokens~=%s elapsed=%.2fs",
             request_id,
@@ -1494,9 +1651,23 @@ def read_docs_node(state: QAState) -> QAState:
             len(full_docs),
             sum(len(doc.get("text") or "") for doc in full_docs),
             full_token_est,
-            time.monotonic() - start,
+            elapsed,
         )
-        return {"evidence": evidence, "full_docs": full_docs}
+        return _return_with_profile(
+            state,
+            "read",
+            {"evidence": evidence, "full_docs": full_docs},
+            elapsed_seconds=round(elapsed, 3),
+            skipped=False,
+            docs=len(doc_ids),
+            chunks=chunk_count,
+            chars=char_count,
+            tokens_est=token_est,
+            evidence=len(evidence),
+            full_docs=len(full_docs),
+            full_chars=sum(len(doc.get("text") or "") for doc in full_docs),
+            full_tokens_est=full_token_est,
+        )
     except Exception:
         logger.exception("read.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
         raise
@@ -1528,10 +1699,25 @@ def answer_node(state: QAState) -> QAState:
         return None
     try:
         if not evidence and not full_docs:
-            logger.info("answer.skip req=%s reason=no_evidence elapsed=%.2fs", request_id, time.monotonic() - start)
-            return no_evidence_answer(language)
+            elapsed = time.monotonic() - start
+            logger.info("answer.skip req=%s reason=no_evidence elapsed=%.2fs", request_id, elapsed)
+            return _return_with_profile(
+                state,
+                "answer",
+                no_evidence_answer(language),
+                elapsed_seconds=round(elapsed, 3),
+                skipped=True,
+                reason="no_evidence",
+                citations=0,
+                evidence=0,
+                full_docs=0,
+                repair_attempts=0,
+                repair_success=False,
+                fallback_reason="no_evidence",
+            )
         result = build_answer(state["question"], language, evidence, full_docs=full_docs)
         answer = result.get("answer") or ""
+        diagnostics = result.get("diagnostics") or {}
         cited_ids: set[int] = set()
         for raw in result.get("citations") or []:
             parsed = _parse_citation_id(raw)
@@ -1564,15 +1750,34 @@ def answer_node(state: QAState) -> QAState:
                     }
                 )
 
+        elapsed = time.monotonic() - start
         logger.info(
             "answer.done req=%s citations=%s evidence=%s full_docs=%s elapsed=%.2fs",
             request_id,
             len(citations),
             len(evidence),
             len(full_docs),
-            time.monotonic() - start,
+            elapsed,
         )
-        return {"answer": answer, "citations": citations}
+        return _return_with_profile(
+            state,
+            "answer",
+            {"answer": answer, "citations": citations},
+            elapsed_seconds=round(elapsed, 3),
+            skipped=False,
+            citations=len(citations),
+            evidence=len(evidence),
+            full_docs=len(full_docs),
+            validator_triggered=bool(diagnostics.get("validation_errors_initial")),
+            repair_attempts=int(diagnostics.get("repair_attempts") or 0),
+            repair_success=bool(diagnostics.get("repair_success")),
+            fallback_reason=diagnostics.get("fallback_reason"),
+            validation_errors_initial=diagnostics.get("validation_errors_initial") or [],
+            validation_errors_final=diagnostics.get("validation_errors_final") or [],
+            deterministic_fix_applied=bool(diagnostics.get("deterministic_fix_applied")),
+            deterministic_fix_types=diagnostics.get("deterministic_fix_types") or [],
+            repair_skipped_reason=diagnostics.get("repair_skipped_reason"),
+        )
     except Exception:
         logger.exception("answer.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
         raise

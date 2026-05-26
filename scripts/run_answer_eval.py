@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -126,6 +127,82 @@ def _is_lexical_mismatch(checks: dict[str, Any]) -> bool:
     return bool(missing_include and not must_not_hits and must_include_hits)
 
 
+def _percentile(values: list[float], pct: float) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    idx = int((len(ordered) - 1) * (pct / 100.0))
+    return ordered[idx]
+
+
+def _summarize_profiles(results: list[dict[str, Any]]) -> dict[str, Any]:
+    stages = ("intent", "temporal_guard", "ingest", "retrieve", "backfill", "rerank", "read", "answer")
+    summary: dict[str, Any] = {}
+    for stage in stages:
+        elapsed_values: list[float] = []
+        for item in results:
+            profile = item.get("profile") or {}
+            stage_data = profile.get(stage) if isinstance(profile, dict) else None
+            if not isinstance(stage_data, dict):
+                continue
+            elapsed = stage_data.get("elapsed_seconds")
+            if isinstance(elapsed, (int, float)):
+                elapsed_values.append(float(elapsed))
+        if not elapsed_values:
+            continue
+        summary[stage] = {
+            "count": len(elapsed_values),
+            "avg_seconds": round(sum(elapsed_values) / len(elapsed_values), 4),
+            "p50_seconds": round(_percentile(elapsed_values, 50), 4),
+            "p95_seconds": round(_percentile(elapsed_values, 95), 4),
+            "max_seconds": round(max(elapsed_values), 4),
+        }
+
+    answer_profiles = [
+        (item.get("profile") or {}).get("answer")
+        for item in results
+        if isinstance(item.get("profile"), dict) and isinstance((item.get("profile") or {}).get("answer"), dict)
+    ]
+    if answer_profiles:
+        fallback_counts: Counter[str] = Counter()
+        deterministic_fix_types: Counter[str] = Counter()
+        repair_skipped_reasons: Counter[str] = Counter()
+        repair_attempts = 0
+        repair_success = 0
+        validator_triggered = 0
+        deterministic_fix_cases = 0
+        for data in answer_profiles:
+            if bool(data.get("validator_triggered")):
+                validator_triggered += 1
+            attempts = data.get("repair_attempts")
+            if isinstance(attempts, int):
+                repair_attempts += attempts
+            if bool(data.get("repair_success")):
+                repair_success += 1
+            if bool(data.get("deterministic_fix_applied")):
+                deterministic_fix_cases += 1
+            for fix_type in data.get("deterministic_fix_types") or []:
+                if isinstance(fix_type, str) and fix_type:
+                    deterministic_fix_types[fix_type] += 1
+            skipped_reason = data.get("repair_skipped_reason")
+            if isinstance(skipped_reason, str) and skipped_reason:
+                repair_skipped_reasons[skipped_reason] += 1
+            reason = data.get("fallback_reason")
+            if isinstance(reason, str) and reason:
+                fallback_counts[reason] += 1
+        summary["answer_diagnostics"] = {
+            "total_cases": len(answer_profiles),
+            "validator_triggered": validator_triggered,
+            "repair_attempts_total": repair_attempts,
+            "repair_success_cases": repair_success,
+            "deterministic_fix_cases": deterministic_fix_cases,
+            "deterministic_fix_types": dict(sorted(deterministic_fix_types.items())),
+            "repair_skipped_reasons": dict(sorted(repair_skipped_reasons.items())),
+            "fallback_reasons": dict(sorted(fallback_counts.items())),
+        }
+    return summary
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default="data/eval_answer_demo_v1.json")
@@ -135,6 +212,11 @@ def main() -> int:
     parser.add_argument("--timeout", type=float, default=420.0)
     parser.add_argument("--retries", type=int, default=1)
     parser.add_argument("--retry-delay", type=float, default=1.0)
+    parser.add_argument(
+        "--debug-profile",
+        action="store_true",
+        help="Call /ask with debug=true and include per-stage profile metrics in report.",
+    )
     parser.add_argument(
         "--rescue-timeout",
         type=float,
@@ -170,13 +252,19 @@ def main() -> int:
             started = time.perf_counter()
             payload: dict[str, Any] = {}
             last_exc: Exception | None = None
+            profile: dict[str, Any] | None = None
             for attempt in range(args.retries + 1):
                 try:
-                    response = client.post("/ask", json={"question": question, "debug": False})
+                    response = client.post("/ask", json={"question": question, "debug": args.debug_profile})
                     response.raise_for_status()
                     payload = response.json()
                     answer = str(payload.get("answer") or "")
                     citations = payload.get("citations") or []
+                    debug_payload = payload.get("debug") if isinstance(payload, dict) else None
+                    if isinstance(debug_payload, dict):
+                        profile_obj = debug_payload.get("profile")
+                        if isinstance(profile_obj, dict):
+                            profile = profile_obj
                     last_exc = None
                     break
                 except httpx.TimeoutException as exc:
@@ -191,11 +279,19 @@ def main() -> int:
             if isinstance(last_exc, httpx.TimeoutException) and args.rescue_timeout > args.timeout:
                 try:
                     with httpx.Client(base_url=args.base_url.rstrip("/"), timeout=args.rescue_timeout) as rescue_client:
-                        response = rescue_client.post("/ask", json={"question": question, "debug": False})
+                        response = rescue_client.post(
+                            "/ask",
+                            json={"question": question, "debug": args.debug_profile},
+                        )
                     response.raise_for_status()
                     payload = response.json()
                     answer = str(payload.get("answer") or "")
                     citations = payload.get("citations") or []
+                    debug_payload = payload.get("debug") if isinstance(payload, dict) else None
+                    if isinstance(debug_payload, dict):
+                        profile_obj = debug_payload.get("profile")
+                        if isinstance(profile_obj, dict):
+                            profile = profile_obj
                     last_exc = None
                 except Exception as exc:
                     last_exc = exc
@@ -230,6 +326,7 @@ def main() -> int:
                         "answer": answer,
                         "citations": citations,
                     },
+                    "profile": profile or {},
                 }
             )
             status = "pass" if passed else "fail"
@@ -263,6 +360,7 @@ def main() -> int:
         if category in failure_breakdown:
             failure_breakdown[category] += 1
 
+    profile_cases = sum(1 for item in results if item.get("profile"))
     report = {
         "run_id": run_id,
         "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
@@ -284,10 +382,13 @@ def main() -> int:
             "critical_failed_ids": critical_failed,
             "api_errors": api_errors,
             "lexical_mismatches": lexical_mismatches,
+            "profile_cases": profile_cases,
             "failure_breakdown": failure_breakdown,
         },
         "cases": results,
     }
+    if args.debug_profile:
+        report["profile_summary"] = _summarize_profiles(results)
 
     output_dir.mkdir(parents=True, exist_ok=True)
     report_path = output_dir / f"answer_{run_id}.json"
@@ -308,6 +409,19 @@ def main() -> int:
             failure_breakdown["content_failure"],
         )
     )
+    if args.debug_profile:
+        answer_diag = (report.get("profile_summary") or {}).get("answer_diagnostics") or {}
+        if profile_cases == 0:
+            print("profile.capture warning: 0 cases included debug profile (restart API with latest code?)")
+        if answer_diag:
+            print(
+                "profile.answer validator_triggered={} repair_attempts_total={} repair_success_cases={} fallbacks={}".format(
+                    answer_diag.get("validator_triggered", 0),
+                    answer_diag.get("repair_attempts_total", 0),
+                    answer_diag.get("repair_success_cases", 0),
+                    answer_diag.get("fallback_reasons", {}),
+                )
+            )
     return 0
 
 

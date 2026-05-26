@@ -205,5 +205,6 @@ def ask(payload: AskRequest):
             "intent": result.get("intent"),
             "candidate_docs": result.get("candidate_docs"),
             "evidence": result.get("evidence"),
+            "profile": result.get("profile"),
         }
     return response
