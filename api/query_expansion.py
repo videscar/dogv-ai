@@ -457,7 +457,7 @@ def llm_expand_query(
         },
     ]
     try:
-        result = client.chat_json(messages, temperature=0.0)
+        result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
     except Exception:
         return {"keywords": [], "phrases": []}
 

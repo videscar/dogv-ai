@@ -50,4 +50,4 @@ def classify_document(
         {"role": "user", "content": CLASSIFY_USER.format(title=title or "", excerpt=excerpt)},
     ]
     client = LlmClient(base_url=base_url, model=model, timeout=timeout)
-    return client.chat_json(messages, temperature=0.0)
+    return client.chat_json(messages, temperature=0.0, enable_thinking=False)

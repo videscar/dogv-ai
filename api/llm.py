@@ -102,6 +102,7 @@ class LlmClient:
         messages: list[dict[str, str]],
         temperature: float = 0.2,
         response_format: dict[str, Any] | None = None,
+        enable_thinking: bool = True,
     ) -> str:
         start = time.monotonic()
         ok = False
@@ -115,6 +116,9 @@ class LlmClient:
             payload["max_tokens"] = self.max_tokens
         if response_format is not None:
             payload["response_format"] = response_format
+        if not enable_thinking:
+            # Qwen3 + llama.cpp jinja template: disables <think> generation entirely.
+            payload["chat_template_kwargs"] = {"enable_thinking": False}
         try:
             resp = requests.post(
                 f"{self.base_url}/v1/chat/completions",
@@ -130,11 +134,12 @@ class LlmClient:
             return content
         finally:
             logger.info(
-                "llm.chat ok=%s model=%s messages=%s format=%s elapsed=%.2fs",
+                "llm.chat ok=%s model=%s messages=%s format=%s think=%s elapsed=%.2fs",
                 ok,
                 self.model,
                 len(messages),
                 "json" if response_format else "none",
+                "on" if enable_thinking else "off",
                 time.monotonic() - start,
             )
 
@@ -142,16 +147,18 @@ class LlmClient:
         self,
         messages: list[dict[str, str]],
         temperature: float = 0.0,
+        enable_thinking: bool = True,
     ) -> dict[str, Any]:
         text = self.chat(
             messages,
             temperature=temperature,
             response_format={"type": "json_object"},
+            enable_thinking=enable_thinking,
         )
         parsed = _json_from_text(text)
         if parsed is None:
             # Fallback for servers/models that ignore response_format.
-            text = self.chat(messages, temperature=temperature)
+            text = self.chat(messages, temperature=temperature, enable_thinking=enable_thinking)
             parsed = _json_from_text(text)
         if parsed is None:
             raise ValueError(f"Failed to parse JSON from model output: {text[:500]}")

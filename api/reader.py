@@ -812,7 +812,7 @@ def extract_evidence(
         {"role": "user", "content": READER_USER.format(question=question, docs="\n\n---\n\n".join(blocks))},
     ]
     try:
-        result = client.chat_json(messages, temperature=0.0)
+        result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
         evidence = _clean_evidence(result.get("evidence") or [])
         numeric = _numeric_evidence(question, docs, full_docs=full_docs)
         eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)

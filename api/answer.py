@@ -663,12 +663,13 @@ def _chat_json_with_retry(
     client: LlmClient,
     messages: list[dict[str, str]],
     temperature: float,
+    enable_thinking: bool = False,
 ) -> dict[str, Any]:
     attempts = ANSWER_CHAT_RETRIES + 1
     last_error: Exception | None = None
     for attempt in range(1, attempts + 1):
         try:
-            return client.chat_json(messages, temperature=temperature)
+            return client.chat_json(messages, temperature=temperature, enable_thinking=enable_thinking)
         except Exception as exc:
             last_error = exc
             logger.warning(

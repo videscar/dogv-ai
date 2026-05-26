@@ -215,7 +215,7 @@ def analyze_intent(question: str) -> dict[str, Any]:
         {"role": "system", "content": INTENT_SYSTEM},
         {"role": "user", "content": INTENT_USER.format(question=question)},
     ]
-    result = client.chat_json(messages, temperature=0.0)
+    result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
     return normalize_intent(result, question=question)
 
 
@@ -231,7 +231,7 @@ def analyze_intent_and_expand(
         {"role": "user", "content": INTENT_EXPAND_USER.format(question=question)},
     ]
     try:
-        result = client.chat_json(messages, temperature=0.0)
+        result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
         intent = normalize_intent(result, question=question)
         expansion_obj = result.get("expansion") if isinstance(result, dict) else None
         raw_keywords = _string_list(result.get("expansion_keywords") if isinstance(result, dict) else None)
