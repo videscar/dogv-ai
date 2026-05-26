@@ -70,11 +70,18 @@ Notas:
 
 settings = get_settings()
 logger = logging.getLogger("dogv.answer")
-ANSWER_TIMEOUT = 120
+ANSWER_TIMEOUT = settings.ollama_timeout
 ANSWER_CHAT_RETRIES = 1
 
 _REFERENCE_RE = re.compile(r"\b\d{4}/[A-Za-z0-9Xx]+\b")
 _NUMBER_RE = re.compile(r"\b\d[\d\.,]*\b")
+_CVE_RE = re.compile(r"\bCVE[:\s-]*[A-Za-z0-9-]+\b", re.IGNORECASE)
+_PERCENT_NUMBER_RE = re.compile(r"\b\d[\d\.,]*\s*%")
+_PERCENT_WORD_RE = re.compile(r"\b(percent(?:atge|aje|ual)?s?)\b", re.IGNORECASE)
+_CURRENCY_WORD_RE = re.compile(
+    r"(€|\b(?:eur|euros?|euro|milions?|millones?|millon(?:es)?|milers?|miles?)\b)",
+    re.IGNORECASE,
+)
 
 
 def _no_evidence_fallback(language: str) -> str:
@@ -170,6 +177,101 @@ def _fallback_from_evidence(language: str, evidence: list[dict[str, Any]] | None
         if len(lines) >= 10:
             break
     return header + "\n" + "\n".join(lines) if lines else _no_evidence_fallback(language)
+
+
+def _fallback_summary_from_sources(
+    language: str,
+    evidence: list[dict[str, Any]] | None,
+    full_docs: list[dict[str, Any]] | None,
+    max_items: int,
+) -> str:
+    if not evidence and not full_docs:
+        return _no_evidence_fallback(language)
+
+    doc_meta: dict[int, dict[str, Any]] = {}
+    ordered_ids: list[int] = []
+
+    for item in evidence or []:
+        doc_id = item.get("doc_id") or item.get("document_id")
+        if doc_id is None:
+            continue
+        doc_id = int(doc_id)
+        if doc_id not in ordered_ids:
+            ordered_ids.append(doc_id)
+        current = doc_meta.setdefault(doc_id, {})
+        quote = (item.get("quote") or "").strip()
+        if quote and not current.get("quote"):
+            current["quote"] = quote
+
+    for doc in full_docs or []:
+        doc_id = doc.get("document_id")
+        if doc_id is None:
+            continue
+        doc_id = int(doc_id)
+        if doc_id not in ordered_ids:
+            ordered_ids.append(doc_id)
+        current = doc_meta.setdefault(doc_id, {})
+        for key in ("title", "issue_date", "ref", "text"):
+            value = doc.get(key)
+            if value and not current.get(key):
+                current[key] = value
+
+    if language.startswith(("va", "ca")):
+        intro = "No puc confirmar una resposta unica amb seguretat. Publicacions rellevants trobades:"
+        unknown_title = "Titol no disponible"
+        date_label = "data"
+    else:
+        intro = "No puedo confirmar una respuesta unica con seguridad. Publicaciones relevantes encontradas:"
+        unknown_title = "Titulo no disponible"
+        date_label = "fecha"
+
+    lines: list[str] = []
+    for doc_id in ordered_ids[: max(1, max_items)]:
+        meta = doc_meta.get(doc_id) or {}
+        title = str(meta.get("title") or "").strip()
+        issue_date = str(meta.get("issue_date") or "").strip()
+        ref = str(meta.get("ref") or "").strip()
+        quote = str(meta.get("quote") or "").strip()
+        snippet = quote or str(meta.get("text") or "").strip()
+        if not title and snippet:
+            title = snippet[:160]
+        title = title or unknown_title
+        parts = [f"- ({doc_id}) {title}"]
+        if issue_date:
+            parts.append(f"{date_label}: {issue_date}")
+        if ref:
+            parts.append(f"ref: {ref}")
+        lines.append(" | ".join(parts))
+
+    if not lines:
+        return _fallback_from_evidence(language, evidence)
+    return intro + "\n" + "\n".join(lines)
+
+
+def _fallback_validation_message(language: str) -> str:
+    if language.startswith(("va", "ca")):
+        return (
+            "No puc validar una resposta unica amb seguretat amb l'evidencia disponible. "
+            "Revise les publicacions citades."
+        )
+    return (
+        "No puedo validar una respuesta unica con seguridad con la evidencia disponible. "
+        "Revise las publicaciones citadas."
+    )
+
+
+def _validation_fallback_answer(
+    language: str,
+    evidence: list[dict[str, Any]] | None,
+    full_docs: list[dict[str, Any]] | None,
+) -> str:
+    style = str(getattr(settings, "answer_fallback_style", "concise_summary") or "concise_summary")
+    max_items = max(1, int(getattr(settings, "answer_fallback_max_items", 3) or 3))
+    if style == "raw_evidence":
+        return _fallback_from_evidence(language, evidence)
+    if style == "explicit_validation_error":
+        return _fallback_validation_message(language)
+    return _fallback_summary_from_sources(language, evidence, full_docs, max_items=max_items)
 
 
 _NO_CONSTA_ONLY_PATTERNS = (
@@ -372,13 +474,173 @@ def _source_text(evidence: list[dict[str, Any]] | None, full_docs: list[dict[str
     return "\n".join(parts)
 
 
-def _numeric_tokens(value: str) -> set[str]:
+def _source_text_for_citations(
+    evidence: list[dict[str, Any]] | None,
+    full_docs: list[dict[str, Any]] | None,
+    citations: list[int],
+) -> str:
+    if not citations:
+        return _source_text(evidence, full_docs)
+    scope = set(citations)
+    parts: list[str] = []
+    for item in evidence or []:
+        doc_id = item.get("doc_id") or item.get("document_id")
+        if doc_id is None or int(doc_id) not in scope:
+            continue
+        quote = (item.get("quote") or "").strip()
+        if quote:
+            parts.append(quote)
+    for doc in full_docs or []:
+        doc_id = doc.get("document_id")
+        if doc_id is None or int(doc_id) not in scope:
+            continue
+        text = (doc.get("text") or "").strip()
+        if text:
+            parts.append(text)
+    if not parts:
+        return _source_text(evidence, full_docs)
+    return "\n".join(parts)
+
+
+def _canonical_number_token(raw: str) -> str:
+    return re.sub(r"[^\d]", "", raw or "")
+
+
+def _legacy_numeric_tokens(value: str) -> set[str]:
     tokens: set[str] = set()
     for match in _NUMBER_RE.finditer(value or ""):
-        canonical = re.sub(r"[^\d]", "", match.group(0))
+        canonical = _canonical_number_token(match.group(0))
         if canonical:
             tokens.add(canonical)
     return tokens
+
+
+def _extract_reference_claims(value: str) -> set[str]:
+    refs = {match.group(0).lower() for match in _REFERENCE_RE.finditer(value or "")}
+    for match in _CVE_RE.finditer(value or ""):
+        normalized = re.sub(r"\s+", "", match.group(0).lower())
+        refs.add(normalized)
+    return refs
+
+
+def _extract_unit_claims(value: str) -> dict[str, set[str]]:
+    text = value or ""
+    lower = text.lower()
+    currency_numbers: set[str] = set()
+    percent_numbers: set[str] = set()
+
+    for match in _PERCENT_NUMBER_RE.finditer(text):
+        token = _canonical_number_token(match.group(0))
+        if token:
+            percent_numbers.add(token)
+
+    for match in _NUMBER_RE.finditer(text):
+        token = _canonical_number_token(match.group(0))
+        if not token:
+            continue
+        start = max(0, match.start() - 16)
+        end = min(len(text), match.end() + 16)
+        window = lower[start:end]
+        if "%" in window or _PERCENT_WORD_RE.search(window):
+            percent_numbers.add(token)
+            continue
+        if _CURRENCY_WORD_RE.search(window):
+            currency_numbers.add(token)
+
+    return {"currency": currency_numbers, "percent": percent_numbers}
+
+
+def _detect_unsupported_claim(
+    *,
+    answer_text: str,
+    source_text: str,
+    mode: str,
+) -> bool:
+    answer_refs = _extract_reference_claims(answer_text)
+    source_refs = _extract_reference_claims(source_text)
+    unsupported_ref = any(ref not in source_refs for ref in answer_refs)
+    if mode == "refs_only":
+        return unsupported_ref
+
+    if mode == "current_strict":
+        source_numbers = _legacy_numeric_tokens(source_text)
+        answer_numbers = _legacy_numeric_tokens(answer_text)
+        unsupported_number = any(token not in source_numbers for token in answer_numbers)
+        return unsupported_ref or unsupported_number
+
+    answer_units = _extract_unit_claims(answer_text)
+    source_units = _extract_unit_claims(source_text)
+    unsupported_currency = any(token not in source_units["currency"] for token in answer_units["currency"])
+    unsupported_percent = any(token not in source_units["percent"] for token in answer_units["percent"])
+    return unsupported_ref or unsupported_currency or unsupported_percent
+
+
+def _validate_answer_details(
+    *,
+    answer_text: str,
+    citations: list[int],
+    evidence: list[dict[str, Any]] | None,
+    full_docs: list[dict[str, Any]] | None,
+) -> dict[str, Any]:
+    structural_errors: list[str] = []
+    semantic_errors: list[str] = []
+    has_evidence = bool(evidence)
+    scope_ids = _collect_scope_ids(evidence, full_docs)
+
+    if has_evidence and not citations:
+        structural_errors.append("citation_missing_if_evidence")
+
+    out_of_scope = [doc_id for doc_id in citations if scope_ids and doc_id not in scope_ids]
+    if out_of_scope:
+        structural_errors.append("citation_out_of_scope")
+
+    if has_evidence and _is_no_consta_only_answer(answer_text):
+        semantic_errors.append("no_consta_only_with_evidence")
+
+    source_text = _source_text_for_citations(evidence, full_docs, citations)
+    claim_guard_mode = str(getattr(settings, "answer_claim_guard_mode", "unit_aware_strict") or "unit_aware_strict")
+    if source_text and answer_text and _detect_unsupported_claim(
+        answer_text=answer_text,
+        source_text=source_text,
+        mode=claim_guard_mode,
+    ):
+        semantic_errors.append("unsupported_numeric_or_ref_claim")
+
+    errors = structural_errors + semantic_errors
+    return {
+        "errors": errors,
+        "stage_structural": structural_errors,
+        "stage_semantic": semantic_errors,
+        "fixable": bool(structural_errors) and not semantic_errors,
+        "requires_llm_repair": bool(semantic_errors),
+        "scope_ids": scope_ids,
+    }
+
+
+def _apply_deterministic_citation_fixes(
+    *,
+    citations: list[int],
+    evidence: list[dict[str, Any]] | None,
+    scope_ids: set[int],
+    validation: dict[str, Any],
+) -> tuple[list[int], list[str]]:
+    updated = list(citations)
+    fix_types: list[str] = []
+    structural = set(validation.get("stage_structural") or [])
+
+    if "citation_out_of_scope" in structural and scope_ids:
+        clamped = [doc_id for doc_id in updated if doc_id in scope_ids]
+        if clamped != updated:
+            updated = clamped
+            fix_types.append("citation_out_of_scope")
+
+    if "citation_missing_if_evidence" in structural and evidence:
+        evidence_ids = _collect_citation_ids(evidence)
+        if evidence_ids and not updated:
+            updated = evidence_ids
+            fix_types.append("citation_missing_if_evidence")
+
+    return _normalize_citations(updated), fix_types
 
 
 def _validate_answer(
@@ -388,33 +650,13 @@ def _validate_answer(
     evidence: list[dict[str, Any]] | None,
     full_docs: list[dict[str, Any]] | None,
 ) -> list[str]:
-    errors: list[str] = []
-    has_evidence = bool(evidence)
-
-    if has_evidence and not citations:
-        errors.append("citation_missing_if_evidence")
-
-    scope_ids = _collect_scope_ids(evidence, full_docs)
-    if scope_ids and any(doc_id not in scope_ids for doc_id in citations):
-        errors.append("citation_out_of_scope")
-
-    if has_evidence and _is_no_consta_only_answer(answer_text):
-        errors.append("no_consta_only_with_evidence")
-
-    source_text = _source_text(evidence, full_docs)
-    if source_text and answer_text:
-        source_refs = {match.group(0).lower() for match in _REFERENCE_RE.finditer(source_text)}
-        answer_refs = {match.group(0).lower() for match in _REFERENCE_RE.finditer(answer_text)}
-        unsupported_ref = any(ref not in source_refs for ref in answer_refs)
-
-        source_numbers = _numeric_tokens(source_text)
-        answer_numbers = _numeric_tokens(answer_text)
-        unsupported_number = any(token not in source_numbers for token in answer_numbers)
-
-        if unsupported_ref or unsupported_number:
-            errors.append("unsupported_numeric_or_ref_claim")
-
-    return errors
+    details = _validate_answer_details(
+        answer_text=answer_text,
+        citations=citations,
+        evidence=evidence,
+        full_docs=full_docs,
+    )
+    return list(details.get("errors") or [])
 
 
 def _chat_json_with_retry(
@@ -476,7 +718,7 @@ def build_answer(
     evidence: list[dict[str, Any]],
     full_docs: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    client = OllamaClient(timeout=min(settings.ollama_timeout, ANSWER_TIMEOUT))
+    client = OllamaClient(timeout=ANSWER_TIMEOUT)
     evidence_block = _format_evidence(evidence) or "Ninguna."
     full_docs_block = _format_full_docs(full_docs)
     missing_notes = (
@@ -497,6 +739,16 @@ def build_answer(
             ),
         },
     ]
+    diagnostics: dict[str, Any] = {
+        "validation_errors_initial": [],
+        "validation_errors_final": [],
+        "repair_attempts": 0,
+        "repair_success": False,
+        "fallback_reason": None,
+        "deterministic_fix_applied": False,
+        "deterministic_fix_types": [],
+        "repair_skipped_reason": None,
+    }
     try:
         result = _chat_json_with_retry(client, messages, temperature=0.0)
         answer_text = str(result.get("answer") or "").strip()
@@ -509,78 +761,139 @@ def build_answer(
             answer_text = _ensure_question_term_coverage(answer_text, question, language)
 
         if settings.answer_validator_enabled:
-            validation_errors = _validate_answer(
+            validation = _validate_answer_details(
                 answer_text=answer_text,
                 citations=citations,
                 evidence=evidence,
                 full_docs=full_docs,
             )
-            if validation_errors:
-                logger.info(
-                    "answer.validation_failed errors=%s",
-                    ",".join(validation_errors),
+            validation_errors = list(validation.get("errors") or [])
+            diagnostics["validation_errors_initial"] = list(validation_errors)
+
+            citations, fix_types = _apply_deterministic_citation_fixes(
+                citations=citations,
+                evidence=evidence,
+                scope_ids=set(validation.get("scope_ids") or set()),
+                validation=validation,
+            )
+            if fix_types:
+                diagnostics["deterministic_fix_applied"] = True
+                diagnostics["deterministic_fix_types"] = fix_types
+                validation = _validate_answer_details(
+                    answer_text=answer_text,
+                    citations=citations,
+                    evidence=evidence,
+                    full_docs=full_docs,
                 )
-                repair_attempts = max(0, int(getattr(settings, "answer_repair_attempts", 1)))
-                for attempt in range(1, repair_attempts + 1):
-                    repaired = _repair_answer_once(
-                        client=client,
-                        question=question,
-                        language=language,
-                        evidence_block=evidence_block,
-                        full_docs_block=full_docs_block,
-                        previous_answer=answer_text,
-                        previous_citations=citations,
-                        validation_errors=validation_errors,
-                        missing_notes=missing_notes,
-                    )
-                    candidate_answer = str(repaired.get("answer") or "").strip()
-                    candidate_citations = _normalize_citations(repaired.get("citations"))
+                validation_errors = list(validation.get("errors") or [])
+                if not validation_errors:
+                    diagnostics["repair_skipped_reason"] = "structural_only"
 
-                    if settings.answer_mutators_enabled:
-                        candidate_answer = _ensure_topic_coverage(candidate_answer, question, language)
-                        candidate_answer = _ensure_field_coverage(candidate_answer, question, language)
-                        candidate_answer = _ensure_reference_coverage(candidate_answer, question, language)
-                        candidate_answer = _ensure_question_term_coverage(candidate_answer, question, language)
+            if validation_errors:
+                logger.info("answer.validation_failed errors=%s", ",".join(validation_errors))
+                repair_mode = str(getattr(settings, "answer_repair_mode", "conditional") or "conditional")
+                repair_required = False
+                if repair_mode == "always":
+                    repair_required = True
+                elif repair_mode == "none":
+                    diagnostics["repair_skipped_reason"] = "disabled_by_config"
+                else:
+                    repair_required = bool(validation.get("requires_llm_repair"))
+                    if not repair_required:
+                        diagnostics["repair_skipped_reason"] = "structural_only"
 
-                    validation_errors = _validate_answer(
-                        answer_text=candidate_answer,
-                        citations=candidate_citations,
-                        evidence=evidence,
-                        full_docs=full_docs,
-                    )
-                    if not validation_errors:
-                        answer_text = candidate_answer
-                        citations = candidate_citations
-                        break
+                if repair_required:
+                    repair_attempts = max(0, int(getattr(settings, "answer_repair_attempts", 1)))
+                    for attempt in range(1, repair_attempts + 1):
+                        diagnostics["repair_attempts"] = attempt
+                        repaired = _repair_answer_once(
+                            client=client,
+                            question=question,
+                            language=language,
+                            evidence_block=evidence_block,
+                            full_docs_block=full_docs_block,
+                            previous_answer=answer_text,
+                            previous_citations=citations,
+                            validation_errors=validation_errors,
+                            missing_notes=missing_notes,
+                        )
+                        candidate_answer = str(repaired.get("answer") or "").strip()
+                        candidate_citations = _normalize_citations(repaired.get("citations"))
 
-                    logger.info(
-                        "answer.repair_failed attempt=%s/%s errors=%s",
-                        attempt,
-                        repair_attempts,
-                        ",".join(validation_errors),
-                    )
+                        if settings.answer_mutators_enabled:
+                            candidate_answer = _ensure_topic_coverage(candidate_answer, question, language)
+                            candidate_answer = _ensure_field_coverage(candidate_answer, question, language)
+                            candidate_answer = _ensure_reference_coverage(candidate_answer, question, language)
+                            candidate_answer = _ensure_question_term_coverage(candidate_answer, question, language)
+
+                        candidate_validation = _validate_answer_details(
+                            answer_text=candidate_answer,
+                            citations=candidate_citations,
+                            evidence=evidence,
+                            full_docs=full_docs,
+                        )
+                        candidate_citations, repair_fix_types = _apply_deterministic_citation_fixes(
+                            citations=candidate_citations,
+                            evidence=evidence,
+                            scope_ids=set(candidate_validation.get("scope_ids") or set()),
+                            validation=candidate_validation,
+                        )
+                        if repair_fix_types:
+                            diagnostics["deterministic_fix_applied"] = True
+                            all_fix_types = set(diagnostics.get("deterministic_fix_types") or [])
+                            all_fix_types.update(repair_fix_types)
+                            diagnostics["deterministic_fix_types"] = sorted(all_fix_types)
+                            candidate_validation = _validate_answer_details(
+                                answer_text=candidate_answer,
+                                citations=candidate_citations,
+                                evidence=evidence,
+                                full_docs=full_docs,
+                            )
+
+                        validation_errors = list(candidate_validation.get("errors") or [])
+                        if not validation_errors:
+                            answer_text = candidate_answer
+                            citations = candidate_citations
+                            diagnostics["repair_success"] = True
+                            break
+
+                        logger.info(
+                            "answer.repair_failed attempt=%s/%s errors=%s",
+                            attempt,
+                            repair_attempts,
+                            ",".join(validation_errors),
+                        )
+                elif not diagnostics.get("repair_skipped_reason"):
+                    diagnostics["repair_skipped_reason"] = "not_required"
 
                 if validation_errors:
+                    diagnostics["validation_errors_final"] = list(validation_errors)
+                    diagnostics["fallback_reason"] = "validation_failed"
                     logger.info(
                         "answer.fallback reason=validation_failed errors=%s",
                         ",".join(validation_errors),
                     )
+                    fallback_citations = citations or _collect_citation_ids(evidence)
                     return {
-                        "answer": _fallback_from_evidence(language, evidence),
-                        "citations": _collect_citation_ids(evidence),
+                        "answer": _validation_fallback_answer(language, evidence, full_docs),
+                        "citations": fallback_citations,
+                        "diagnostics": diagnostics,
                     }
+
+            diagnostics["validation_errors_final"] = []
         else:
             if not citations:
                 citations = _collect_citation_ids(evidence)
             if evidence and _is_no_consta_only_answer(answer_text):
+                diagnostics["fallback_reason"] = "no_consta_only"
                 logger.info(
                     "answer.fallback reason=no_consta_only evidence_docs=%s",
                     len(evidence),
                 )
                 answer_text = _fallback_from_evidence(language, evidence)
-
-        return {"answer": answer_text, "citations": citations}
+        return {"answer": answer_text, "citations": citations, "diagnostics": diagnostics}
     except Exception as exc:
+        diagnostics["fallback_reason"] = "chat_json_failed"
         logger.warning(
             "answer.fallback reason=chat_json_failed error=%s",
             type(exc).__name__,
@@ -588,6 +901,7 @@ def build_answer(
         return {
             "answer": _fallback_from_evidence(language, evidence),
             "citations": _collect_citation_ids(evidence),
+            "diagnostics": diagnostics,
         }
 
 
