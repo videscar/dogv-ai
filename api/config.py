@@ -12,6 +12,13 @@ class Settings(BaseSettings):
     ollama_embed_model: str = "bge-m3"
     ollama_timeout: int = 300
     ollama_num_ctx: int = 65536
+    llm_base_url: str = "http://127.0.0.1:8000"
+    llm_model: str = "qwen3.6-27b"
+    llm_timeout: int = 300
+    llm_max_tokens: int = 8192
+    embed_base_url: str = "http://127.0.0.1:8001"
+    embed_model: str = "bge-m3"
+    embed_timeout: int = 60
     embedding_dim: int = 1024
     chunk_min_tokens: int = 300
     chunk_max_tokens: int = 500
