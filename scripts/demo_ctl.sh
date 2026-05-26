@@ -31,6 +31,8 @@ EMBED_LLM_MODEL="${EMBED_LLM_MODEL:-${HOME}/models/bge-m3/bge-m3-f16.gguf}"
 EMBED_LLM_ALIAS="${EMBED_LLM_ALIAS:-bge-m3}"
 EMBED_LLM_CTX="${EMBED_LLM_CTX:-8192}"
 EMBED_LLM_NGL="${EMBED_LLM_NGL:-99}"
+# Pin the embed server to a specific GPU index (chat server typically owns GPU 0).
+EMBED_LLM_CUDA_DEVICES="${EMBED_LLM_CUDA_DEVICES:-1}"
 
 API_HOST="${API_HOST:-0.0.0.0}"
 API_PORT="${API_PORT:-8088}"
@@ -140,8 +142,8 @@ start_embed_llm() {
     return 1
   fi
 
-  echo "Starting embed llama-server on ${EMBED_LLM_HOST}:${EMBED_LLM_PORT}"
-  nohup "${LLAMA_SERVER_BIN}" \
+  echo "Starting embed llama-server on ${EMBED_LLM_HOST}:${EMBED_LLM_PORT} (CUDA_VISIBLE_DEVICES=${EMBED_LLM_CUDA_DEVICES})"
+  nohup env CUDA_VISIBLE_DEVICES="${EMBED_LLM_CUDA_DEVICES}" "${LLAMA_SERVER_BIN}" \
     --model "${EMBED_LLM_MODEL}" \
     --alias "${EMBED_LLM_ALIAS}" \
     --host "${EMBED_LLM_HOST}" --port "${EMBED_LLM_PORT}" \
