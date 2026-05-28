@@ -100,16 +100,29 @@ class LlmClient:
     def chat(
         self,
         messages: list[dict[str, str]],
-        temperature: float = 0.2,
+        temperature: float = 0.7,
         response_format: dict[str, Any] | None = None,
         enable_thinking: bool = True,
     ) -> str:
         start = time.monotonic()
         ok = False
+        # Unsloth Qwen3.6-27B sampling presets. Caller's temperature is honored only when
+        # thinking is off; thinking-mode general preset (temp=1.0, top_p=0.95) is dictated
+        # by the model card and overrides the caller's temperature.
+        if enable_thinking:
+            sample_temp = 1.0
+            sample_top_p = 0.95
+        else:
+            sample_temp = temperature
+            sample_top_p = 0.8
         payload: dict[str, Any] = {
             "model": self.model,
             "messages": messages,
-            "temperature": temperature,
+            "temperature": sample_temp,
+            "top_p": sample_top_p,
+            "top_k": 20,
+            "presence_penalty": 1.5,
+            "min_p": 0.0,
             "stream": False,
         }
         if self.max_tokens:
@@ -146,7 +159,7 @@ class LlmClient:
     def chat_json(
         self,
         messages: list[dict[str, str]],
-        temperature: float = 0.0,
+        temperature: float = 0.7,
         enable_thinking: bool = True,
     ) -> dict[str, Any]:
         text = self.chat(
