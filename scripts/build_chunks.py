@@ -29,6 +29,15 @@ from api.models import DogvDocument, DogvIssue
 from api.retrieval import ts_config_for_language
 
 settings = get_settings()
+
+# Correlated anti-join: documents that have no chunks yet. Cheap via
+# idx_rag_chunk_document, and avoids materializing every chunked document_id
+# in Python on each batch (which scaled with the whole corpus, not the work
+# left to do).
+_NOT_CHUNKED = sa_text(
+    "NOT EXISTS (SELECT 1 FROM rag_chunk c WHERE c.document_id = dogv_documents.id)"
+)
+
 try:
     from transformers import AutoTokenizer  # type: ignore
 except Exception:
@@ -175,6 +184,39 @@ def _embed_chunks_individual(
     return embeddings
 
 
+def _embed_many_batched(
+    client: EmbedClient,
+    texts: list[str],
+    attempts: int = 3,
+) -> list[list[float] | None]:
+    """Embed several independent texts in a single request.
+
+    Used for the per-document title + doc-summary embeddings so they cost one
+    round-trip instead of one each. On batch failure it degrades to per-item
+    embedding (with diacritic/ascii fallbacks) so one bad input doesn't drop the
+    rest. The returned list is aligned with `texts`; entries may be None.
+    """
+    if not texts:
+        return []
+    for attempt in range(1, attempts + 1):
+        try:
+            return list(client.embed_batch(texts))
+        except Exception as exc:
+            wait = min(30, 2 ** attempt)
+            print(f"[warn] aux embed_batch failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s")
+            time.sleep(wait)
+    return [
+        _embed_with_retry(
+            client,
+            text,
+            raise_on_fail=False,
+            fallback_strip_diacritics=True,
+            fallback_ascii=True,
+        )
+        for text in texts
+    ]
+
+
 def _normalize_chunk_text(text: str) -> str:
     if not text:
         return ""
@@ -303,11 +345,7 @@ def _count_documents(db: Session, start_date=None, end_date=None, force: bool = 
     if end_date:
         q = q.filter(DogvIssue.date <= end_date)
     if not force:
-        q = q.filter(
-            ~DogvDocument.id.in_(
-                db.execute(sa_text("SELECT DISTINCT document_id FROM rag_chunk")).scalars().all()
-            )
-        )
+        q = q.filter(_NOT_CHUNKED)
     return q.count()
 
 
@@ -325,11 +363,7 @@ def iter_document_ids(db: Session, start_date=None, end_date=None, force: bool =
         if end_date:
             q = q.filter(DogvIssue.date <= end_date)
         if not force:
-            q = q.filter(
-                ~DogvDocument.id.in_(
-                    db.execute(sa_text("SELECT DISTINCT document_id FROM rag_chunk")).scalars().all()
-                )
-            )
+            q = q.filter(_NOT_CHUNKED)
         q = q.order_by(DogvDocument.id.asc()).limit(batch_size)
         ids = [row[0] for row in q.all()]
         if not ids:
@@ -491,14 +525,27 @@ def build_chunks_for_range(
                     },
                 )
 
+            # Embed the title and the doc-summary text together in a single
+            # request rather than one round-trip each.
+            doc_text = ""
+            summary = ""
+            if build_doc_embeddings:
+                doc_text, summary = _build_doc_embedding_text(doc, issue)
+
+            aux_texts: list[str] = []
+            title_slot = doc_slot = None
             if doc.title:
-                title_embedding = _embed_with_retry(
-                    client,
-                    doc.title,
-                    raise_on_fail=False,
-                    fallback_strip_diacritics=True,
-                    fallback_ascii=True,
-                )
+                title_slot = len(aux_texts)
+                aux_texts.append(doc.title)
+            if doc_text:
+                doc_slot = len(aux_texts)
+                aux_texts.append(doc_text)
+
+            aux_embeddings = _embed_many_batched(client, aux_texts)
+            title_embedding = aux_embeddings[title_slot] if title_slot is not None else None
+            doc_embedding = aux_embeddings[doc_slot] if doc_slot is not None else None
+
+            if doc.title:
                 if title_embedding:
                     db.execute(
                         sa_text(
@@ -521,49 +568,40 @@ def build_chunks_for_range(
                 else:
                     print(f"[warn] title embedding skipped for doc {doc.id}")
 
-            if build_doc_embeddings:
-                doc_text, summary = _build_doc_embedding_text(doc, issue)
-                if doc_text:
-                    doc_embedding = _embed_with_retry(
-                        client,
-                        doc_text,
-                        raise_on_fail=False,
-                        fallback_strip_diacritics=True,
-                        fallback_ascii=True,
+            if doc_text:
+                if doc_embedding:
+                    metadata = {
+                        "ref": doc.ref,
+                        "section": doc.section,
+                        "doc_kind": doc.doc_kind,
+                        "doc_subkind": doc.doc_subkind,
+                        "issue_date": issue.date.isoformat() if issue.date else None,
+                    }
+                    db.execute(
+                        sa_text(
+                            """
+                            INSERT INTO rag_doc (document_id, language, title, summary, metadata, embedding)
+                            VALUES (:document_id, :language, :title, :summary, CAST(:metadata AS jsonb),
+                                    CAST(:embedding AS vector))
+                            ON CONFLICT (document_id)
+                            DO UPDATE SET
+                                title = EXCLUDED.title,
+                                summary = EXCLUDED.summary,
+                                metadata = EXCLUDED.metadata,
+                                embedding = EXCLUDED.embedding
+                            """
+                        ),
+                        {
+                            "document_id": doc.id,
+                            "language": issue.language,
+                            "title": doc.title or "",
+                            "summary": summary,
+                            "metadata": json.dumps(metadata),
+                            "embedding": "[" + ",".join(f"{v:.6f}" for v in doc_embedding) + "]",
+                        },
                     )
-                    if doc_embedding:
-                        metadata = {
-                            "ref": doc.ref,
-                            "section": doc.section,
-                            "doc_kind": doc.doc_kind,
-                            "doc_subkind": doc.doc_subkind,
-                            "issue_date": issue.date.isoformat() if issue.date else None,
-                        }
-                        db.execute(
-                            sa_text(
-                                """
-                                INSERT INTO rag_doc (document_id, language, title, summary, metadata, embedding)
-                                VALUES (:document_id, :language, :title, :summary, CAST(:metadata AS jsonb),
-                                        CAST(:embedding AS vector))
-                                ON CONFLICT (document_id)
-                                DO UPDATE SET
-                                    title = EXCLUDED.title,
-                                    summary = EXCLUDED.summary,
-                                    metadata = EXCLUDED.metadata,
-                                    embedding = EXCLUDED.embedding
-                                """
-                            ),
-                            {
-                                "document_id": doc.id,
-                                "language": issue.language,
-                                "title": doc.title or "",
-                                "summary": summary,
-                                "metadata": json.dumps(metadata),
-                                "embedding": "[" + ",".join(f"{v:.6f}" for v in doc_embedding) + "]",
-                            },
-                        )
-                    else:
-                        print(f"[warn] doc embedding skipped for doc {doc.id}")
+                else:
+                    print(f"[warn] doc embedding skipped for doc {doc.id}")
 
             processed += 1
             if processed % commit_every == 0:
