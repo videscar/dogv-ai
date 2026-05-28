@@ -18,6 +18,8 @@ if register_vector:
     def _register_vector(dbapi_connection, connection_record):
         register_vector(dbapi_connection)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SessionLocal = sessionmaker(
+    autocommit=False, autoflush=False, expire_on_commit=False, bind=engine,
+)
 
 Base = declarative_base()
