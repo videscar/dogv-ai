@@ -1,0 +1,248 @@
+from __future__ import annotations
+
+import logging
+import time
+from typing import Any
+
+from sqlalchemy import text as sa_text
+
+from agent.shared import (
+    QAState,
+    best_snippet,
+    coverage_score,
+    extract_keywords_simple,
+    return_with_profile,
+    rrf_margin_ratio,
+)
+from api.config import get_settings
+from api.db import SessionLocal
+from api.rerank import prepend_recent_relevant_docs, rerank_titles
+from api.retrieval import top_chunks_for_docs
+
+settings = get_settings()
+logger = logging.getLogger("dogv.graph")
+
+
+def _doc_similarity_scores(
+    query_embedding: list[float] | None,
+    doc_ids: list[int],
+) -> dict[int, float]:
+    if not query_embedding or not doc_ids:
+        return {}
+    literal = "[" + ",".join(f"{v:.6f}" for v in query_embedding) + "]"
+    params = {"query_embedding": literal, "doc_ids": doc_ids}
+    sql = sa_text(
+        """
+        WITH doc_scores AS (
+            SELECT document_id, 1 - (embedding <=> CAST(:query_embedding AS vector)) AS score
+            FROM rag_doc
+            WHERE document_id = ANY(:doc_ids)
+            AND embedding IS NOT NULL
+        ),
+        title_scores AS (
+            SELECT document_id, 1 - (embedding <=> CAST(:query_embedding AS vector)) AS score
+            FROM rag_title
+            WHERE document_id = ANY(:doc_ids)
+            AND embedding IS NOT NULL
+        )
+        SELECT document_id, MAX(score) AS score
+        FROM (
+            SELECT * FROM doc_scores
+            UNION ALL
+            SELECT * FROM title_scores
+        ) combined
+        GROUP BY document_id
+        """
+    )
+    with SessionLocal() as db:
+        rows = db.execute(sql, params).mappings().all()
+    return {int(row["document_id"]): float(row["score"]) for row in rows}
+
+
+def rerank_titles_node(state: QAState) -> QAState:
+    start = time.monotonic()
+    request_id = state.get("request_id")
+    candidates = state.get("candidate_docs") or []
+    all_candidates = candidates
+    try:
+        question = state["question"]
+        keywords = extract_keywords_simple(question)
+        max_candidates = getattr(settings, "ask_rerank_max_candidates", 10)
+        top_n = getattr(settings, "ask_rerank_top_n", 5)
+        read_max_docs = getattr(settings, "ask_read_max_docs", 3)
+        expand_ratio = getattr(settings, "ask_rrf_expand_margin_ratio", 0.12)
+        expand_probe = getattr(settings, "ask_rrf_margin_probe", 5)
+        expand_candidates = getattr(settings, "ask_rerank_expand_candidates", 10)
+        expand_top_n = getattr(settings, "ask_rerank_expand_top_n", 2)
+        if candidates and rrf_margin_ratio(candidates, probe=expand_probe) < expand_ratio:
+            max_candidates = min(len(candidates), max_candidates + expand_candidates)
+            top_n = min(len(candidates), top_n + expand_top_n)
+        doc_scores = _doc_similarity_scores(
+            state.get("query_embedding"),
+            [int(item["document_id"]) for item in candidates],
+        )
+        if doc_scores:
+            candidates = sorted(
+                candidates,
+                key=lambda item: (
+                    doc_scores.get(int(item["document_id"]), -1.0),
+                    float(item.get("rrf_score") or 0.0),
+                ),
+                reverse=True,
+            )
+        if len(candidates) > max_candidates:
+            candidates = candidates[:max_candidates]
+
+        top_chunks = state.get("top_chunks") or {}
+        chunk_candidates = state.get("chunk_candidates") or []
+        chunk_candidates_by_doc: dict[int, list[dict[str, Any]]] = {}
+        if chunk_candidates:
+            for item in chunk_candidates:
+                doc_id = item.get("document_id")
+                if doc_id is None:
+                    continue
+                chunk_candidates_by_doc.setdefault(int(doc_id), []).append(item)
+            for doc_id, items in chunk_candidates_by_doc.items():
+                items.sort(key=lambda row: float(row.get("score") or 0.0), reverse=True)
+        fallback_doc_ids = [int(item["document_id"]) for item in candidates]
+        fallback_summaries: dict[int, str] = {}
+        fallback_chunks: dict[int, list[dict[str, Any]]] = {}
+        embeddings = state.get("query_embeddings") or []
+        if not embeddings and state.get("query_embedding"):
+            embeddings = [state["query_embedding"]]
+        if fallback_doc_ids:
+            with SessionLocal() as db:
+                rows = db.execute(
+                    sa_text(
+                        """
+                        SELECT document_id, summary
+                        FROM rag_doc
+                        WHERE document_id = ANY(:doc_ids)
+                        AND summary IS NOT NULL
+                        """
+                    ),
+                    {"doc_ids": fallback_doc_ids},
+                ).mappings().all()
+                fallback_summaries = {
+                    int(row["document_id"]): (row["summary"] or "").strip() for row in rows
+                }
+                if embeddings:
+                    best_chunks: dict[int, dict[str, Any]] = {}
+                    for embedding in embeddings:
+                        chunk_map = top_chunks_for_docs(
+                            db,
+                            embedding,
+                            fallback_doc_ids,
+                            per_doc=1,
+                        )
+                        for doc_id, items in chunk_map.items():
+                            if not items:
+                                continue
+                            candidate = items[0]
+                            score = float(candidate.get("score") or 0.0)
+                            current = best_chunks.get(doc_id)
+                            if current is None or score > float(current.get("score") or 0.0):
+                                best_chunks[doc_id] = candidate
+                    fallback_chunks = {doc_id: [chunk] for doc_id, chunk in best_chunks.items()}
+        rerank_candidates = []
+        for item in candidates:
+            doc_id = int(item["document_id"])
+            snippet = ""
+            chunk_list = top_chunks.get(doc_id) or []
+            if chunk_list:
+                snippet = best_snippet(question, chunk_list)
+            if not snippet:
+                snippet = (item.get("summary") or item.get("text") or "").strip()
+            if not snippet:
+                snippet = fallback_summaries.get(doc_id, "")
+            if not snippet and doc_id in fallback_chunks:
+                snippet = best_snippet(question, fallback_chunks[doc_id])
+            if snippet and keywords and coverage_score(snippet, keywords) == 0:
+                candidate_chunks = chunk_candidates_by_doc.get(doc_id) or []
+                if candidate_chunks:
+                    improved = best_snippet(question, candidate_chunks)
+                    if improved and coverage_score(improved, keywords) > 0:
+                        snippet = improved
+            if not snippet:
+                snippet = (item.get("title") or "").strip()
+            rerank_candidates.append(
+                {
+                    "document_id": doc_id,
+                    "issue_date": item.get("issue_date"),
+                    "title": item.get("title"),
+                    "doc_kind": item.get("doc_kind"),
+                    "doc_subkind": item.get("doc_subkind"),
+                    "ref": item.get("ref"),
+                    "snippet": snippet,
+                }
+            )
+
+        llm_top_n = min(len(rerank_candidates), max(top_n, read_max_docs))
+        if len(rerank_candidates) <= llm_top_n:
+            doc_ids = [item["document_id"] for item in rerank_candidates]
+            elapsed = time.monotonic() - start
+            logger.info(
+                "rerank.skip req=%s candidates=%s elapsed=%.2fs",
+                request_id,
+                len(rerank_candidates),
+                elapsed,
+            )
+            return return_with_profile(
+                state,
+                "rerank",
+                {"selected_doc_ids": doc_ids},
+                elapsed_seconds=round(elapsed, 3),
+                skipped=True,
+                selected_docs=len(doc_ids),
+                candidate_docs=len(rerank_candidates),
+            )
+        doc_ids = rerank_titles(
+            question,
+            rerank_candidates,
+            top_n=llm_top_n,
+            return_all=True,
+        )
+        coverage_keep = []
+        coverage_keep_n = getattr(settings, "ask_rerank_coverage_keep", 2)
+        if coverage_keep_n > 0 and keywords:
+            threshold = 1 if len(keywords) <= 3 else 2
+            scored = []
+            for item in rerank_candidates:
+                doc_id = int(item["document_id"])
+                text = f"{item.get('title') or ''} {item.get('snippet') or ''}"
+                score = coverage_score(text, keywords)
+                if score >= threshold:
+                    scored.append((score, doc_id))
+            scored.sort(key=lambda item: item[0], reverse=True)
+            coverage_keep = [doc_id for _, doc_id in scored[:coverage_keep_n]]
+        if coverage_keep:
+            seen: set[int] = set()
+            merged: list[int] = []
+            for doc_id in coverage_keep + doc_ids:
+                if doc_id in seen:
+                    continue
+                seen.add(doc_id)
+                merged.append(doc_id)
+            doc_ids = merged
+        if not doc_ids:
+            doc_ids = [item["document_id"] for item in rerank_candidates]
+        doc_ids = prepend_recent_relevant_docs(question, keywords, rerank_candidates, doc_ids)
+        elapsed = time.monotonic() - start
+        logger.info(
+            "rerank.done req=%s selected=%s elapsed=%.2fs",
+            request_id,
+            len(doc_ids),
+            elapsed,
+        )
+        return return_with_profile(
+            state,
+            "rerank",
+            {"selected_doc_ids": doc_ids},
+            elapsed_seconds=round(elapsed, 3),
+            skipped=False,
+            selected_docs=len(doc_ids),
+            candidate_docs=len(rerank_candidates),
+        )
+    except Exception:
+        logger.exception("rerank.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
+        raise

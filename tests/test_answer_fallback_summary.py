@@ -9,7 +9,7 @@ class _AlwaysSemanticFailClient:
     def __init__(self, *args, **kwargs):
         return None
 
-    def chat_json(self, messages, temperature=0.0):
+    def chat_json(self, messages, temperature=0.0, **kwargs):
         _AlwaysSemanticFailClient.calls += 1
         return {
             "answer": "La cuantia maxima es de 900 euros segun 2025/99999.",

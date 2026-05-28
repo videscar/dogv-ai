@@ -9,7 +9,7 @@ class _FlakyClient:
     def __init__(self, *args, **kwargs):
         return None
 
-    def chat_json(self, messages, temperature=0.0):
+    def chat_json(self, messages, temperature=0.0, **kwargs):
         _FlakyClient.calls += 1
         if _FlakyClient.calls == 1:
             raise ValueError("transient parse error")
@@ -23,7 +23,7 @@ class _AlwaysFailClient:
     def __init__(self, *args, **kwargs):
         return None
 
-    def chat_json(self, messages, temperature=0.0):
+    def chat_json(self, messages, temperature=0.0, **kwargs):
         raise ValueError("permanent parse error")
 
 

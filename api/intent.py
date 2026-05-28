@@ -9,6 +9,22 @@ from .query_expansion import normalize_expansion_terms
 from .taxonomy import canonical_doc_kind, canonical_doc_subkind, normalize_text
 
 
+def needs_amounts(question: str) -> bool:
+    if not question:
+        return False
+    return bool(re.search(r"\b(quantia|cuant[ií]a|importe|cantidad|euros?|€)\b", question, re.IGNORECASE))
+
+
+def needs_eligibility(question: str) -> bool:
+    return bool(
+        re.search(
+            r"\b(qui|qui[eé]n|beneficiar|beneficiari|beneficiario|sol·licit[a-z]*|solicit[a-z]*|requisit|requisito|destinatari|destinatario|pot|puede|poden|pueden)\b",
+            question,
+            re.IGNORECASE,
+        )
+    )
+
+
 INTENT_SYSTEM = (
     "Eres un analista de intencion para consultas del DOGV. "
     "Devuelve SOLO JSON con estos campos: "

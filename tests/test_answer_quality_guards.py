@@ -7,7 +7,7 @@ class _IdentityClient:
     def __init__(self, *args, **kwargs):
         return None
 
-    def chat_json(self, messages, temperature=0.0):
+    def chat_json(self, messages, temperature=0.0, **kwargs):
         return {
             "answer": "El president actual és Juan Francisco Pérez Llorca i l'ex-president és Carlos Mazón Guixot.",
             "citations": [42629, 42628],

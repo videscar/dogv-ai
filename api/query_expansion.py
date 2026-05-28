@@ -4,202 +4,31 @@ from typing import Any
 import re
 
 from .llm import LlmClient
-from .temporal import has_relative_time_expression
+from .query_classifiers import guess_language, is_feed_query, is_relative_time_query
+from .text_tokens import (
+    CONNECTORS as _CONNECTORS,
+    GENERIC_TERMS as _GENERIC_TERMS,
+    LOW_SIGNAL_TERMS as _LOW_SIGNAL_TERMS,
+    SHORT_TOKEN_ALLOWLIST as _SHORT_TOKEN_ALLOWLIST,
+    STOPWORDS as _STOPWORDS,
+    has_content_tokens as _has_content_tokens,
+    keep_token as _keep_token,
+    tokenize as _tokenize,
+)
 
-_STOPWORDS = {
-    "que",
-    "qui",
-    "quin",
-    "quina",
-    "quins",
-    "quines",
-    "com",
-    "quan",
-    "on",
-    "per",
-    "amb",
-    "des",
-    "para",
-    "por",
-    "sobre",
-    "entre",
-    "desde",
-    "hasta",
-    "sin",
-    "segun",
-    "según",
-    "del",
-    "de",
-    "la",
-    "el",
-    "les",
-    "els",
-    "los",
-    "las",
-    "una",
-    "uno",
-    "unos",
-    "unas",
-    "nou",
-    "nova",
-    "nous",
-    "noves",
-    "data",
-    "generalitat",
-    "consell",
-    "conselleria",
-    "presidencia",
-    "presidència",
-    "departament",
-    "govern",
-    "ha",
-    "han",
-    "s'ha",
-    "es",
-    "se",
-    "si",
-    "sí",
-    "ja",
-    "ya",
-    "esta",
-    "este",
-    "aquesta",
-    "aquest",
-    "hoy",
-    "ahir",
-    "ayer",
-    "donde",
-    "dónde",
-    "cual",
-    "cuál",
-    "cuales",
-    "cuáles",
-    "como",
-    "cómo",
-    "quiero",
-    "ver",
-    "buscar",
-    "encontrar",
-    "consultar",
-    "participar",
-    "poder",
-    "puedo",
-    "podria",
-    "podría",
-    "algun",
-    "algún",
-    "alguna",
-    "algunos",
-    "algunas",
-    "cualquier",
-    "cualquiera",
-    "cualesquiera",
-    "sera",
-    "serà",
-    "esta",
-    "aquesta",
-    "nou",
-    "nova",
-    "nous",
-    "noves",
-}
 
-_SHORT_TOKEN_ALLOWLIST = {
-    "ope",
-    "umh",
-    "ivass",
-    "gva",
-    "c1",
-    "c2",
-    "a1",
-    "a2",
-    "b1",
-    "b2",
-}
+__all__ = [
+    "guess_language",
+    "is_feed_query",
+    "is_relative_time_query",
+    "normalize_expansion_terms",
+    "llm_expand_query",
+    "build_bm25_query",
+    "build_bm25_queries",
+    "build_prf_query",
+    "decompose_question",
+]
 
-_GENERIC_TERMS = {
-    "anuncio",
-    "resolucion",
-    "resolución",
-    "decreto",
-    "orden",
-    "acuerdo",
-    "convocatoria",
-    "convocar",
-    "bases",
-    "base",
-    "lista",
-    "listado",
-    "listes",
-    "listes",
-    "admitidos",
-    "admitidas",
-    "excluidos",
-    "excluidas",
-    "tribunal",
-    "tribunales",
-    "concurso",
-    "oposicion",
-    "oposición",
-    "publicado",
-    "publicada",
-    "publicacion",
-    "publicación",
-    "modificacion",
-    "modificación",
-    "correccion",
-    "corrección",
-    "nombramiento",
-    "cese",
-    "plaza",
-    "plazas",
-    "puesto",
-    "puestos",
-    "oferta",
-    "empleo",
-    "publico",
-    "público",
-    "provision",
-    "provisión",
-    "resolucio",
-    "resolució",
-    "ayuntamiento",
-    "universidad",
-    "universitat",
-    "consorcio",
-    "generalitat",
-    "personal",
-    "convocado",
-    "convocada",
-    "convocó",
-    "salido",
-    "publicaron",
-    "aprobó",
-    "aprobado",
-}
-
-_LOW_SIGNAL_TERMS = {
-    "publicado",
-    "publicada",
-    "publicacion",
-    "publicación",
-    "publicar",
-    "salido",
-    "salida",
-    "salir",
-    "aprobado",
-    "aprobada",
-    "aprobó",
-    "aprobacion",
-    "aprobación",
-    "aprobar",
-    "convocado",
-    "convocada",
-    "convocar",
-    "modificado",
-    "modificada",
-    "modificar",
-}
 
 EXPAND_SYSTEM = (
     "Eres un asistente para expandir consultas del DOGV. "
@@ -219,43 +48,6 @@ Contexto opcional:
 - keywords: {keywords}
 
 Devuelve SOLO JSON con keywords y phrases."""
-
-
-def _tokenize(text: str) -> list[str]:
-    return re.findall(r"[\w·'/-]+", text.lower())
-
-
-def _keep_token(token: str) -> bool:
-    if len(token) >= 4:
-        return True
-    if token in _SHORT_TOKEN_ALLOWLIST:
-        return True
-    if any(ch.isdigit() for ch in token) and len(token) >= 2:
-        return True
-    if re.fullmatch(r"[a-z]\d", token):
-        return True
-    return False
-
-
-_CONNECTORS = {
-    "de",
-    "del",
-    "d'",
-    "l'",
-    "la",
-    "el",
-    "i",
-    "y",
-    "da",
-    "do",
-    "dos",
-    "des",
-    "en",
-    "para",
-    "per",
-    "a",
-    "al",
-}
 
 
 def _extract_phrases(question: str, keywords: list[str] | None = None) -> list[str]:
@@ -318,11 +110,6 @@ def _phrase_is_useful(phrase: str) -> bool:
     if not tokens:
         return False
     return any(token.lower() not in _LOW_SIGNAL_TERMS for token in tokens)
-
-
-def _has_content_tokens(text: str) -> bool:
-    tokens = [t for t in _tokenize(text) if _keep_token(t) and t not in _STOPWORDS]
-    return len(tokens) >= 2
 
 
 def _normalize_expansion_item(text: str) -> str | None:
@@ -592,51 +379,6 @@ def _rank_phrase_tokens(phrases: list[str]) -> list[str]:
     if not counts:
         return []
     return sorted(counts, key=lambda tok: (-counts[tok], -len(tok), tok))
-
-
-def is_feed_query(text: str) -> bool:
-    return is_relative_time_query(text)
-
-
-def is_relative_time_query(text: str) -> bool:
-    return has_relative_time_expression(text or "")
-
-
-_VALENCIAN_MARKERS = {
-    "s'ha",
-    "ha estat",
-    "per a",
-    "llocs",
-    "lloc",
-    "nomenament",
-    "cessament",
-    "errades",
-    "correccio",
-    "correcció",
-    "publicat",
-    "convocat",
-    "convocada",
-    "resolucio",
-    "resolució",
-    "decret",
-    "generalitat",
-    "consell",
-    "conselleria",
-}
-
-
-def guess_language(text: str) -> str:
-    if not text:
-        return "es_es"
-    lower = text.lower()
-    if "·" in lower or "ç" in lower:
-        return "va_va"
-    if "l'" in lower:
-        return "va_va"
-    hits = sum(1 for marker in _VALENCIAN_MARKERS if marker in lower)
-    if hits >= 2:
-        return "va_va"
-    return "es_es"
 
 
 def _clean_phrase(text: str) -> str | None:

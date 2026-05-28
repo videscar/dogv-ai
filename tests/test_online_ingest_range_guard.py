@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 
-import agent.graph as graph
+import agent.nodes.online_ingest as graph
 
 
 class _DummySession:

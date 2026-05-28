@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agent.graph import _prepend_recent_relevant_docs
+from api.rerank import prepend_recent_relevant_docs as _prepend_recent_relevant_docs
 
 
 def test_recent_relevant_docs_are_prepended_for_recent_queries():

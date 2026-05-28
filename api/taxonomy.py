@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import re
 import unicodedata
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -213,3 +214,16 @@ def canonical_doc_subkind(value: str | None) -> str | None:
         return None
     normalized = normalize_text(value)
     return _DOC_SUBKIND_MAP.get(normalized) or value
+
+
+def is_base_like(item: dict[str, Any]) -> bool:
+    doc_kind = (item.get("doc_kind") or "").lower()
+    doc_subkind = (item.get("doc_subkind") or "").lower()
+    title = (item.get("title") or "").lower()
+    if doc_subkind in {"bases", "convocatoria", "convocatòria"}:
+        return True
+    if "bases reguladoras" in title or "bases reguladores" in title or "convocatoria" in title:
+        return True
+    if doc_kind in {"subvenciones", "ayudas"} and ("decret" in title or "decreto" in title):
+        return True
+    return False
