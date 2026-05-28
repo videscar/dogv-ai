@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily DOGV ingest at 09:30 Europe/Madrid on weekdays
+
+[Timer]
+OnCalendar=Mon..Fri *-*-* 09:30:00 Europe/Madrid
+Persistent=true
+Unit=dogv-daily-ingest.service
+
+[Install]
+WantedBy=timers.target

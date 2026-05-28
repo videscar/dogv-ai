@@ -1,0 +1,19 @@
+[Unit]
+Description=DOGV AI daily ingest (sumario + extract + classify + chunks, warm window)
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=ai-server
+WorkingDirectory=/home/ai-server/dogv-ai
+Environment="PATH=/home/ai-server/dogv-ai/.venv/bin:/usr/bin"
+EnvironmentFile=/home/ai-server/dogv-ai/.env
+ExecStart=/home/ai-server/dogv-ai/.venv/bin/python scripts/maintain_indices.py --daily
+StandardOutput=journal
+StandardError=journal
+TimeoutStartSec=3h
+Nice=10
+
+[Install]
+WantedBy=multi-user.target
