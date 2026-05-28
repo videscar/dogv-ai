@@ -29,7 +29,7 @@
   {
     "id": "A04",
     "language": "es",
-    "question": "¿Qué subvenciones de movilidad o transporte se publicaron esta semana?",
+    "question": "¿Qué subvenciones de movilidad o transporte se publicaron en 2025?",
     "must_include": ["movilidad", "transporte"],
     "must_not_include": [],
     "required_citations": 1,
@@ -110,7 +110,7 @@
   {
     "id": "A13",
     "language": "va",
-    "question": "Quines convocatòries de subvencions a entitats locals han eixit este mes?",
+    "question": "Quines convocatòries de subvencions a entitats locals s'han publicat en 2025?",
     "must_include": ["subvenc", "entitat"],
     "must_not_include": [],
     "required_citations": 1,
