@@ -131,8 +131,11 @@ def build_answer(
         if settings.answer_missing_notes_enabled
         else "Sin notas."
     )
+    system_prompt = ANSWER_SYSTEM
+    if "gpt-oss" in str(getattr(client, "model", "") or "").lower():
+        system_prompt = f"{ANSWER_SYSTEM}\nReasoning: high"
     messages = [
-        {"role": "system", "content": ANSWER_SYSTEM},
+        {"role": "system", "content": system_prompt},
         {
             "role": "user",
             "content": ANSWER_USER.format(
