@@ -208,7 +208,7 @@ class Settings(BaseSettings):
     answer_missing_notes_enabled: bool = False
     answer_validator_enabled: bool = True
     answer_repair_attempts: int = 1
-    answer_claim_guard_mode: str = "unit_aware_strict"
+    answer_claim_guard_mode: str = "current_strict"
     answer_repair_mode: str = "conditional"
     answer_fallback_style: str = "concise_summary"
     answer_fallback_max_items: int = 3
