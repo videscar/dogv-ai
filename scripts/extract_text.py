@@ -143,6 +143,58 @@ def select_document_text(
     return None, None
 
 
+def resolve_pdf_text(
+    pdf_url: Optional[str],
+    html_text: Optional[str],
+    has_annex: bool,
+    *,
+    download_missing: bool = True,
+) -> Optional[str]:
+    """Extract PDF text, but only when the HTML can't stand alone (annex /
+    unusable HTML). Downloads the PDF on demand when not cached."""
+    if not (pdf_url and _needs_pdf(html_text, has_annex)):
+        return None
+    pdf_path = build_pdf_path(pdf_url)
+    if not pdf_path.exists() and download_missing:
+        full_url = build_pdf_url(pdf_url)
+        if full_url:
+            download_pdf(full_url, pdf_path)
+    if pdf_path.exists():
+        return extract_text_from_pdf(pdf_path)
+    return None
+
+
+def resolve_document_text(
+    doc: DogvDocument,
+    lang: Optional[str],
+    *,
+    prefetched: Optional[tuple[Optional[str], bool]] = None,
+    fetch_html: bool = True,
+) -> tuple[Optional[str], Optional[str]]:
+    """Resolve final (text, source) for one document.
+
+    `prefetched` lets a caller (e.g. the concurrent backfill) supply an
+    already-fetched (html_text, has_annex) pair so this does no network for the
+    HTML; otherwise the HTML body is fetched here when fetch_html is set.
+    """
+    if prefetched is not None:
+        html_text, has_annex = prefetched
+    else:
+        html_text, has_annex = None, False
+        disp_id = (doc.raw_json or {}).get("id")
+        if fetch_html and disp_id and lang:
+            html_text, has_annex = fetch_disposicion_body(disp_id, lang)
+
+    pdf_text = resolve_pdf_text(doc.pdf_url, html_text, has_annex)
+    return select_document_text(
+        html_text=html_text,
+        pdf_text=pdf_text,
+        title=doc.title,
+        conselleria=doc.conselleria,
+        section=doc.section,
+    )
+
+
 def _count_target_documents(db: Session, start_date=None, end_date=None) -> int:
     q = (
         db.query(DogvDocument.id)
@@ -212,32 +264,7 @@ def extract_range(
             .all()
         )
         for doc, lang in rows:
-            disp_id = (doc.raw_json or {}).get("id")
-            html_text = None
-            has_annex = False
-            if fetch_html and disp_id and lang:
-                html_text, has_annex = fetch_disposicion_body(disp_id, lang)
-
-            # Only fetch/parse the PDF when the HTML can't stand alone: an annex
-            # the portal keeps PDF-only, or an unusable HTML body. The ~90% with
-            # a complete HTML body skip the PDF download + parse entirely.
-            pdf_text = None
-            if doc.pdf_url and _needs_pdf(html_text, has_annex):
-                pdf_path = build_pdf_path(doc.pdf_url)
-                if not pdf_path.exists():
-                    full_url = build_pdf_url(doc.pdf_url)
-                    if full_url:
-                        download_pdf(full_url, pdf_path)
-                if pdf_path.exists():
-                    pdf_text = extract_text_from_pdf(pdf_path)
-
-            text, source = select_document_text(
-                html_text=html_text,
-                pdf_text=pdf_text,
-                title=doc.title,
-                conselleria=doc.conselleria,
-                section=doc.section,
-            )
+            text, source = resolve_document_text(doc, lang, fetch_html=fetch_html)
 
             if text is None:
                 print(f"[skip] no text extracted for doc id={doc.id}")
