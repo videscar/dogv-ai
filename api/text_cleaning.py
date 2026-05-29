@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
 
 _DROP_TAGS = {
@@ -35,7 +36,15 @@ def clean_html(html: str) -> str:
         tag.decompose()
 
     for tag in soup.find_all(True):
-        classes = " ".join(tag.get("class", [])).lower()
+        # Decomposing a parent above tears down its descendants, but they are
+        # still present in this list; calling .get() on a destroyed node raises
+        # AttributeError. Skip anything that is no longer a live Tag.
+        if not isinstance(tag, Tag) or tag.name is None:
+            continue
+        cls = tag.get("class") or []
+        if isinstance(cls, str):
+            cls = [cls]
+        classes = " ".join(cls).lower()
         element_id = (tag.get("id") or "").lower()
         if any(key in classes for key in ("menu", "header", "footer", "nav")):
             tag.decompose()

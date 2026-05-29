@@ -1,5 +1,8 @@
 """
-Run the full ingestion pipeline (sumario -> documents -> assets -> text -> classify -> chunks).
+Run the full ingestion pipeline (sumario -> documents -> text -> classify -> chunks).
+
+Text extraction prefers the portal HTML body and pulls the PDF on demand only
+for annex documents, so there is no separate bulk asset-download step.
 
 Usage:
     python scripts/ingest_pipeline.py YYYY-MM-DD YYYY-MM-DD [langs]

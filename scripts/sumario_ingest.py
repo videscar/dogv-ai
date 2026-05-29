@@ -112,6 +112,19 @@ def fetch_sumario_json(date: str, lang: str = "es_es") -> Dict[str, Any]:
     return resp.json()
 
 
+def fetch_disposicion_json(disp_id: Any, lang: str, timeout: int = 20) -> Dict[str, Any]:
+    """Fetch one document's detail JSON (incl. the `texto` HTML body).
+
+    Same backend as the sumario fetch. `lang` is required by the API (issue
+    language, e.g. 'es_es' / 'va_va'); omitting it returns HTTP 440.
+    """
+    base = settings.dogv_base_url.rstrip("/")
+    url = f"{base}/dogv-portal/disposicion/{disp_id}"
+    resp = requests.get(url, params={"lang": lang}, timeout=timeout)
+    resp.raise_for_status()
+    return resp.json()
+
+
 def main():
     if len(sys.argv) < 2:
         print("Usage: python scripts/sumario_ingest.py YYYY-MM-DD [lang]")
