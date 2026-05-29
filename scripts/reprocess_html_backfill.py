@@ -46,7 +46,7 @@ from api.models import DogvDocument, DogvIssue
 from scripts.build_chunks import build_chunks_for_range
 from scripts.classify_documents import classify_range
 from scripts.download_assets import build_pdf_path, download_pdf
-from scripts.extract_documents import _invalidate_doc_for_reindex
+from scripts.extract_documents import _delete_rag_rows, _invalidate_doc_for_reindex
 from scripts.extract_text import (
     _needs_pdf,
     fetch_disposicion_body,
@@ -111,7 +111,9 @@ def _prefetch_worker(task: tuple) -> tuple:
     return doc_id, html_text, has_annex
 
 
-def reprocess_date(db: Session, d: date, workers: int, dry_run: bool) -> tuple[int, int, int]:
+def reprocess_date(
+    db: Session, d: date, workers: int, dry_run: bool, skip_classify: bool = False
+) -> tuple[int, int, int]:
     rows = (
         db.query(DogvDocument, DogvIssue.language)
         .join(DogvIssue)
@@ -138,9 +140,18 @@ def reprocess_date(db: Session, d: date, workers: int, dry_run: bool) -> tuple[i
         pre = prefetched.get(doc.id, (None, False))
         text, source = resolve_document_text(doc, lang, prefetched=pre)
         if not dry_run:
-            # Reset prior text/classification and drop stale chunks so classify
-            # and build_chunks pick the doc up again.
-            _invalidate_doc_for_reindex(db, doc, reset_text=True)
+            if skip_classify:
+                # Drop stale chunks + reset text, but KEEP doc_kind: classification
+                # is title-driven and unchanged by PDF->HTML, so re-classifying the
+                # whole corpus (the dominant LLM cost) is unnecessary.
+                _delete_rag_rows(db, doc.id)
+                doc.text = None
+                doc.text_source = None
+                doc.text_updated_at = None
+            else:
+                # Reset prior text/classification and drop stale chunks so classify
+                # and build_chunks pick the doc up again.
+                _invalidate_doc_for_reindex(db, doc, reset_text=True)
             if text is not None:
                 doc.text = text
                 doc.text_source = source
@@ -157,10 +168,12 @@ def reprocess_date(db: Session, d: date, workers: int, dry_run: bool) -> tuple[i
         return html_n, pdf_n, none_n
 
     db.commit()
-    # Phase C — needs servers: re-classify (chat) then re-chunk/re-embed (embed).
-    classify_range(db, d, d)
+    # Phase C — needs servers: (optionally) re-classify (chat) then re-chunk/re-embed (embed).
+    if not skip_classify:
+        classify_range(db, d, d)
     build_chunks_for_range(db, d, d, force=True)
-    print(f"  {d}  docs={len(rows)}  html={html_n} pdf={pdf_n} none={none_n}  reclassified+rechunked")
+    action = "rechunked (kept doc_kind)" if skip_classify else "reclassified+rechunked"
+    print(f"  {d}  docs={len(rows)}  html={html_n} pdf={pdf_n} none={none_n}  {action}")
     return html_n, pdf_n, none_n
 
 
@@ -171,6 +184,11 @@ def main():
     parser.add_argument("--all", action="store_true", help="process the entire corpus")
     parser.add_argument("--workers", type=int, default=8, help="concurrent HTML fetchers")
     parser.add_argument("--dry-run", action="store_true", help="fetch + report only; no DB writes, no servers")
+    parser.add_argument(
+        "--skip-classify",
+        action="store_true",
+        help="keep existing doc_kind (title-driven); only re-extract + re-chunk/re-embed",
+    )
     parser.add_argument("--limit-dates", type=int, help="process at most N dates (pilot)")
     parser.add_argument("--resume", action="store_true", help="skip dates up to the saved checkpoint")
     args = parser.parse_args()
@@ -192,11 +210,12 @@ def main():
             dates = dates[: args.limit_dates]
 
         mode = "DRY-RUN" if args.dry_run else "WRITE"
-        print(f"[{mode}] {len(dates)} issue-dates to process, workers={args.workers}")
+        classify_note = " skip-classify" if args.skip_classify else ""
+        print(f"[{mode}{classify_note}] {len(dates)} issue-dates to process, workers={args.workers}")
 
         t_html = t_pdf = t_none = 0
         for d in dates:
-            h, p, n = reprocess_date(db, d, args.workers, args.dry_run)
+            h, p, n = reprocess_date(db, d, args.workers, args.dry_run, args.skip_classify)
             t_html += h
             t_pdf += p
             t_none += n
