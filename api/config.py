@@ -85,7 +85,6 @@ class TemporalPolicy:
 class AutoIngestPolicy:
     enabled: bool
     max_days: int
-    keep_months: int
     languages: str
     startup_enabled: bool
     startup_blocking: bool
@@ -189,7 +188,6 @@ class Settings(BaseSettings):
     # Auto ingest
     auto_ingest_enabled: bool = False
     auto_ingest_max_days: int = 15
-    auto_ingest_keep_months: int = 12
     auto_ingest_languages: str = "es_es,va_va"
     auto_ingest_startup_enabled: bool = True
     auto_ingest_startup_blocking: bool = False
@@ -311,7 +309,6 @@ class Settings(BaseSettings):
         return AutoIngestPolicy(
             enabled=self.auto_ingest_enabled,
             max_days=self.auto_ingest_max_days,
-            keep_months=self.auto_ingest_keep_months,
             languages=self.auto_ingest_languages,
             startup_enabled=self.auto_ingest_startup_enabled,
             startup_blocking=self.auto_ingest_startup_blocking,

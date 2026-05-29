@@ -555,9 +555,9 @@ def startup_sync(languages: list[str] | None = None) -> dict[str, Any]:
         return get_startup_sync_status()
 
     selected_languages = languages or _parse_languages(settings.auto_ingest_languages)
-    keep_months = max(1, int(settings.auto_ingest_keep_months))
+    retention_months = max(1, int(settings.warm_index_months))
     today = local_today(settings.temporal_timezone)
-    window_start = _subtract_months(today, keep_months)
+    window_start = _subtract_months(today, retention_months)
     started_at = _utc_now_iso()
 
     _set_startup_status(
