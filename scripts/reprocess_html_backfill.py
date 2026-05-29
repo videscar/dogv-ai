@@ -168,11 +168,13 @@ def reprocess_date(
         return html_n, pdf_n, none_n
 
     db.commit()
-    # Phase C — needs servers: (optionally) re-classify (chat) then re-chunk/re-embed (embed).
-    if not skip_classify:
-        classify_range(db, d, d)
+    # Phase C — needs servers. classify_range only processes doc_kind IS NULL, so
+    # we always call it: with --skip-classify the existing doc_kind was kept and
+    # this just fills genuine gaps (never-classified docs); without it, every doc
+    # was nulled above and gets reclassified. Then re-chunk/re-embed (embed).
+    classify_range(db, d, d)
     build_chunks_for_range(db, d, d, force=True)
-    action = "rechunked (kept doc_kind)" if skip_classify else "reclassified+rechunked"
+    action = "rechunked (kept doc_kind, gaps classified)" if skip_classify else "reclassified+rechunked"
     print(f"  {d}  docs={len(rows)}  html={html_n} pdf={pdf_n} none={none_n}  {action}")
     return html_n, pdf_n, none_n
 
