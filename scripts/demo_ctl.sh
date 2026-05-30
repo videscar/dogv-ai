@@ -30,6 +30,10 @@ EMBED_LLM_PORT="${EMBED_LLM_PORT:-8001}"
 EMBED_LLM_MODEL="${EMBED_LLM_MODEL:-${HOME}/models/bge-m3/bge-m3-f16.gguf}"
 EMBED_LLM_ALIAS="${EMBED_LLM_ALIAS:-bge-m3}"
 EMBED_LLM_CTX="${EMBED_LLM_CTX:-8192}"
+# Micro-batch: smaller than ctx to keep GPU memory low (~1GB) so embed coexists
+# with the chat server on GPU1; must still hold a full embed request (8 chunks x
+# ~500 tok). 4096 is the sweet spot — 512 was too small and caused HTTP 500s.
+EMBED_LLM_UBATCH="${EMBED_LLM_UBATCH:-4096}"
 EMBED_LLM_NGL="${EMBED_LLM_NGL:-99}"
 # Pin the embed server to a specific GPU index (chat server typically owns GPU 0).
 EMBED_LLM_CUDA_DEVICES="${EMBED_LLM_CUDA_DEVICES:-1}"
@@ -143,15 +147,19 @@ start_embed_llm() {
   fi
 
   echo "Starting embed llama-server on ${EMBED_LLM_HOST}:${EMBED_LLM_PORT} (CUDA_VISIBLE_DEVICES=${EMBED_LLM_CUDA_DEVICES})"
+  # --verbosity 0: the default per-request logging destabilized the server under
+  # sustained load (crashed ~every 40min during the corpus backfill, and ballooned
+  # the log to 61GB). Quiet logging fixed it.
   nohup env CUDA_VISIBLE_DEVICES="${EMBED_LLM_CUDA_DEVICES}" "${LLAMA_SERVER_BIN}" \
     --model "${EMBED_LLM_MODEL}" \
     --alias "${EMBED_LLM_ALIAS}" \
     --host "${EMBED_LLM_HOST}" --port "${EMBED_LLM_PORT}" \
     --embeddings \
     --pooling cls \
-    --ctx-size "${EMBED_LLM_CTX}" -b "${EMBED_LLM_CTX}" -ub "${EMBED_LLM_CTX}" \
+    --ctx-size "${EMBED_LLM_CTX}" -b "${EMBED_LLM_CTX}" -ub "${EMBED_LLM_UBATCH}" \
     --n-gpu-layers "${EMBED_LLM_NGL}" \
     --embd-normalize 2 \
+    --verbosity 0 \
     >"${EMBED_LLM_LOG_FILE}" 2>&1 &
   local pid=$!
   echo "${pid}" >"${EMBED_LLM_PID_FILE}"
