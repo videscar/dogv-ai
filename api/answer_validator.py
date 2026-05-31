@@ -229,9 +229,15 @@ def _detect_unsupported_claim(
         return unsupported_ref or unsupported_number
 
     answer_units = _extract_unit_claims(answer_text)
-    source_units = _extract_unit_claims(source_text)
-    unsupported_currency = any(token not in source_units["currency"] for token in answer_units["currency"])
-    unsupported_percent = any(token not in source_units["percent"] for token in answer_units["percent"])
+    # Answer-side stays unit-aware: only currency/percent claims are policed, so
+    # incidental numbers (dates, article nums, counts) don't trigger dumps. But the
+    # source side checks figure *presence* among all numbers, not currency-adjacency:
+    # source tables write figures bare ("A1 1.366,74 52,60 ...") while answers write
+    # them with a unit ("1.366,74 euros"). Requiring currency-adjacency in the source
+    # falsely flagged correct, grounded figures as unsupported (verified on v2-032/089).
+    source_numbers = _legacy_numeric_tokens(source_text)
+    unsupported_currency = any(token not in source_numbers for token in answer_units["currency"])
+    unsupported_percent = any(token not in source_numbers for token in answer_units["percent"])
     return unsupported_ref or unsupported_currency or unsupported_percent
 
 

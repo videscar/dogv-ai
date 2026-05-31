@@ -213,7 +213,11 @@ class Settings(BaseSettings):
     answer_missing_notes_enabled: bool = False
     answer_validator_enabled: bool = True
     answer_repair_attempts: int = 1
-    answer_claim_guard_mode: str = "current_strict"
+    # current_strict flags ANY answer number absent from cited source -> dumps
+    # good syntheses (incidental dates/counts/recombined figures). unit_aware_strict
+    # only guards currency- and percent-adjacent figures, the ones that matter for
+    # faithfulness, leaving synthesis numbers alone. See W3 in eval_v2 report.
+    answer_claim_guard_mode: str = "unit_aware_strict"
     answer_repair_mode: str = "conditional"
     answer_fallback_style: str = "concise_summary"
     answer_fallback_max_items: int = 3

@@ -44,6 +44,20 @@ def test_validate_answer_flags_unsupported_currency_claim(monkeypatch):
     assert "unsupported_numeric_or_ref_claim" in errors
 
 
+def test_validate_answer_allows_currency_figure_present_as_bare_table_number(monkeypatch):
+    # Regression (W3): source tables write figures bare ("A1 1.366,74 52,60 ...")
+    # while the answer writes them with a unit ("1.366,74 euros"). The grounded
+    # figure must NOT be flagged just because it lacks a currency word in the source.
+    monkeypatch.setattr(answer_validator.settings, "answer_claim_guard_mode", "unit_aware_strict")
+    errors = _validate_answer(
+        answer_text="El sou base mensual del grup A1 es de 1.366,74 euros.",
+        citations=[101],
+        evidence=[{"doc_id": 101, "quote": "A1 1.366,74 52,60 843,40 32,47"}],
+        full_docs=None,
+    )
+    assert "unsupported_numeric_or_ref_claim" not in errors
+
+
 def test_validate_answer_flags_reference_out_of_source(monkeypatch):
     monkeypatch.setattr(answer_validator.settings, "answer_claim_guard_mode", "unit_aware_strict")
     errors = _validate_answer(
