@@ -25,3 +25,11 @@ data/missing_chunks_detailed_*.csv
 # Misc
 .ipynb_checkpoints/
 logs/
+
+# eval scratch subset runs (intermediate; not authoritative baselines)
+data/eval_v2/answers_w3_unitaware.jsonl
+data/eval_v2/answers_w3_unitaware_fix.jsonl
+data/eval_v2/answers_w3_unitaware_fix.jsonl.meta.json
+data/eval_v2/answers_w3_currentstrict.jsonl
+data/eval_v2/answer_input_w3.json
+data/eval_v2/answer_input_determinism.json

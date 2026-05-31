@@ -1,0 +1,18 @@
+{
+ "started_at": "2026-05-31T10:32:02+0000",
+ "base_url": "http://127.0.0.1:8089",
+ "in_path": "data/eval_v2/answer_input.json",
+ "out_path": "data/eval_v2/answers_w3_full.jsonl",
+ "build": {
+  "git_sha": "2269b5817b80c7de0c77678fb03bf67ed2045ba7",
+  "git_branch": "eval-v2-weaknesses",
+  "git_dirty": false
+ },
+ "eval_settings": {
+  "answer_claim_guard_mode": "unit_aware_strict",
+  "ask_synthesis_thinking": true,
+  "ask_synthesis_temperature": 0.0,
+  "answer_repair_mode": "conditional",
+  "answer_validator_enabled": true
+ }
+}
