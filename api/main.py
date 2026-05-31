@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
 from .auto_ingest import start_startup_sync
+from .build_info import build_info
 from .config import enabled_lanes, get_settings
 from .db import SessionLocal
 from .models import DogvDocument, DogvIssue
@@ -34,6 +35,20 @@ logger = logging.getLogger("dogv.api")
 app = FastAPI(title="DOGV AI – Local Legal Assistant")
 graph = build_graph()
 settings = get_settings()
+
+# Stamp the running code + eval-relevant settings into the logs at startup, so any
+# run (especially multi-hour eval jobs) can be tied to the exact commit + config
+# that produced it. git_dirty=True means uncommitted code is serving requests.
+_BUILD = build_info()
+logger.info(
+    "build.info git_sha=%s branch=%s dirty=%s claim_guard=%s synthesis_thinking=%s repair_mode=%s",
+    _BUILD.get("git_sha"),
+    _BUILD.get("git_branch"),
+    _BUILD.get("git_dirty"),
+    settings.answer_claim_guard_mode,
+    settings.ask_synthesis_thinking,
+    settings.answer_repair_mode,
+)
 
 
 def get_db():
@@ -95,6 +110,14 @@ def health():
         "status": "ok",
         "freshness": readiness.get("freshness"),
         "startup_sync": readiness.get("startup_sync"),
+        "build": _BUILD,
+        "eval_settings": {
+            "answer_claim_guard_mode": settings.answer_claim_guard_mode,
+            "ask_synthesis_thinking": settings.ask_synthesis_thinking,
+            "ask_synthesis_temperature": settings.ask_synthesis_temperature,
+            "answer_repair_mode": settings.answer_repair_mode,
+            "answer_validator_enabled": settings.answer_validator_enabled,
+        },
     }
     if not readiness.get("ready"):
         payload["readiness"] = {

@@ -36,19 +36,44 @@ def done_ids(path: str) -> set[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base-url", default="http://127.0.0.1:8088")
+    ap.add_argument("--in", dest="in_path", default=IN)
     ap.add_argument("--out", default=OUT)
     ap.add_argument("--timeout", type=float, default=420.0)
     ap.add_argument("--rescue-timeout", type=float, default=900.0)
     args = ap.parse_args()
 
     out_path = args.out
-    items = json.load(open(IN, encoding="utf-8"))
+    base = args.base_url.rstrip("/")
+
+    # Stamp the run with the SERVER's reported code + settings (sidecar, not in the
+    # jsonl, so id-keyed loaders are unaffected). This ties every eval to the exact
+    # commit + config that produced it, and shouts if uncommitted code is serving.
+    try:
+        with httpx.Client(base_url=base, timeout=10.0) as cl:
+            health = cl.get("/health").json()
+        meta = {
+            "started_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+            "base_url": base,
+            "in_path": args.in_path,
+            "out_path": out_path,
+            "build": health.get("build"),
+            "eval_settings": health.get("eval_settings"),
+        }
+        with open(out_path + ".meta.json", "w", encoding="utf-8") as mf:
+            json.dump(meta, mf, ensure_ascii=False, indent=1)
+        print(f"run stamp: build={meta['build']} settings={meta['eval_settings']}", flush=True)
+        if (meta.get("build") or {}).get("git_dirty"):
+            print("WARNING: server reports git_dirty=True — uncommitted code is serving this run.", flush=True)
+    except Exception as exc:
+        print(f"WARNING: could not stamp run from /health ({type(exc).__name__}: {exc}); "
+              f"server may predate build-info support.", flush=True)
+
+    items = json.load(open(args.in_path, encoding="utf-8"))
     skip = done_ids(out_path)
     todo = [i for i in items if i["id"] not in skip]
     print(f"total={len(items)} done={len(skip)} todo={len(todo)}", flush=True)
 
     fout = open(out_path, "a", encoding="utf-8")
-    base = args.base_url.rstrip("/")
     for idx, it in enumerate(todo, start=1):
         q = it["question"]
         started = time.perf_counter()

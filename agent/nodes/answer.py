@@ -127,6 +127,7 @@ def answer_node(state: QAState) -> QAState:
             deterministic_fix_applied=bool(diagnostics.get("deterministic_fix_applied")),
             deterministic_fix_types=diagnostics.get("deterministic_fix_types") or [],
             repair_skipped_reason=diagnostics.get("repair_skipped_reason"),
+            rejected_answer=diagnostics.get("rejected_answer"),
         )
     except Exception:
         logger.exception("answer.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)

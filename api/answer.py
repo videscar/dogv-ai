@@ -190,6 +190,9 @@ def build_answer(
             diagnostics = outcome["diagnostics"]
             if outcome.get("fallback_required"):
                 fallback_citations = citations or collect_citation_ids(evidence)
+                # Keep the rejected synthesis so we can see *what* the validator threw
+                # away (vs. only knowing that it dumped). Truncated; debug-only.
+                diagnostics["rejected_answer"] = (answer_text or "")[:600]
                 return {
                     "answer": validation_fallback_answer(language, evidence, full_docs),
                     "citations": fallback_citations,
