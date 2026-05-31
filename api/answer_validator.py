@@ -163,7 +163,26 @@ def _source_text_for_citations(
 
 
 def _canonical_number_token(raw: str) -> str:
-    return re.sub(r"[^\d]", "", raw or "")
+    # Normalise es/ca numbers so the same value matches regardless of how cents are
+    # written: "1.600.000,00" and "1.600.000" must be equal (otherwise the claim
+    # guard falsely flags a grounded figure when the answer adds ",00" cents the
+    # source omits — verified dumping v2-049/v2-044). Convention: "." groups
+    # thousands, "," is the decimal mark. Falls back to digit-stripping if unparsable.
+    s = (raw or "").strip()
+    if not s:
+        return ""
+    if "," in s:
+        norm = s.replace(".", "").replace(",", ".")
+    else:
+        norm = s.replace(".", "")
+    norm = re.sub(r"[^\d.]", "", norm)
+    try:
+        value = float(norm)
+    except ValueError:
+        return re.sub(r"[^\d]", "", s)
+    # Currency/percent precision: keep ≤2 decimals, drop trailing zeros so
+    # 1600000.00 -> "1600000" and 1366.74 -> "1366.74".
+    return f"{value:.2f}".rstrip("0").rstrip(".")
 
 
 def _legacy_numeric_tokens(value: str) -> set[str]:

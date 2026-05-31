@@ -58,6 +58,19 @@ def test_validate_answer_allows_currency_figure_present_as_bare_table_number(mon
     assert "unsupported_numeric_or_ref_claim" not in errors
 
 
+def test_validate_answer_allows_currency_with_cents_when_source_omits_them(monkeypatch):
+    # Regression: "1.600.000,00 €" in the answer must match "1.600.000" in the source
+    # (the guard concatenated cents -> 160000000 != 1600000 and falsely dumped v2-049).
+    monkeypatch.setattr(answer_validator.settings, "answer_claim_guard_mode", "unit_aware_strict")
+    errors = _validate_answer(
+        answer_text="El importe global máximo es de 1.600.000,00 €.",
+        citations=[101],
+        evidence=[{"doc_id": 101, "quote": "importe global máximo de 1.600.000 euros"}],
+        full_docs=None,
+    )
+    assert "unsupported_numeric_or_ref_claim" not in errors
+
+
 def test_validate_answer_flags_reference_out_of_source(monkeypatch):
     monkeypatch.setattr(answer_validator.settings, "answer_claim_guard_mode", "unit_aware_strict")
     errors = _validate_answer(
