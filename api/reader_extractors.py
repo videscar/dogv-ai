@@ -280,7 +280,11 @@ def _numeric_evidence(
         return []
 
     candidates: list[tuple[int, int, str]] = []
-    amount_re = re.compile(r"\b\\d[\\d\\.,]*\\b")
+    # NB: was r"\b\\d[\\d\\.,]*\\b" — in a raw string \\d is a literal backslash+d, so
+    # it matched only text containing backslashes (never, in DOGV text). The numeric
+    # extractor silently returned nothing, leaving amount questions with no
+    # deterministic figure backstop. This matches numbers like 207.000 / 1.366,74.
+    amount_re = re.compile(r"\b\d[\d.,]*\b")
 
     def _score_amount(text: str) -> int:
         return len(amount_re.findall(text))
@@ -325,6 +329,83 @@ def _numeric_evidence(
             "doc_id": doc_id,
             "quote": quote[:800],
             "detail": "Extracto con cantidades.",
+        }
+        for doc_id, quote in best.items()
+    ]
+
+
+# A program's *convocatoria/bases* declares its total budget/dotación; resoluciones
+# de concesión/adjudicación declare amounts awarded to specific beneficiaries. When
+# the question asks for a program-level total, the figure must come from the
+# convocatoria/bases doc, not a concesión — a general DOGV distinction, not a
+# per-question rule. These cues fire on intent ("import total/global/màxim",
+# "dotació", "pressupost"...) and on the chunk that actually states such a total.
+_PROGRAM_TOTAL_INTENT = re.compile(
+    r"(import\w*\s+(?:total|global|m[aà]xim\w*)|importe\s+global|quantia\s+total|"
+    r"dotaci[oó]\w*|dotad\w*|dotat\w*|pressupost\w*|presupuest\w*|"
+    r"(?:total|global)\s+m[aà]xim\w*|m[aà]xim\w*\s+(?:total|global))",
+    re.IGNORECASE,
+)
+_TOTAL_CUE = re.compile(
+    r"(import\w*\s+(?:total|global|m[aà]xim\w*)|importe\s+global|quantia\s+total|"
+    r"dotaci[oó]\w*|pressupost\w*|presupuest\w*|(?:total|global)\s+m[aà]xim\w*)",
+    re.IGNORECASE,
+)
+_CONVOCATORIA_SUBKINDS = {"convocatoria", "convocatòria", "convocatories", "bases"}
+
+
+def _program_total_evidence(
+    question: str,
+    docs: list[dict[str, Any]],
+    full_docs: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Pin the total/global/dotación figure from convocatoria/bases docs.
+
+    Fires only when (a) the question asks for a program-level total AND (b) a
+    Convocatoria/Bases-subkind doc is present in the window. Otherwise a no-op, so
+    questions about individually-awarded amounts keep using the concesión doc.
+    """
+    if not _PROGRAM_TOTAL_INTENT.search(question or ""):
+        return []
+    amount_re = re.compile(r"\b\d[\d.,]*\b")
+    candidates: list[tuple[int, int, str]] = []
+
+    def _scan(items: list[dict[str, Any]], get_text):
+        for d in items or []:
+            subkind = (d.get("doc_subkind") or "").strip().lower()
+            if subkind not in _CONVOCATORIA_SUBKINDS:
+                continue
+            doc_id = d.get("document_id")
+            if doc_id is None:
+                continue
+            for chunk in get_text(d):
+                if not chunk or not _TOTAL_CUE.search(chunk):
+                    continue
+                if not amount_re.search(chunk):
+                    continue
+                # Prefer chunks that pair a total cue with a currency figure.
+                score = len(_TOTAL_CUE.findall(chunk)) + (1 if "€" in chunk or "euro" in chunk.lower() else 0)
+                candidates.append((score, int(doc_id), chunk))
+
+    _scan(docs, lambda d: d.get("chunks") or [])
+    if not candidates and full_docs:
+        _scan(full_docs, lambda d: (d.get("text") or "").splitlines())
+
+    if not candidates:
+        return []
+    candidates.sort(key=lambda item: item[0], reverse=True)
+    best: dict[int, str] = {}
+    for _, doc_id, text in candidates:
+        if doc_id in best:
+            continue
+        best[doc_id] = text.strip()
+        if len(best) >= 2:
+            break
+    return [
+        {
+            "doc_id": doc_id,
+            "quote": quote[:800],
+            "detail": "Importe total/global de la convocatoria o bases.",
         }
         for doc_id, quote in best.items()
     ]

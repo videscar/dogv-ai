@@ -353,6 +353,8 @@ def read_docs_node(state: QAState) -> QAState:
                         "document_id": doc.id,
                         "title": doc.title,
                         "ref": doc.ref,
+                        "doc_kind": doc.doc_kind,
+                        "doc_subkind": doc.doc_subkind,
                         "issue_date": issue.date.isoformat() if issue.date else None,
                         "chunks": chunks,
                     }
