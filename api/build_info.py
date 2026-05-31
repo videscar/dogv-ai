@@ -27,7 +27,9 @@ def build_info() -> dict[str, object]:
         except Exception:
             return None
 
-    status = _git("status", "--porcelain")
+    # Tracked changes only: untracked scratch files (eval outputs, logs) must not
+    # trip the alarm — git_dirty should mean "uncommitted *code* is serving traffic".
+    status = _git("status", "--porcelain", "--untracked-files=no")
     return {
         "git_sha": _git("rev-parse", "HEAD"),
         "git_branch": _git("rev-parse", "--abbrev-ref", "HEAD"),
