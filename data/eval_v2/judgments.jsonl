@@ -1,0 +1,100 @@
+{"id": "v2-001", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "failed A1 mensual; gold 3145 not retrieved (cited wrong table 6352)"}
+{"id": "v2-002", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "64 llocs correct"}
+{"id": "v2-003", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "33/33 correct"}
+{"id": "v2-004", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "right doc retrieved but amount chunk not passed -> no consta"}
+{"id": "v2-005", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "3.000 correct"}
+{"id": "v2-006", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "500.000 correct"}
+{"id": "v2-007", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "GV-Talent doc retrieved (extracto) but 1.600.000 chunk not passed"}
+{"id": "v2-008", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "30,57/25,48 correct"}
+{"id": "v2-009", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "gold 14662 absent all lanes; found cese doc, said no new gerente"}
+{"id": "v2-010", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "180.000 correct"}
+{"id": "v2-011", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex 36.065,80 correct"}
+{"id": "v2-012", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex Alaquàs 261.560 correct"}
+{"id": "v2-013", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex 6.000 correct"}
+{"id": "v2-014", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex 2.250 correct"}
+{"id": "v2-015", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "90% + 670.301,61 correct"}
+{"id": "v2-016", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "3.651.200 correct"}
+{"id": "v2-017", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "75.000 + 51.637,24 correct"}
+{"id": "v2-018", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "LEADER Ticket Rural gold not retrieved; talked about EMPYME/INTECA"}
+{"id": "v2-019", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "25/46.000 correct"}
+{"id": "v2-020", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "10 marzo + 50% correct"}
+{"id": "v2-021", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: relevant OPE2026 oposiciones, not the gold A1/A2 turno libre orders"}
+{"id": "v2-022", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: other municipal aids, not Fondo Coop Municipal (gold absent)"}
+{"id": "v2-023", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: thorough on 180.000 becas, missed GV-Talent"}
+{"id": "v2-024", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: correct 5.000 premi but anchored on 2025 doc not 2026"}
+{"id": "v2-025", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: mentions Ticket Rural+farmer aids, no specific total"}
+{"id": "v2-026", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: thorough música, audiovisual missing"}
+{"id": "v2-027", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "matrícula A2/B1 20-28 abril correct + thorough"}
+{"id": "v2-028", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: other sport fundings, not Jocs Esportius 500.000"}
+{"id": "v2-029", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: lists real appointments incl President, not the gold Peyró"}
+{"id": "v2-030", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "DANA lloguer program correct incl amounts"}
+{"id": "v2-031", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "range 500-2.500 correct"}
+{"id": "v2-032", "correctness": 1, "faithful": 1, "critical_error": true, "abstained": null, "note": "led with 1.387,24 (alt càrrec) as A1 base -> wrong number; 1.366,74 mentioned 2nd"}
+{"id": "v2-033", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "5.000 + winner Falla Marzal + 157.000 concesión correct"}
+{"id": "v2-034", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "Codi Escola 4.0 correct detail"}
+{"id": "v2-035", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "A2 tasa gold not retrieved -> no consta"}
+{"id": "v2-036", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "gold retrieved but name chunk not passed -> no consta gerent name"}
+{"id": "v2-037", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "64 puestos correct"}
+{"id": "v2-038", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "20-28 abril correct"}
+{"id": "v2-039", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "180.000 correct"}
+{"id": "v2-040", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "identifies acord, says president name no consta (likely not in doc)"}
+{"id": "v2-041", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "surfaced Decreto 73/2026 but hedged fallback, didn't state names in body"}
+{"id": "v2-042", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "corrected 167/2024 + explained program"}
+{"id": "v2-043", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "30,57/25,48 from right Orden 23/2026"}
+{"id": "v2-044", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "corrected Orde 5/2025 + 22.255.556"}
+{"id": "v2-045", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "corrected Orden 12/2022 but failed 3.000 amount (no consta)"}
+{"id": "v2-046", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "surfaced 38/2022 + convocatoria but hedged, no dotació figure"}
+{"id": "v2-047", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "both orders + systems + Decreto 16/2026 correct"}
+{"id": "v2-048", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "2025=5.000 correct; 2026 no consta -> half comparison"}
+{"id": "v2-049", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "180.000 correct; GV-Talent total no consta -> no comparison"}
+{"id": "v2-050", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "both IVC purposes correct"}
+{"id": "v2-051", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "DANA 3.651.200 correct; Fondo Coop import no consta"}
+{"id": "v2-052", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vocals CVU correct; gerent UV no consta"}
+{"id": "v2-053", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "Zaragosí cese + Peyró nombramiento exact"}
+{"id": "v2-054", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "Sonia Margarita Barriga Alejandro correct"}
+{"id": "v2-055", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "periodo 2024-2026 correct; signer no consta (chunk not passed)"}
+{"id": "v2-056", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "gold retrieved but %cofinanç chunk not passed; hedged, no 60/100"}
+{"id": "v2-057", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "Decreto 20/2017 correct; number muddled (8 conv vs 1 concedida from 2026 docs)"}
+{"id": "v2-058", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "tres vocals AVSF correct"}
+{"id": "v2-059", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "gold 12483 retrieved but plazo chunk not passed -> no consta"}
+{"id": "v2-060", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "15 dies + cv_skills@gva.es correct"}
+{"id": "v2-061", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex names chunk not passed -> no consta (right doc)"}
+{"id": "v2-062", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex La Malvesia 3.796,40 correct"}
+{"id": "v2-063", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex per-municipality chunk not passed -> no consta Alboraia (same doc as v2-012 which succeeded)"}
+{"id": "v2-064", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "annex: doc retrieved, Adán Lledó line not in passed chunks -> no consta"}
+{"id": "v2-075", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "premios olímpicos 2025 correct doc"}
+{"id": "v2-076", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: rental aids incl DANA S1892, focus Bo Lloguer Jove"}
+{"id": "v2-077", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "Plan 2024-2026 + Juan Martínez Caballero correct (signer found here, unlike v2-055)"}
+{"id": "v2-078", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "audiovisual incl videojocs correct (prior convocatoria doc)"}
+{"id": "v2-079", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "3.000 correct"}
+{"id": "v2-080", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "Ticket Rural detailed correct (Orde 5/2025, 60% FEADER)"}
+{"id": "v2-081", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "llibrets 1r premi 5.000 correct"}
+{"id": "v2-082", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "Pilar Chiva + Enrique Vidal correct"}
+{"id": "v2-083", "correctness": 0, "faithful": 1, "critical_error": true, "abstained": null, "note": "gave 157.000 (concesión total) as convocatoria importe máximo (207.000) -> wrong number, pulled adjacent doc"}
+{"id": "v2-084", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "2,5%+1,5% accumulation correct"}
+{"id": "v2-085", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "1 dic 2025 + estreno correct"}
+{"id": "v2-086", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "tribunal president gold not retrieved -> lists wrong tribunals"}
+{"id": "v2-087", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "pulled convocatoria not concesión -> winner falla no consta"}
+{"id": "v2-088", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "75.000 correct"}
+{"id": "v2-089", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "wrong-ref '30/2026' -> gold not retrieved, lists resarcimiento acuerdos"}
+{"id": "v2-090", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "confirmed 1.600.000 but stated wrong course 2023-2024 (gold 2024-2025)"}
+{"id": "v2-091", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "range 500-2.500 correct but didn't correct Decreto->Orden, used 2026 doc"}
+{"id": "v2-092", "correctness": 0, "faithful": 1, "critical_error": false, "abstained": null, "note": "wrong-ref/temporal -> EPSAR gold not retrieved"}
+{"id": "v2-093", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "both fallas resolutions + 5.000 correct"}
+{"id": "v2-094", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "tasa A1 30,57 correct; sou base A1 no consta"}
+{"id": "v2-095", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "surfaced both docs incl UNED 75.000 but fallback format, no deportista amount"}
+{"id": "v2-096", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "10 març 2026 correct"}
+{"id": "v2-097", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "doctorandos 775.000 correct"}
+{"id": "v2-098", "correctness": 1, "faithful": 1, "critical_error": false, "abstained": null, "note": "vague: UV research posts relevant, not the specific gold convocatoria"}
+{"id": "v2-099", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "ayudante doctor incl UA (gold cited) correct"}
+{"id": "v2-100", "correctness": 2, "faithful": 1, "critical_error": false, "abstained": null, "note": "Zaragosí a petició pròpia correct"}
+{"id": "v2-065", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-066", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-067", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-068", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-069", "correctness": null, "faithful": null, "critical_error": false, "abstained": false, "note": "out_of_scope"}
+{"id": "v2-070", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-071", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-072", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-073", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}
+{"id": "v2-074", "correctness": null, "faithful": null, "critical_error": false, "abstained": true, "note": "out_of_scope"}

@@ -1,0 +1,100 @@
+{"id":"v2-001","correctness":0,"faithful":1,"critical_error":true,"abstained":null,"note":"wrong table: cited 6352 (annual, +1.5%) not gold 3145 (monthly 1.366,74, +2.5%); raise % wrong"}
+{"id":"v2-002","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"64 llocs laboral, correct + cited gold"}
+{"id":"v2-003","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"33 modalidades / 33 docentes, exact"}
+{"id":"v2-004","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"validation_failed fallback dump; gold retrieved but no synthesized ficcion 4.860.000"}
+{"id":"v2-005","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"3.000 EUR correct"}
+{"id":"v2-006","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; total 500.000 not given (gold 17649 retrieved)"}
+{"id":"v2-007","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; GV-Talent doc retrieved but amounts not stated"}
+{"id":"v2-008","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"A1 30,57 / A2 25,48 correct"}
+{"id":"v2-009","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; gerent name missing, gold not retrieved (retr=N)"}
+{"id":"v2-010","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"180.000 EUR correct"}
+{"id":"v2-011","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"36.065,80 EUR exact"}
+{"id":"v2-012","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Alaquas 261.560 EUR correct"}
+{"id":"v2-013","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Nestor Abad 6.000 EUR correct"}
+{"id":"v2-014","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Jairo Agenjo 2.250 EUR correct"}
+{"id":"v2-015","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"90% + 670.301,61 EUR correct"}
+{"id":"v2-016","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"3.651.200,00 EUR correct"}
+{"id":"v2-017","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"UNED 51.637,24 + global 75.000 correct"}
+{"id":"v2-018","correctness":0,"faithful":1,"critical_error":true,"abstained":null,"note":"gave 19.000/17.000 per-beneficiary (wrong measure) not max 22.255.556; retr=N"}
+{"id":"v2-019","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"25 subv / 46.000 EUR correct"}
+{"id":"v2-020","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"date 10 marc correct; 50% support hedged/missing"}
+{"id":"v2-021","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; on-topic OPE 2026 orders but not gold 23/18; real convocatorias"}
+{"id":"v2-022","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; lists other municipal aids, not Fons Cooperacio (gold)"}
+{"id":"v2-023","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; on-topic uni grants but different convocatoria/figure than gold"}
+{"id":"v2-024","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"premi President 5.000 + Generalitat, total 207.000; correct & detailed"}
+{"id":"v2-025","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"chat_json_failed dump but correct on-topic Ticket Rural content; max not stated"}
+{"id":"v2-026","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; surfaces foment activitats musicals (gold-ish) + others; partial"}
+{"id":"v2-027","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; correct JQCV certs A2-C2 but matricula dates missing"}
+{"id":"v2-028","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; on-topic sport aids but not gold Jocs Esportius 500.000"}
+{"id":"v2-029","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; real nombramientos but not gold Decreto 73/2026 Peyro"}
+{"id":"v2-030","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"DANA lloguer 3.651.200, 326 exp, 11.200/benef; matches gold"}
+{"id":"v2-031","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"colloquial; surfaces 2.250 example correct but muddled with Decreto 132/2009"}
+{"id":"v2-032","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"sou base mensual A1 1.366,74 correct (here right doc, unlike v2-001)"}
+{"id":"v2-033","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"winner Convento Jerusalen + 5.000 correct"}
+{"id":"v2-034","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Codi Escola 4.0 identified + 6.563.065 global + dates; correct"}
+{"id":"v2-035","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"A2 tasa 25,48 correct"}
+{"id":"v2-036","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Daniel Gonzalez Serisola correct (was flippy pre-fix)"}
+{"id":"v2-037","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"64 llocs correct (answered in va but right)"}
+{"id":"v2-038","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"matricula 20-28 abril correct with hours"}
+{"id":"v2-039","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"180.000 EUR total correct"}
+{"id":"v2-040","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; correct ACUERDO retrieved (16662) but president name not extracted"}
+{"id":"v2-041","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; Decreto 73/2026 retrieved but names not given, ref not corrected"}
+{"id":"v2-042","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"correctly flags no 167/2025, gives 167/2024 DANA lloguer"}
+{"id":"v2-043","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"A1 30,57 / A2 25,48 correct (ref 22 vs 23 not flagged but data right)"}
+{"id":"v2-044","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; Orde 5/2025 in snippets but max 22.255.556 not stated"}
+{"id":"v2-045","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; premio 3.000 not given"}
+{"id":"v2-046","correctness":0,"faithful":0,"critical_error":true,"abstained":null,"note":"157.000 EUR WRONG (gold 207.000); falles total error (va twin of v2-083)"}
+{"id":"v2-047","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"says Orden 23/18 no consta; failed multihop despite retr=Y"}
+{"id":"v2-048","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"President 5.000 both 2025&2026, unchanged; correct multihop"}
+{"id":"v2-049","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"validation_failed dump; 180.000 in snippet but no GV-Talent/comparison"}
+{"id":"v2-050","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"both finalitats (music vs audiovisual) correct"}
+{"id":"v2-051","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"gave 45M Fondo / 6.429.124 DANA-incremento; not gold comprometido figures"}
+{"id":"v2-052","correctness":0,"faithful":0,"critical_error":true,"abstained":null,"note":"wrong vocal name (Borso di Carminati) + missed gerent; misattribution"}
+{"id":"v2-053","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"cesa Zaragosi / nombra Peyro correct"}
+{"id":"v2-054","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"named president CV Transparencia from gold doc; assumed correct"}
+{"id":"v2-055","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"period 2024-2026 correct; signer missing (no consta)"}
+{"id":"v2-056","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; S2124 in snippet but 60%/100% not stated"}
+{"id":"v2-057","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"8 becas clase G + Decreto 20/2017 correct"}
+{"id":"v2-058","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"3 vocals Consell Rector AVSF correct"}
+{"id":"v2-059","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; plazo 10 dias not given (gold 12483 retrieved)"}
+{"id":"v2-060","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"15 dies naturals + cv_skills@gva.es correct"}
+{"id":"v2-061","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; first beneficiary Alberic not named (gold 3669 retrieved)"}
+{"id":"v2-062","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"La Malvesia 3.796,40 exact"}
+{"id":"v2-063","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Alboraia 235.896 exact"}
+{"id":"v2-064","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Claudia Adan 2.500 correct"}
+{"id":"v2-065","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS IRPF estatal; declined (listed tangential AVT docs, no fabricated deadline)"}
+{"id":"v2-066","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS bombers Terol; declined"}
+{"id":"v2-067","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS future subv agosto; declined"}
+{"id":"v2-068","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS fictional Decret 999/2026; declined, did not affirm existence"}
+{"id":"v2-069","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS horario SS Alicante; declined"}
+{"id":"v2-070","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS nota tall Medicina; declined"}
+{"id":"v2-071","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS AEMET weather; clean abstention"}
+{"id":"v2-072","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS Mercadona conveni; declined"}
+{"id":"v2-073","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS DNI renewal; declined"}
+{"id":"v2-074","correctness":null,"faithful":1,"critical_error":false,"abstained":true,"note":"OOS metro Madrid; declined (listed ATMV Valencia, did not answer Madrid)"}
+{"id":"v2-075","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; surfaced correct olympic premios 2025 with real amounts"}
+{"id":"v2-076","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; housing aids listed but not gold DANA lloguer"}
+{"id":"v2-077","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"says no consta plan medio ambiente though gold 13421 cited; failed to extract"}
+{"id":"v2-078","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"videojocs 30.000 + audiovisual; correct"}
+{"id":"v2-079","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"3.000 EUR correct"}
+{"id":"v2-080","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"identified Ticket Rural + per-person amounts; answers the what-aid question"}
+{"id":"v2-081","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"llibrets primer premi 5.000 correct"}
+{"id":"v2-082","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Pilar Chiva Jorda i Enrique Vidal Perez correct"}
+{"id":"v2-083","correctness":0,"faithful":0,"critical_error":true,"abstained":null,"note":"157.000 EUR WRONG (gold 207.000); falles total error (es twin of v2-046)"}
+{"id":"v2-084","correctness":0,"faithful":1,"critical_error":true,"abstained":null,"note":"1,5% vs 31/12/2025 WRONG (gold 2,5% vs 31/12/2024); wrong table 6352 (va twin of v2-001)"}
+{"id":"v2-085","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"no grabada antes 1 dic 2025 correct"}
+{"id":"v2-086","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; president tribunal Colom not found (retr=N)"}
+{"id":"v2-087","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"Espartero-Gran Via Ramon y Cajal correct"}
+{"id":"v2-088","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"UNED 75.000 correct"}
+{"id":"v2-089","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"A1 1.366,74 correct (here right doc 3145)"}
+{"id":"v2-090","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"fallback dump; 1.600.000 in snippet but correction (curso 2024-25) not synthesized"}
+{"id":"v2-091","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"gave 500-2.500 range from 2026 conv, not Orden 59/2016 per-deportista; wrong doc"}
+{"id":"v2-092","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"64 llocs correct but found 2025 resolution not the April-2026 one; partial"}
+{"id":"v2-093","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"both resolutions (convocatoria/concesion) + President 5.000 correct"}
+{"id":"v2-094","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"tasa A1 30,57 correct; sou base 1.366,74 missing (no consta)"}
+{"id":"v2-095","correctness":0,"faithful":1,"critical_error":false,"abstained":null,"note":"validation_failed dump; 75.000 & 2.250 in snippets but no synthesized comparison"}
+{"id":"v2-096","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"justify fins 10 marc 2026 correct"}
+{"id":"v2-097","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"doctorandos 775.000 correct + on-topic innovation budgets"}
+{"id":"v2-098","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; correct kind (investigador places concurs merits) but not pinned to gold"}
+{"id":"v2-099","correctness":1,"faithful":1,"critical_error":false,"abstained":null,"note":"vague; on-topic ayudante doctor (UJI/UV) but not gold UA marzo 2026"}
+{"id":"v2-100","correctness":2,"faithful":1,"critical_error":false,"abstained":null,"note":"cesa Zaragosi a peticio propia correct"}

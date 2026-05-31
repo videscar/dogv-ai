@@ -100,7 +100,7 @@ def vector_search(
         JOIN dogv_issues di ON di.id = dd.issue_id
         WHERE rc.embedding IS NOT NULL
         {filter_sql}
-        ORDER BY rc.embedding <=> CAST(:query_embedding AS vector)
+        ORDER BY rc.embedding <=> CAST(:query_embedding AS vector), rc.id
         LIMIT :limit
         """
     )
@@ -146,7 +146,7 @@ def bm25_search(
         CROSS JOIN q
         WHERE rc.tsv @@ q.query
         {filter_sql}
-        ORDER BY score DESC
+        ORDER BY score DESC, rc.id
         LIMIT :limit
         """
     )
@@ -176,7 +176,7 @@ def bm25_search(
         CROSS JOIN q
         WHERE rc.tsv @@ q.query
         {filter_sql}
-        ORDER BY score DESC
+        ORDER BY score DESC, rc.id
         LIMIT :limit
         """
     )
@@ -236,7 +236,7 @@ def title_bm25_search(
         CROSS JOIN q
         WHERE to_tsvector(CAST(:ts_config AS regconfig), coalesce(dd.title, '')) @@ q.query
         {filter_sql}
-        ORDER BY score DESC
+        ORDER BY score DESC, dd.id
         LIMIT :limit
         """
     )
@@ -262,7 +262,7 @@ def title_bm25_search(
         CROSS JOIN q
         WHERE to_tsvector(CAST(:ts_config AS regconfig), coalesce(dd.title, '')) @@ q.query
         {filter_sql}
-        ORDER BY score DESC
+        ORDER BY score DESC, dd.id
         LIMIT :limit
         """
     )
@@ -318,7 +318,7 @@ def title_vector_search(
         JOIN dogv_issues di ON di.id = dd.issue_id
         WHERE rt.embedding IS NOT NULL
         {filter_sql}
-        ORDER BY rt.embedding <=> CAST(:query_embedding AS vector)
+        ORDER BY rt.embedding <=> CAST(:query_embedding AS vector), rt.document_id
         LIMIT :limit
         """
     )
@@ -348,7 +348,11 @@ def rrf_fuse(
             if doc_id not in merged:
                 merged[doc_id] = dict(row)
 
-    ranked = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+    # Sort by fused score descending; break ties by ascending document_id so the
+    # candidate set and its cutoff are deterministic run-to-run. Without a stable
+    # tiebreaker, two docs with equal RRF scores straddling the max_docs cutoff
+    # swap in/out non-deterministically, which flips downstream evidence/answers.
+    ranked = sorted(scores.items(), key=lambda item: (-item[1], item[0]))
     results = []
     for doc_id, score in ranked[:max_docs]:
         row = merged[doc_id]
@@ -364,7 +368,7 @@ def group_top_chunks(chunks: list[dict[str, Any]], per_doc: int = 3) -> dict[int
         grouped.setdefault(doc_id, []).append(chunk)
 
     for doc_id, items in grouped.items():
-        items.sort(key=lambda item: item.get("score", 0.0), reverse=True)
+        items.sort(key=lambda item: (-(item.get("score") or 0.0), item.get("chunk_id") or 0))
         grouped[doc_id] = items[:per_doc]
     return grouped
 
@@ -394,7 +398,7 @@ def top_chunks_for_docs(
                 (1 - (rc.embedding <=> CAST(:query_embedding AS vector))) AS score,
                 ROW_NUMBER() OVER (
                     PARTITION BY rc.document_id
-                    ORDER BY rc.embedding <=> CAST(:query_embedding AS vector)
+                    ORDER BY rc.embedding <=> CAST(:query_embedding AS vector), rc.id
                 ) AS rn
             FROM rag_chunk rc
             WHERE rc.document_id = ANY(:doc_ids)

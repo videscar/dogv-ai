@@ -1,0 +1,1472 @@
+[
+ {
+  "id": "v2-001",
+  "question": "¿Cuál es el importe del sueldo base mensual del subgrupo A1 según las tablas retributivas de la Generalitat de 2026, y qué subida salarial aplican?",
+  "gold_sets": [
+   [
+    48017
+   ]
+  ],
+  "doc_ids": [
+   48017
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-002",
+  "question": "Quants llocs de treball té la relació de llocs de treball (RLT) de l'Entitat de Sanejament d'Aigües (EPSAR) per a l'exercici 2026?",
+  "gold_sets": [
+   [
+    88766
+   ]
+  ],
+  "doc_ids": [
+   88766
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-003",
+  "question": "¿Cuántas modalidades de competición y cuántos docentes expertos se van a seleccionar para los campeonatos de FP CVSkills 2027?",
+  "gold_sets": [
+   [
+    86180
+   ]
+  ],
+  "doc_ids": [
+   86180
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-004",
+  "question": "Quina dotació total tenen les subvencions per a la producció d'obres audiovisuals a la Comunitat Valenciana (anualitats 2026-2028) en la modalitat de ficció?",
+  "gold_sets": [
+   [
+    76674
+   ]
+  ],
+  "doc_ids": [
+   76674
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-005",
+  "question": "¿De cuánto es el premio individual de excelencia académica concedido en diciembre de 2025 al alumnado de grado del sistema universitario valenciano?",
+  "gold_sets": [
+   [
+    21226
+   ]
+  ],
+  "doc_ids": [
+   21226
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Premios",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-006",
+  "question": "Quina és la quantia total de les subvencions concedides a les entitats dels XLIV Jocs Esportius de la Comunitat Valenciana en el nivell d'iniciació al rendiment per al curs 2025-2026?",
+  "gold_sets": [
+   [
+    89632
+   ]
+  ],
+  "doc_ids": [
+   89632
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-007",
+  "question": "¿Qué importe global máximo tienen las becas GV-Talent para la excelencia académica convocadas en abril de 2026, y de cuánto es cada beca?",
+  "gold_sets": [
+   [
+    86084
+   ]
+  ],
+  "doc_ids": [
+   86084
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Becas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-008",
+  "question": "Quins són els drets d'examen (taxa) de les proves selectives dels subgrups A1 i A2 de l'oferta d'ocupació pública de 2026 per concurs de mèrits?",
+  "gold_sets": [
+   [
+    89021
+   ]
+  ],
+  "doc_ids": [
+   89021
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-009",
+  "question": "¿A quién se ha nombrado gerente de la Universitat de València en la resolución de abril de 2026?",
+  "gold_sets": [
+   [
+    86629
+   ]
+  ],
+  "doc_ids": [
+   86629
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-010",
+  "question": "Quin import global màxim tenen les beques per a l'alumnat que finalitze els estudis universitaris durant el curs 2025-2026, convocades el maig de 2026?",
+  "gold_sets": [
+   [
+    89159
+   ]
+  ],
+  "doc_ids": [
+   89159
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-011",
+  "question": "En la concesión de ayudas del programa Código Escuela 4.0 para robótica en centros concertados (mayo 2026), ¿qué importe se concedió al Centre Privat Pureza de María - Grao de València?",
+  "gold_sets": [
+   [
+    86763
+   ]
+  ],
+  "doc_ids": [
+   86763
+  ],
+  "language": "es",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-012",
+  "question": "Segons la resolució d'assignació del Fons de Cooperació Municipal 2026, quina quantitat li correspon al municipi d'Alaquàs?",
+  "gold_sets": [
+   [
+    88759
+   ]
+  ],
+  "doc_ids": [
+   88759
+  ],
+  "language": "va",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-013",
+  "question": "En los premios de la Generalitat para deportistas por su clasificación olímpica y paralímpica de 2025, ¿qué premio recibió Néstor Abad Sanjuán (gimnasia artística)?",
+  "gold_sets": [
+   [
+    15679
+   ]
+  ],
+  "doc_ids": [
+   15679
+  ],
+  "language": "es",
+  "category": "annex",
+  "doc_kind": "Premios",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-014",
+  "question": "En les beques academicodeportives per a esportistes d'elit de 2025, quina quantia va rebre Jairo Agenjo Trigos (taekwondo)?",
+  "gold_sets": [
+   [
+    40613
+   ]
+  ],
+  "doc_ids": [
+   40613
+  ],
+  "language": "va",
+  "category": "annex",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-015",
+  "question": "En las ayudas para instalaciones de recogida de residuos (NextGenerationEU) concedidas en abril de 2026, ¿qué porcentaje de ayuda se aplicó y qué importe se otorgó al primer expediente del Consorcio Plan Zonal de Residuos Zona I?",
+  "gold_sets": [
+   [
+    86079
+   ]
+  ],
+  "doc_ids": [
+   86079
+  ],
+  "language": "es",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-016",
+  "question": "En la concessió d'ajudes DANA al lloguer de febrer de 2025, quin import total es va comprometre amb càrrec a la línia de subvenció habilitada?",
+  "gold_sets": [
+   [
+    33528
+   ]
+  ],
+  "doc_ids": [
+   33528
+  ],
+  "language": "va",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-017",
+  "question": "En las becas para estudiantes de la UNED en la Comunitat Valenciana del curso 2024-2025, ¿qué importe total se libró a favor de la UNED y cuál era el importe global máximo de la convocatoria?",
+  "gold_sets": [
+   [
+    17892
+   ]
+  ],
+  "doc_ids": [
+   17892
+  ],
+  "language": "es",
+  "category": "annex",
+  "doc_kind": "Becas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-018",
+  "question": "Quin import màxim total tenen les ajudes LEADER «Ticket Rural» per a la creació de microempreses no agràries (segon període de la convocatòria 2025)?",
+  "gold_sets": [
+   [
+    84704
+   ]
+  ],
+  "doc_ids": [
+   84704
+  ],
+  "language": "va",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-019",
+  "question": "En la convocatoria de subvenciones para la promoción del valenciano en el ámbito festivo de 2026, ¿qué dotación total tienen los libros de Moros y Cristianos y cuántas subvenciones se convocan?",
+  "gold_sets": [
+   [
+    48743
+   ]
+  ],
+  "doc_ids": [
+   48743
+  ],
+  "language": "es",
+  "category": "annex",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-020",
+  "question": "Segons la resolució de concessió d'ajudes en matèria de comerç, artesania i consum (CMIART) de febrer de 2026, fins a quina data han de justificar les persones beneficiàries i quin percentatge de suport s'aplica?",
+  "gold_sets": [
+   [
+    76655
+   ]
+  ],
+  "doc_ids": [
+   76655
+  ],
+  "language": "va",
+  "category": "annex",
+  "doc_kind": "Subvenciones",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-021",
+  "question": "¿Ha salido algo sobre las oposiciones de la Generalitat de este año?",
+  "gold_sets": [
+   [
+    86529
+   ],
+   [
+    86200
+   ]
+  ],
+  "doc_ids": [
+   86529,
+   86200
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Empleo Publico",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-022",
+  "question": "Hi ha alguna ajuda nova per als pobles?",
+  "gold_sets": [
+   [
+    88759
+   ]
+  ],
+  "doc_ids": [
+   88759
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-023",
+  "question": "Quería información sobre las becas universitarias.",
+  "gold_sets": [
+   [
+    86667
+   ],
+   [
+    86084
+   ]
+  ],
+  "doc_ids": [
+   86667,
+   86084
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-024",
+  "question": "Volia saber sobre els premis de les falles.",
+  "gold_sets": [
+   [
+    89633
+   ]
+  ],
+  "doc_ids": [
+   89633
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Premios",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-025",
+  "question": "¿Hay ayudas para el campo o para emprender en pueblos pequeños?",
+  "gold_sets": [
+   [
+    84414
+   ]
+  ],
+  "doc_ids": [
+   84414
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-026",
+  "question": "Què hi ha publicat sobre subvencions de cultura o música?",
+  "gold_sets": [
+   [
+    87949
+   ],
+   [
+    76674
+   ]
+  ],
+  "doc_ids": [
+   87949,
+   76674
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-027",
+  "question": "¿Qué hay de los certificados de valenciano?",
+  "gold_sets": [
+   [
+    85489
+   ]
+  ],
+  "doc_ids": [
+   85489
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-028",
+  "question": "M'han dit que han tret diners per a l'esport, és cert?",
+  "gold_sets": [
+   [
+    89632
+   ]
+  ],
+  "doc_ids": [
+   89632
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-029",
+  "question": "¿Han nombrado a alguien nuevo en la Generalitat últimamente?",
+  "gold_sets": [
+   [
+    86845
+   ]
+  ],
+  "doc_ids": [
+   86845
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-030",
+  "question": "Busque informació sobre ajudes per a l'habitatge per la DANA.",
+  "gold_sets": [
+   [
+    33528
+   ]
+  ],
+  "doc_ids": [
+   33528
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-031",
+  "question": "oye cuanto pagan de beca a los deportistas de elite valencianos? lo del 2025",
+  "gold_sets": [
+   [
+    18712
+   ]
+  ],
+  "doc_ids": [
+   18712
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-032",
+  "question": "quant es el sou base mensual dun A1 de la generalitat este any?",
+  "gold_sets": [
+   [
+    48415
+   ]
+  ],
+  "doc_ids": [
+   48415
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-033",
+  "question": "porfa los premios de las fayas de este año cuanto son y quien gano la mejor falla grande??",
+  "gold_sets": [
+   [
+    87141
+   ]
+  ],
+  "doc_ids": [
+   87141
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Premios",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-034",
+  "question": "ke ajudes hi ha per a comprar coses de robotica als col-legis concertats?",
+  "gold_sets": [
+   [
+    89255
+   ]
+  ],
+  "doc_ids": [
+   89255
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-035",
+  "question": "me podeis decir cuanto cuesta apuntarse a las oposiciones A2 de la gva? la tasa esa",
+  "gold_sets": [
+   [
+    86529
+   ]
+  ],
+  "doc_ids": [
+   86529
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Empleo Publico",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-036",
+  "question": "hola volia saber qui han nomenat gerent de la universitat de valencia",
+  "gold_sets": [
+   [
+    89121
+   ]
+  ],
+  "doc_ids": [
+   89121
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-037",
+  "question": "kuantos puestos tiene la plantilla de la epsar (aguas residuales) para el 2026?",
+  "gold_sets": [
+   [
+    86274
+   ]
+  ],
+  "doc_ids": [
+   86274
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-038",
+  "question": "fins quan em puc matricular del valencia nivell B1 a la jqcv?",
+  "gold_sets": [
+   [
+    87981
+   ]
+  ],
+  "doc_ids": [
+   87981
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-039",
+  "question": "y las becas pa los que acaban la carrera este año cuanto dinero hay en total?",
+  "gold_sets": [
+   [
+    86667
+   ]
+  ],
+  "doc_ids": [
+   86667
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-040",
+  "question": "qui es el president del consell dadministracio de la corporacio valenciana de mitjans? lacord de maig",
+  "gold_sets": [
+   [
+    89331
+   ]
+  ],
+  "doc_ids": [
+   89331
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-041",
+  "question": "¿Qué dispone el Decreto 74/2026 del Consell sobre el cese y nombramiento del director general de Relaciones Institucionales?",
+  "gold_sets": [
+   [
+    86845
+   ]
+  ],
+  "doc_ids": [
+   86845
+  ],
+  "language": "es",
+  "category": "wrong_ref",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-042",
+  "question": "Què diu el Decret 167/2025 sobre les ajudes urgents de lloguer per la DANA?",
+  "gold_sets": [
+   [
+    33528
+   ]
+  ],
+  "doc_ids": [
+   33528
+  ],
+  "language": "va",
+  "category": "wrong_ref",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-043",
+  "question": "Sobre la Orden 22/2026 de oposiciones A1 y A2 por concurso de méritos, ¿cuáles son las tasas de examen?",
+  "gold_sets": [
+   [
+    86529
+   ]
+  ],
+  "doc_ids": [
+   86529
+  ],
+  "language": "es",
+  "category": "wrong_ref",
+  "doc_kind": "Empleo Publico",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-044",
+  "question": "En la resolució de les ajudes LEADER Ticket Rural emparada en l'Ordre 4/2025, quin és l'import màxim?",
+  "gold_sets": [
+   [
+    84704
+   ]
+  ],
+  "doc_ids": [
+   84704
+  ],
+  "language": "va",
+  "category": "wrong_ref",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-045",
+  "question": "¿Cuánto fue el premio de excelencia académica de la Orden 11/2022 para los graduados universitarios?",
+  "gold_sets": [
+   [
+    21226
+   ]
+  ],
+  "doc_ids": [
+   21226
+  ],
+  "language": "es",
+  "category": "wrong_ref",
+  "doc_kind": "Premios",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-046",
+  "question": "Quina dotació té la convocatòria de premis a les falles de 2026 segons el Decret 38/2023 del president?",
+  "gold_sets": [
+   [
+    87714
+   ]
+  ],
+  "doc_ids": [
+   87714
+  ],
+  "language": "va",
+  "category": "wrong_ref",
+  "doc_kind": "Premios",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-047",
+  "question": "Compara las dos vías de acceso de la OPE 2026 de la Generalitat: ¿en qué se diferencian la Orden 23/2026 y la Orden 18/2026 y qué sistema selectivo usa cada una?",
+  "gold_sets": [
+   [
+    86529,
+    86200
+   ]
+  ],
+  "doc_ids": [
+   86529,
+   86200
+  ],
+  "language": "es",
+  "category": "multihop",
+  "doc_kind": "Empleo Publico",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-048",
+  "question": "Quant va estar dotat el premi President a les falles en 2025 i en 2026? Ha canviat la quantia?",
+  "gold_sets": [
+   [
+    37586,
+    89633
+   ]
+  ],
+  "doc_ids": [
+   37586,
+   89633
+  ],
+  "language": "va",
+  "category": "multihop",
+  "doc_kind": "Premios",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-049",
+  "question": "Para 2026, ¿cuál es el importe total de las becas para alumnado que finaliza estudios universitarios y cuál el de las becas GV-Talent? ¿Cuál tiene más presupuesto?",
+  "gold_sets": [
+   [
+    86667,
+    86084
+   ]
+  ],
+  "doc_ids": [
+   86667,
+   86084
+  ],
+  "language": "es",
+  "category": "multihop",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-050",
+  "question": "Vull comparar dues subvencions de l'IVC de 2026: la d'obres audiovisuals i la d'activitats musicals. Quina finalitat té cadascuna?",
+  "gold_sets": [
+   [
+    76674,
+    87949
+   ]
+  ],
+  "doc_ids": [
+   76674,
+   87949
+  ],
+  "language": "va",
+  "category": "multihop",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-051",
+  "question": "¿Qué dos tipos de ayuda relacionadas con la DANA y los municipios aparecen: las de alquiler de vivienda y el Fondo de Cooperación Municipal? Indica el importe comprometido de cada una.",
+  "gold_sets": [
+   [
+    11627,
+    86267
+   ]
+  ],
+  "doc_ids": [
+   11627,
+   86267
+  ],
+  "language": "es",
+  "category": "multihop",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-052",
+  "question": "En l'àmbit dels nomenaments universitaris de 2026, qui és el nou gerent de la Universitat de València i qui s'ha nomenat vocal del Ple del Consell Valencià d'Universitats?",
+  "gold_sets": [
+   [
+    89121,
+    89473
+   ]
+  ],
+  "doc_ids": [
+   89121,
+   89473
+  ],
+  "language": "va",
+  "category": "multihop",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-053",
+  "question": "¿A quién cesa y a quién nombra el Decreto 73/2026 del Consell para la Dirección General de Relaciones Institucionales, Seguimiento y Comunicación?",
+  "gold_sets": [
+   [
+    86845
+   ]
+  ],
+  "doc_ids": [
+   86845
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-054",
+  "question": "Qui ha sigut nomenat/nomenada presidenta del Consell Valencià de Transparència pel Decret 6/2026 del President?",
+  "gold_sets": [
+   [
+    83987
+   ]
+  ],
+  "doc_ids": [
+   83987
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-055",
+  "question": "¿Qué periodo cubre el Plan estratégico de subvenciones de la Conselleria de Medio Ambiente aprobado en abril de 2026 y quién lo firma?",
+  "gold_sets": [
+   [
+    86380
+   ]
+  ],
+  "doc_ids": [
+   86380
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Subvenciones",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-056",
+  "question": "Quin percentatge de cofinançament del FEDER tenen les subvencions del Sistema Valencià d'Innovació per als exercicis 2026-2028, i quina línia s'hi finança al 100%?",
+  "gold_sets": [
+   [
+    88095
+   ]
+  ],
+  "doc_ids": [
+   88095
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-057",
+  "question": "¿Cuántas becas de prácticas de turismo (clase G) concedió Turisme Comunitat Valenciana para 2025-2026 y bajo qué decreto de bases?",
+  "gold_sets": [
+   [
+    20033
+   ]
+  ],
+  "doc_ids": [
+   20033
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-058",
+  "question": "El Decret 3/2026 del President quants vocals nomena i de quin òrgan?",
+  "gold_sets": [
+   [
+    87835
+   ]
+  ],
+  "doc_ids": [
+   87835
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-059",
+  "question": "En la convocatoria de oposiciones A1 por el sistema de oposición (Orden 18/2026), ¿cuál es el plazo de presentación de solicitudes?",
+  "gold_sets": [
+   [
+    86200
+   ]
+  ],
+  "doc_ids": [
+   86200
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-060",
+  "question": "En la selecció de professorat expert per als CVSkills 2027, quin termini hi ha per a enviar la documentació i a quina adreça?",
+  "gold_sets": [
+   [
+    88672
+   ]
+  ],
+  "doc_ids": [
+   88672
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-061",
+  "question": "Según el anexo de las ayudas DANA al alquiler de febrero de 2025, ¿qué ayuda se concedió a la primera persona beneficiaria del listado, en Alberic?",
+  "gold_sets": [
+   [
+    11627
+   ]
+  ],
+  "doc_ids": [
+   11627
+  ],
+  "language": "es",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-062",
+  "question": "En la concessió d'ajudes Codi Escola 4.0 (robòtica) de maig de 2026, quin import es va concedir al centre La Malvesia de Llombai?",
+  "gold_sets": [
+   [
+    89255
+   ]
+  ],
+  "doc_ids": [
+   89255
+  ],
+  "language": "va",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-063",
+  "question": "En el Fondo de Cooperación Municipal 2026, ¿qué cantidad se asigna a Alboraia/Alboraya?",
+  "gold_sets": [
+   [
+    86267
+   ]
+  ],
+  "doc_ids": [
+   86267
+  ],
+  "language": "es",
+  "category": "annex",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-064",
+  "question": "En els premis de classificació olímpica i paralímpica de 2025, quin premi va rebre Claudia Adán Lledó (vela)?",
+  "gold_sets": [
+   [
+    37580
+   ]
+  ],
+  "doc_ids": [
+   37580
+  ],
+  "language": "va",
+  "category": "annex",
+  "doc_kind": "Premios",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-075",
+  "question": "¿Hay algo sobre premios para deportistas olímpicos valencianos?",
+  "gold_sets": [
+   [
+    15679
+   ]
+  ],
+  "doc_ids": [
+   15679
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Premios",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-076",
+  "question": "Què s'ha tret sobre habitatge o lloguer últimament?",
+  "gold_sets": [
+   [
+    33528
+   ]
+  ],
+  "doc_ids": [
+   33528
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-077",
+  "question": "Información sobre el plan de subvenciones de medio ambiente.",
+  "gold_sets": [
+   [
+    86380
+   ]
+  ],
+  "doc_ids": [
+   86380
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Subvenciones",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-078",
+  "question": "Hi ha ajudes per a fer pel·lícules o videojocs ací?",
+  "gold_sets": [
+   [
+    76674
+   ]
+  ],
+  "doc_ids": [
+   76674
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-079",
+  "question": "cuanto dan de premio en los premios de excelencia academica de la universidad??",
+  "gold_sets": [
+   [
+    21226
+   ]
+  ],
+  "doc_ids": [
+   21226
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Premios",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-080",
+  "question": "quina ajuda hi ha per a microempreses no agraries als pobles rurals (leader)?",
+  "gold_sets": [
+   [
+    84704
+   ]
+  ],
+  "doc_ids": [
+   84704
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Ayudas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-081",
+  "question": "los llibrets de falla cuanto pagan de subvencion el primer premio?",
+  "gold_sets": [
+   [
+    48743
+   ]
+  ],
+  "doc_ids": [
+   48743
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-082",
+  "question": "qui son els nous vocals del consell valencia duniversitats nomenats al maig?",
+  "gold_sets": [
+   [
+    89473
+   ]
+  ],
+  "doc_ids": [
+   89473
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-083",
+  "question": "¿Qué importe total máximo tiene la convocatoria de los premios President y Generalitat a las fallas de 2026?",
+  "gold_sets": [
+   [
+    85222
+   ]
+  ],
+  "doc_ids": [
+   85222
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Premios",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-084",
+  "question": "Quina puja salarial recullen les taules retributives de la Generalitat de 2026?",
+  "gold_sets": [
+   [
+    48415
+   ]
+  ],
+  "doc_ids": [
+   48415
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-085",
+  "question": "¿Qué requisito de antigüedad de la obra se exige para las ayudas a la composición de obras musicales nuevas del IVC en 2026?",
+  "gold_sets": [
+   [
+    85457
+   ]
+  ],
+  "doc_ids": [
+   85457
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-086",
+  "question": "En el concurs ordinari de provisió de llocs reservats a funcionaris d'habilitació nacional (2025 i 2026), qui presidix el tribunal de valoració?",
+  "gold_sets": [
+   [
+    84494
+   ]
+  ],
+  "doc_ids": [
+   84494
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-087",
+  "question": "¿Qué falla ganó el premio President a la Mejor Falla Infantil de la Sección Especial en 2026?",
+  "gold_sets": [
+   [
+    87141
+   ]
+  ],
+  "doc_ids": [
+   87141
+  ],
+  "language": "es",
+  "category": "clean",
+  "doc_kind": "Premios",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-088",
+  "question": "Quin import global màxim tenien les beques per a estudiants de la UNED a la Comunitat Valenciana del curs 2024-2025?",
+  "gold_sets": [
+   [
+    39793
+   ]
+  ],
+  "doc_ids": [
+   39793
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Becas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-089",
+  "question": "¿De cuánto es el sueldo base del A1 según el Acuerdo del Consell 30/2026 de tablas retributivas?",
+  "gold_sets": [
+   [
+    48017
+   ]
+  ],
+  "doc_ids": [
+   48017
+  ],
+  "language": "es",
+  "category": "wrong_ref",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-090",
+  "question": "Segons la Resolució de les beques GV-Talent, l'import global màxim és d'1.600.000 €? Crec que és la convocatòria del curs 2025-2026.",
+  "gold_sets": [
+   [
+    88576
+   ]
+  ],
+  "doc_ids": [
+   88576
+  ],
+  "language": "va",
+  "category": "wrong_ref",
+  "doc_kind": "Becas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-091",
+  "question": "En las becas para deportistas de élite del Decreto 59/2016, ¿qué importes se conceden?",
+  "gold_sets": [
+   [
+    18712
+   ]
+  ],
+  "doc_ids": [
+   18712
+  ],
+  "language": "es",
+  "category": "wrong_ref",
+  "doc_kind": "Becas",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-092",
+  "question": "Quins llocs té la RLT de l'EPSAR del 2025? (la resolució d'abril)",
+  "gold_sets": [
+   [
+    88766
+   ]
+  ],
+  "doc_ids": [
+   88766
+  ],
+  "language": "va",
+  "category": "wrong_ref",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-093",
+  "question": "¿Qué dos resoluciones de premios de las fallas de 2026 hay, la convocatoria y la concesión, y qué importe tiene el premio President en cada una?",
+  "gold_sets": [
+   [
+    85222,
+    87141
+   ]
+  ],
+  "doc_ids": [
+   85222,
+   87141
+  ],
+  "language": "es",
+  "category": "multihop",
+  "doc_kind": "Premios",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-094",
+  "question": "Per a l'OPE 2026, quina taxa d'examen es paga (Ordre 23/2026) i quin és el sou base del subgrup A1 (taules 2026) si s'aprova la plaça?",
+  "gold_sets": [
+   [
+    89021,
+    48415
+   ]
+  ],
+  "doc_ids": [
+   89021,
+   48415
+  ],
+  "language": "va",
+  "category": "multihop",
+  "doc_kind": "Empleo Publico",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-095",
+  "question": "En materia de becas de 2025 ya resueltas: ¿qué importe global máximo tuvieron las de la UNED y cuánto se concedió por deportista de élite? Cita ambas convocatorias.",
+  "gold_sets": [
+   [
+    17892,
+    18712
+   ]
+  ],
+  "doc_ids": [
+   17892,
+   18712
+  ],
+  "language": "es",
+  "category": "multihop",
+  "doc_kind": "Becas",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-096",
+  "question": "kuant de temps tinc per a justificar la subvencio de comerc i artesania cmiart?",
+  "gold_sets": [
+   [
+    76655
+   ]
+  ],
+  "doc_ids": [
+   76655
+  ],
+  "language": "va",
+  "category": "colloquial",
+  "doc_kind": "Subvenciones",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-097",
+  "question": "y para innovacion y doctorandos en empresas hay subvenciones? cuanto presupuesto",
+  "gold_sets": [
+   [
+    85603
+   ]
+  ],
+  "doc_ids": [
+   85603
+  ],
+  "language": "es",
+  "category": "colloquial",
+  "doc_kind": "Subvenciones",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-098",
+  "question": "Hi ha res sobre oposicions o places de personal investigador a la universitat?",
+  "gold_sets": [
+   [
+    89664
+   ]
+  ],
+  "doc_ids": [
+   89664
+  ],
+  "language": "va",
+  "category": "vague",
+  "doc_kind": "Empleo Publico",
+  "text_source": "html"
+ },
+ {
+  "id": "v2-099",
+  "question": "¿Qué se ha publicado sobre plazas de profesorado ayudante doctor?",
+  "gold_sets": [
+   [
+    85055
+   ]
+  ],
+  "doc_ids": [
+   85055
+  ],
+  "language": "es",
+  "category": "vague",
+  "doc_kind": "Empleo Publico",
+  "text_source": "pdf"
+ },
+ {
+  "id": "v2-100",
+  "question": "Qui s'ha cessat com a director general de Relacions Institucionals, Seguiment i Comunicació en el Decret 73/2026, i a petició de qui?",
+  "gold_sets": [
+   [
+    89337
+   ]
+  ],
+  "doc_ids": [
+   89337
+  ],
+  "language": "va",
+  "category": "clean",
+  "doc_kind": "Otros",
+  "text_source": "html"
+ }
+]

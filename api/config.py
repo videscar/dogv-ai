@@ -161,9 +161,16 @@ class Settings(BaseSettings):
 
     # Reading / reranking
     ask_read_max_docs: int = 3
-    ask_chunks_per_doc: int = 4
+    ask_chunks_per_doc: int = 10
+    ask_read_retrieval_chunks: int = 4  # retrieval/BM25 chunks preserved per doc (baseline behaviour)
     ask_chunk_max_chars: int = 1200
     ask_doc_fallback_chars: int = 12000
+    # Final answer synthesis sampling. Thinking mode (temp 1.0 preset) made the
+    # grounded synthesis non-reproducible (flipped correct/"no consta" on identical
+    # input); the raw server is deterministic at temp 0 greedy with thinking off, so
+    # the synthesis now runs thinking-off at low temp for stable, measurable answers.
+    ask_synthesis_thinking: bool = False
+    ask_synthesis_temperature: float = 0.0
     ask_rerank_top_n: int = 5
     ask_rerank_max_candidates: int = 10
     ask_rerank_expand_candidates: int = 10

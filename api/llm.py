@@ -106,11 +106,13 @@ class LlmClient:
     ) -> str:
         start = time.monotonic()
         ok = False
-        # Unsloth Qwen3.6-27B sampling presets. Caller's temperature is honored only when
-        # thinking is off; thinking-mode general preset (temp=1.0, top_p=0.95) is dictated
-        # by the model card and overrides the caller's temperature.
+        # Unsloth Qwen3.6-27B sampling presets. The model card's thinking-mode preset
+        # is temp=1.0/top_p=0.95, but at temp=1.0 the grounded synthesis is unstable
+        # (it flips between the correct fact and "no consta" on identical input), so we
+        # honor the caller's temperature in thinking mode too and keep the preset's
+        # top_p. Callers that want the model-card default can still pass temperature=1.0.
         if enable_thinking:
-            sample_temp = 1.0
+            sample_temp = temperature
             sample_top_p = 0.95
         else:
             sample_temp = temperature

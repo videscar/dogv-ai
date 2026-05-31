@@ -158,7 +158,12 @@ def build_answer(
         "repair_skipped_reason": None,
     }
     try:
-        result = chat_json_with_retry(client, messages, temperature=1.0, enable_thinking=True)
+        result = chat_json_with_retry(
+            client,
+            messages,
+            temperature=settings.ask_synthesis_temperature,
+            enable_thinking=settings.ask_synthesis_thinking,
+        )
         answer_text = str(result.get("answer") or "").strip()
         citations = normalize_citations(result.get("citations"))
 
