@@ -352,6 +352,8 @@ _TOTAL_CUE = re.compile(
     re.IGNORECASE,
 )
 _CONVOCATORIA_SUBKINDS = {"convocatoria", "convocatòria", "convocatories", "bases"}
+_CONCESION_SUBKINDS = {"resultados", "resultats", "adjudicaciones", "adjudicacions"}
+_CONCEDID_INTENT = re.compile(r"\b(concedid\w*|atorgad\w*|concedit\w*)\b", re.IGNORECASE)
 
 
 def _program_total_evidence(
@@ -368,12 +370,20 @@ def _program_total_evidence(
     if not _PROGRAM_TOTAL_INTENT.search(question or ""):
         return []
     amount_re = re.compile(r"\b\d[\d.,]*\b")
+    # The awarded total ("subvencions concedides / atorgades") is declared in the
+    # concesión (Resultados/Adjudicaciones), not the convocatoria. For that intent
+    # scan ONLY those subkinds — a convocatoria sibling's own "import total" line
+    # must not out-score it. Convocatoria-total questions are left untouched.
+    if _CONCEDID_INTENT.search(question or ""):
+        allowed_subkinds = _CONCESION_SUBKINDS
+    else:
+        allowed_subkinds = _CONVOCATORIA_SUBKINDS
     candidates: list[tuple[int, int, str]] = []
 
     def _scan(items: list[dict[str, Any]], get_text):
         for d in items or []:
             subkind = (d.get("doc_subkind") or "").strip().lower()
-            if subkind not in _CONVOCATORIA_SUBKINDS:
+            if subkind not in allowed_subkinds:
                 continue
             doc_id = d.get("document_id")
             if doc_id is None:
@@ -409,6 +419,112 @@ def _program_total_evidence(
         }
         for doc_id, quote in best.items()
     ]
+
+
+# A currency figure: 4.860.000 euros / 1.366,74 € / 500.000 € (not bare counts,
+# which would catch expediente codes and dates).
+# NB: trailing (?!\w) not \b — after "€" (a non-word char) followed by a space
+# there is no word boundary, so r"...€\b" never matches "11.200,00 €".
+_CURRENCY = re.compile(r"\d[\d.]*(?:,\d+)?\s*(?:€|euros?)(?!\w)", re.IGNORECASE)
+# An amount question — the only context where surfacing a figure line is on-topic.
+_AMOUNT_INTENT = re.compile(
+    r"\b(import\w*|importe\w*|quant[ií]a\w*|cuant[ií]a\w*|dotaci[oó]\w*|"
+    r"dotat\w*|dotad\w*|pressupost\w*|presupuest\w*|euros?|€)\b",
+    re.IGNORECASE,
+)
+# Words that say "amount/total" but carry no *subject* — excluded as the
+# disambiguating keyword so a generic "import màxim" label never wins the pin.
+_GENERIC_FIGURE_WORDS = {
+    "import", "imports", "importe", "importes", "total", "totals", "totales",
+    "global", "globals", "maxim", "maxima", "maxims", "maxime", "maximes",
+    "màxim", "màxima", "màxims", "maximo", "maxima", "máximo", "máxima",
+    "euros", "euro", "dotacio", "dotació", "dotacion", "dotación", "dotat",
+    "quantia", "quantía", "cuantia", "cuantía", "pressupost", "presupuesto",
+    "anualitat", "anualitats", "anualidad", "anualidades", "exercici",
+    "exercicis", "ejercicio", "ejercicios", "credit", "crèdit", "credito",
+    "crédito",
+}
+
+
+def _subject_keywords(question: str) -> list[str]:
+    """Distinctive (non-generic, >=5 char) content words from the question."""
+    out: list[str] = []
+    for kw in _extract_keywords(question):
+        if len(kw) < 5 or kw in _GENERIC_FIGURE_WORDS:
+            continue
+        out.append(kw)
+    return out
+
+
+def _subject_amount_evidence(
+    question: str,
+    docs: list[dict[str, Any]],
+    full_docs: list[dict[str, Any]] | None = None,
+    label_window: int = 42,
+    max_items: int = 2,
+) -> list[dict[str, Any]]:
+    """Pin the figure line keyed by the question's specific subject.
+
+    DOGV convocatorias break a budget down by modality / line / submodalidad
+    ("Modalitat. Ficció: 4.860.000 euros"). The LLM reader and the lexical
+    coverage ranker routinely surface a *neighbouring* modality's figure, so the
+    synthesis says "no consta" for the exact one asked. This binds each currency
+    figure to the label text immediately preceding it (reading order "Label:
+    amount") and pins the figure whose label carries the question's distinctive
+    subject word — never a bare "import màxim" line.
+    """
+    if not _AMOUNT_INTENT.search(question or ""):
+        return []
+    subjects = _subject_keywords(question)
+    if not subjects:
+        return []
+    # (num_matched, -gap, doc_id, snippet)
+    scored: list[tuple[int, int, int, str]] = []
+    for doc in docs:
+        doc_id = doc.get("document_id")
+        if doc_id is None:
+            continue
+        for chunk in doc.get("chunks") or []:
+            if not chunk:
+                continue
+            # Skip annex/award-row chunks: their "Entity CIF 369,00 €" rows let a
+            # generic place word in the question (comunitat, valenciana) pin a
+            # per-beneficiary figure instead of the modality total asked for.
+            if _looks_like_list(chunk):
+                continue
+            lower = chunk.lower()
+            for m in _CURRENCY.finditer(chunk):
+                start = m.start()
+                ctx = lower[max(0, start - label_window):start]
+                matched = [k for k in subjects if k in ctx]
+                if not matched:
+                    continue
+                # gap = how close the nearest subject keyword sits before the figure.
+                gap = min(len(ctx) - ctx.rfind(k) for k in matched)
+                lo = max(0, start - label_window)
+                hi = min(len(chunk), m.end() + 4)
+                snippet = chunk[lo:hi].strip()
+                scored.append((len(set(matched)), -gap, int(doc_id), snippet))
+    if not scored:
+        return []
+    scored.sort(key=lambda x: (x[0], x[1]), reverse=True)
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[int, str]] = set()
+    for _n, _gap, doc_id, snippet in scored:
+        key = (doc_id, snippet)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(
+            {
+                "doc_id": doc_id,
+                "quote": snippet[:400],
+                "detail": "Importe de la modalidad/línea solicitada.",
+            }
+        )
+        if len(out) >= max_items:
+            break
+    return out
 
 
 def _eligibility_evidence(
