@@ -14,7 +14,6 @@ from .reader_extractors import (
     _matched_keywords,
     _program_total_evidence,
     _score_text,
-    _subject_amount_evidence,
 )
 
 
@@ -40,7 +39,6 @@ Documentos seleccionados (cada uno con extractos):
 _PINNED_DETAILS = {
     "Extracto con cantidades.",
     "Importe total/global de la convocatoria o bases.",
-    "Importe de la modalidad/línea solicitada.",
 }
 
 
@@ -429,7 +427,6 @@ def extract_evidence(
         evidence = _clean_evidence(result.get("evidence") or [])
         eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
         program_total = _program_total_evidence(question, docs, full_docs=full_docs)
-        subject_amount = _subject_amount_evidence(question, docs, full_docs=full_docs)
         if evidence:
             combined = evidence
         else:
@@ -441,21 +438,16 @@ def extract_evidence(
         # correct figure (v2-049: 1.6M chunk evicted by an umbral table) or inject
         # confusing figures that trip the validator (v2-044 dump). The targeted
         # _program_total pin gives the convocatoria total without that collateral.
-        # Targeted figure pins go FIRST so the coverage ranker treats them as
-        # pinned (survives list-suppression and the 8-quote truncation).
-        for pin in (subject_amount, program_total):
-            if pin:
-                combined = pin + combined
+        if program_total:
+            combined = program_total + combined
         return _coverage_rank_evidence(question, combined, docs)
     except Exception:
         fallback = _fallback_evidence(question, docs, full_docs=full_docs)
         eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
         program_total = _program_total_evidence(question, docs, full_docs=full_docs)
-        subject_amount = _subject_amount_evidence(question, docs, full_docs=full_docs)
         combined = fallback
         if eligibility:
             combined = combined + eligibility
-        for pin in (subject_amount, program_total):
-            if pin:
-                combined = pin + combined
+        if program_total:
+            combined = program_total + combined
         return _coverage_rank_evidence(question, combined, docs)
