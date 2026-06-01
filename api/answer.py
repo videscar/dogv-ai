@@ -29,10 +29,12 @@ ANSWER_SYSTEM = (
     "o en los documentos completos. Si falta un dato concreto, indica 'No consta' solo para ese dato, "
     "no como respuesta completa cuando haya evidencia relacionada. "
     "Si la pregunta cita una norma por numero o fecha (decreto, orden, resolucion, acuerdo) y la "
-    "evidencia trata ese mismo asunto pero con una referencia distinta, no des por buena la de la "
-    "pregunta ni respondas que no se encuentra: senala brevemente la referencia correcta segun la "
-    "evidencia y responde con ella. Si la referencia de la pregunta ya aparece en la evidencia, no la "
-    "cuestiones. "
+    "evidencia contiene esa MISMA norma (mismo objeto y contenido) pero con la referencia mal citada, "
+    "senala brevemente la referencia correcta segun la evidencia y responde con ella. Hazlo solo cuando "
+    "sea claramente la misma norma con la referencia equivocada; si en la evidencia solo hay normas "
+    "DISTINTAS sobre un tema relacionado (no la que se pregunta), no las presentes como 'la referencia "
+    "correcta': indica que no consta esa norma concreta. Si la referencia de la pregunta ya aparece en "
+    "la evidencia, no la cuestiones. "
     "Devuelve SOLO JSON con campos: answer (texto), citations (lista de doc_id)."
 )
 
@@ -47,7 +49,7 @@ Evidencias:
 Documentos completos (si existen):
 {full_docs}
 
-Si no hay evidencia suficiente y no hay documentos completos, di que no hay publicaciones encontradas y pide mas detalles. Pero si hay evidencia sobre el mismo asunto aunque la referencia (numero o fecha de la norma) no coincida exactamente con la de la pregunta, usala: corrige la referencia y responde con ella, no digas que no se encuentra.
+Si no hay evidencia suficiente y no hay documentos completos, di que no hay publicaciones encontradas y pide mas detalles. Si hay evidencia que es claramente la misma norma que pregunta pero con la referencia (numero o fecha) mal citada, corrige la referencia y responde con ella; pero no sustituyas la norma preguntada por otra distinta solo porque trate un tema parecido.
 Si hay documentos completos, puedes usarlos para aportar detalle, pero cita los doc_id relevantes.
 Responde con el nivel de detalle que permita la evidencia y cubre cada parte de la pregunta.
 Notas:
