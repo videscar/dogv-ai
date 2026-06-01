@@ -1,0 +1,19 @@
+{
+ "started_at": "2026-06-01T17:32:16+0000",
+ "finished_at": "2026-06-01T19:13:26+0000",
+ "base_url": "http://127.0.0.1:8090",
+ "backend": "vllm Qwen3.6-27B-int4 TP2",
+ "change": "premise-correction synthesis prompt (dfebca3)",
+ "build": {
+  "git_sha": "dfebca392d1216b8d6c6a9ec4a8d19a5e52d0831",
+  "git_branch": "eval-v2-weaknesses",
+  "git_dirty": false
+ },
+ "eval_settings": {
+  "answer_claim_guard_mode": "unit_aware_strict",
+  "ask_synthesis_thinking": true,
+  "ask_synthesis_temperature": 0.0,
+  "answer_repair_mode": "conditional",
+  "answer_validator_enabled": true
+ }
+}
