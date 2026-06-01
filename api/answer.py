@@ -28,6 +28,11 @@ ANSWER_SYSTEM = (
     "No inventes beneficiarios, cuantias o plazos si no aparecen en las evidencias "
     "o en los documentos completos. Si falta un dato concreto, indica 'No consta' solo para ese dato, "
     "no como respuesta completa cuando haya evidencia relacionada. "
+    "Si la pregunta cita una norma por numero o fecha (decreto, orden, resolucion, acuerdo) y la "
+    "evidencia trata ese mismo asunto pero con una referencia distinta, no des por buena la de la "
+    "pregunta ni respondas que no se encuentra: senala brevemente la referencia correcta segun la "
+    "evidencia y responde con ella. Si la referencia de la pregunta ya aparece en la evidencia, no la "
+    "cuestiones. "
     "Devuelve SOLO JSON con campos: answer (texto), citations (lista de doc_id)."
 )
 
@@ -42,7 +47,7 @@ Evidencias:
 Documentos completos (si existen):
 {full_docs}
 
-Si no hay evidencia suficiente y no hay documentos completos, di que no hay publicaciones encontradas y pide mas detalles.
+Si no hay evidencia suficiente y no hay documentos completos, di que no hay publicaciones encontradas y pide mas detalles. Pero si hay evidencia sobre el mismo asunto aunque la referencia (numero o fecha de la norma) no coincida exactamente con la de la pregunta, usala: corrige la referencia y responde con ella, no digas que no se encuentra.
 Si hay documentos completos, puedes usarlos para aportar detalle, pero cita los doc_id relevantes.
 Responde con el nivel de detalle que permita la evidencia y cubre cada parte de la pregunta.
 Notas:
