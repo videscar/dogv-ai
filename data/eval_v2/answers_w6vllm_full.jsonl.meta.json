@@ -1,0 +1,21 @@
+{
+ "started_at": "2026-06-01T12:53:43+0000",
+ "finished_at": "2026-06-01T14:36:44+0000",
+ "base_url": "http://127.0.0.1:8090",
+ "backend": "vllm Qwen3.6-27B-int4 TP2 (master e48d403)",
+ "in_path": "data/eval_v2/answer_input.json",
+ "out_path": "data/eval_v2/answers_w6vllm_full.jsonl",
+ "collection": "4 concurrent shards, 0 errors/0 empties",
+ "build": {
+  "git_sha": "5c8a05d178f26b3e38dfafa73bca9419bfcda78d",
+  "git_branch": "eval-v2-weaknesses",
+  "git_dirty": false
+ },
+ "eval_settings": {
+  "answer_claim_guard_mode": "unit_aware_strict",
+  "ask_synthesis_thinking": true,
+  "ask_synthesis_temperature": 0.0,
+  "answer_repair_mode": "conditional",
+  "answer_validator_enabled": true
+ }
+}
