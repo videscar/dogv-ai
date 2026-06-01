@@ -381,7 +381,8 @@ def _program_total_evidence(
     candidates: list[tuple[int, int, str]] = []
 
     def _scan(items: list[dict[str, Any]], get_text):
-        for d in items or []:
+        n = len(items or [])
+        for pos, d in enumerate(items or []):
             subkind = (d.get("doc_subkind") or "").strip().lower()
             if subkind not in allowed_subkinds:
                 continue
@@ -393,8 +394,13 @@ def _program_total_evidence(
                     continue
                 if not amount_re.search(chunk):
                     continue
-                # Prefer chunks that pair a total cue with a currency figure.
-                score = len(_TOTAL_CUE.findall(chunk)) + (1 if "€" in chunk or "euro" in chunk.lower() else 0)
+                cue = len(_TOTAL_CUE.findall(chunk)) + (1 if "€" in chunk or "euro" in chunk.lower() else 0)
+                # Prefer the total from the best-RANKED doc — the reranker already
+                # decided which doc the question is about; cue density only breaks
+                # ties within a doc. Without this, a figure-dense sibling convocatoria
+                # out-scores the gold (v2-007: política-lingüística doc 83683 cue=10
+                # beat the rank-1 GV-Talent doc 86084 cue=5, pinning 600k not 1.6M).
+                score = (n - pos) * 100 + cue
                 candidates.append((score, int(doc_id), chunk))
 
     _scan(docs, lambda d: d.get("chunks") or [])
