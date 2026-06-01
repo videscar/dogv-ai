@@ -14,13 +14,34 @@ EMBED_LLM_LOG_FILE="${LOG_DIR}/embed_llm.log"
 API_LOG_FILE="${LOG_DIR}/api.log"
 CHAINLIT_LOG_FILE="${LOG_DIR}/chainlit.log"
 
-# llama-server (chat) — reuses an existing instance when one is already
-# listening, so other projects sharing the same model are not disturbed.
-LLAMA_SERVER_BIN="${LLAMA_SERVER_BIN:-${HOME}/llama.cpp/build/bin/llama-server}"
+# Chat backend selector: "vllm" (default — Qwen3.6 int4-AutoRound, TP2, MTP
+# speculative decoding, ~63-71 tok/s) or "llamacpp" (the Q4 GGUF fallback).
+CHAT_BACKEND="${CHAT_BACKEND:-vllm}"
+
 CHAT_LLM_HOST="${CHAT_LLM_HOST:-127.0.0.1}"
 CHAT_LLM_PORT="${CHAT_LLM_PORT:-8000}"
-CHAT_LLM_MODEL="${CHAT_LLM_MODEL:-${HOME}/models/qwen3.6-27b/Qwen3.6-27B-UD-Q4_K_XL.gguf}"
 CHAT_LLM_ALIAS="${CHAT_LLM_ALIAS:-qwen3.6-27b}"
+
+# vLLM chat backend. Serves the int4-AutoRound safetensors across both GPUs.
+# Notes (see reference_vllm_tp2_chat memory):
+#  - flashinfer JIT-compiles its prefill kernel on the *first request* via a bare
+#    `ninja` subprocess, so the vllm-env bin (which ships ninja) must be on PATH.
+#  - cold start is ~2.5min (torch.compile + warmup + MTP drafter load).
+#  - the worker subprocesses must be reaped as a process group on stop, else they
+#    orphan and pin ~10GB/GPU (handled by stop_chat_llm).
+VLLM_BIN="${VLLM_BIN:-${HOME}/vllm-env/bin/vllm}"
+VLLM_CHAT_MODEL="${VLLM_CHAT_MODEL:-${HOME}/models/Qwen3.6-27B-int4-AutoRound}"
+VLLM_CHAT_TP="${VLLM_CHAT_TP:-2}"
+VLLM_CHAT_CTX="${VLLM_CHAT_CTX:-131072}"
+VLLM_CHAT_GPU_UTIL="${VLLM_CHAT_GPU_UTIL:-0.88}"
+VLLM_CHAT_CUDA_DEVICES="${VLLM_CHAT_CUDA_DEVICES:-0,1}"
+VLLM_CHAT_HEALTH_WAIT="${VLLM_CHAT_HEALTH_WAIT:-300}"
+
+# llama-server (chat fallback, CHAT_BACKEND=llamacpp) — reuses an existing
+# instance when one is already listening, so other projects sharing the same
+# model are not disturbed.
+LLAMA_SERVER_BIN="${LLAMA_SERVER_BIN:-${HOME}/llama.cpp/build/bin/llama-server}"
+CHAT_LLM_MODEL="${CHAT_LLM_MODEL:-${HOME}/models/qwen3.6-27b/Qwen3.6-27B-UD-Q4_K_XL.gguf}"
 CHAT_LLM_CTX="${CHAT_LLM_CTX:-131072}"
 CHAT_LLM_NGL="${CHAT_LLM_NGL:-999}"
 
@@ -84,15 +105,72 @@ wait_for_health() {
 
 start_chat_llm() {
   if is_running_pid_file "${CHAT_LLM_PID_FILE}"; then
-    echo "Chat llama-server already managed (pid=$(cat "${CHAT_LLM_PID_FILE}"))"
+    echo "Chat server already managed (pid=$(cat "${CHAT_LLM_PID_FILE}"))"
     return 0
   fi
 
   if probe_url_ok "${CHAT_LLM_URL}/health"; then
-    echo "Chat llama-server already running externally on ${CHAT_LLM_URL} (not managed by demo_ctl)"
+    echo "Chat server already running externally on ${CHAT_LLM_URL} (not managed by demo_ctl)"
     return 0
   fi
 
+  case "${CHAT_BACKEND}" in
+    vllm)     start_chat_vllm ;;
+    llamacpp) start_chat_llamacpp ;;
+    *) echo "Unknown CHAT_BACKEND='${CHAT_BACKEND}' (expected: vllm | llamacpp)"; return 1 ;;
+  esac
+}
+
+start_chat_vllm() {
+  if [[ ! -x "${VLLM_BIN}" ]]; then
+    echo "vllm binary not found at ${VLLM_BIN}"
+    return 1
+  fi
+  if [[ ! -d "${VLLM_CHAT_MODEL}" ]]; then
+    echo "vLLM chat model dir not found at ${VLLM_CHAT_MODEL}"
+    return 1
+  fi
+
+  echo "Starting chat vLLM on ${CHAT_LLM_HOST}:${CHAT_LLM_PORT} (TP${VLLM_CHAT_TP}, CUDA_VISIBLE_DEVICES=${VLLM_CHAT_CUDA_DEVICES}); cold start ~2.5min"
+  local bindir
+  bindir="$(dirname "${VLLM_BIN}")"
+  # `setsid` makes the launched process a session/group leader, and the inner
+  # `bash -c` records its own pid (== the new pgid) so stop_chat_llm can signal
+  # the whole group and reap the vLLM worker subprocesses. `ninja` (for flashinfer
+  # JIT) is provided by putting the vllm-env bin on PATH.
+  nohup setsid env \
+    PATH="${bindir}:${PATH}" \
+    CUDA_VISIBLE_DEVICES="${VLLM_CHAT_CUDA_DEVICES}" \
+    PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+    bash -c 'echo $$ > "$1"; shift; exec "$@"' _ \
+      "${CHAT_LLM_PID_FILE}" \
+      "${VLLM_BIN}" serve "${VLLM_CHAT_MODEL}" \
+      --served-model-name "${CHAT_LLM_ALIAS}" \
+      --dtype half --language-model-only --trust-remote-code \
+      --tensor-parallel-size "${VLLM_CHAT_TP}" \
+      --max-model-len "${VLLM_CHAT_CTX}" \
+      --gpu-memory-utilization "${VLLM_CHAT_GPU_UTIL}" \
+      --max-num-seqs 2 \
+      --kv-cache-dtype fp8 \
+      --enable-prefix-caching \
+      --reasoning-parser qwen3 \
+      --enable-auto-tool-choice --tool-call-parser qwen3_xml \
+      --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+      --override-generation-config '{"temperature":0.6,"top_p":0.95,"top_k":20,"min_p":0.0}' \
+      --host "${CHAT_LLM_HOST}" --port "${CHAT_LLM_PORT}" \
+    >"${CHAT_LLM_LOG_FILE}" 2>&1 &
+  # The inner bash writes the authoritative (group-leader) pid to the pid file.
+  sleep 2
+  local pid
+  pid="$(cat "${CHAT_LLM_PID_FILE}" 2>/dev/null || true)"
+  if ! wait_for_health "${CHAT_LLM_URL}/health" "Chat vLLM" "${VLLM_CHAT_HEALTH_WAIT}"; then
+    tail -n 40 "${CHAT_LLM_LOG_FILE}" || true
+    return 1
+  fi
+  echo "Chat vLLM started (pid=${pid})"
+}
+
+start_chat_llamacpp() {
   if [[ ! -x "${LLAMA_SERVER_BIN}" ]]; then
     echo "llama-server binary not found at ${LLAMA_SERVER_BIN}"
     return 1
@@ -251,14 +329,76 @@ stop_service() {
   rm -f "${pid_file}"
 }
 
+stop_chat_llm() {
+  # Like stop_service, but signals the whole process group when the recorded pid
+  # is a group leader (setsid-launched vLLM), so worker subprocesses are reaped
+  # instead of orphaning and pinning GPU memory.
+  local pid_file="${CHAT_LLM_PID_FILE}"
+  local name="Chat server"
+
+  if ! [[ -f "${pid_file}" ]]; then
+    echo "${name} pid file not found"
+    return 0
+  fi
+
+  local pid
+  pid="$(cat "${pid_file}" 2>/dev/null || true)"
+  if [[ -z "${pid}" ]]; then
+    rm -f "${pid_file}"
+    echo "${name} pid file was empty; cleaned"
+    return 0
+  fi
+
+  if ! kill -0 "${pid}" 2>/dev/null; then
+    echo "${name} pid ${pid} not running; cleaning stale pid file"
+    rm -f "${pid_file}"
+    return 0
+  fi
+
+  local pgid
+  pgid="$(ps -o pgid= -p "${pid}" 2>/dev/null | tr -d ' ')"
+
+  # vLLM is setsid-launched as its own group leader (pgid == pid); its workers
+  # share that group but reparent to init and ignore SIGTERM mid-shutdown, so we
+  # must wait on the whole *group* emptying — watching only the leader pid lets
+  # workers leak ~10GB/GPU. The llama.cpp fallback is a single process (else).
+  if [[ -n "${pgid}" && "${pgid}" == "${pid}" ]]; then
+    echo "Stopping ${name} (pid=${pid}, process group ${pgid})"
+    kill -TERM "-${pgid}" 2>/dev/null || true
+    local gone=0
+    for _ in $(seq 1 12); do
+      if ! pgrep -g "${pgid}" >/dev/null 2>&1; then gone=1; break; fi
+      sleep 1
+    done
+    if [[ "${gone}" -ne 1 ]]; then
+      echo "${name} group did not exit gracefully, killing"
+      kill -KILL "-${pgid}" 2>/dev/null || true
+      sleep 1
+    fi
+  else
+    echo "Stopping ${name} (pid=${pid})"
+    kill -TERM "${pid}" 2>/dev/null || true
+    for _ in $(seq 1 30); do
+      if ! kill -0 "${pid}" 2>/dev/null; then break; fi
+      sleep 1
+    done
+    if kill -0 "${pid}" 2>/dev/null; then
+      echo "${name} did not stop gracefully, killing"
+      kill -KILL "${pid}" 2>/dev/null || true
+    fi
+  fi
+
+  rm -f "${pid_file}"
+}
+
 show_status() {
   echo "=== Processes ==="
   if is_running_pid_file "${CHAT_LLM_PID_FILE}"; then
-    echo "Chat llama-server: running (pid=$(cat "${CHAT_LLM_PID_FILE}"))"
+    echo "Chat server (${CHAT_BACKEND}): running (pid=$(cat "${CHAT_LLM_PID_FILE}"))"
   elif probe_url_ok "${CHAT_LLM_URL}/health"; then
-    echo "Chat llama-server: externally running at ${CHAT_LLM_URL} (not managed)"
+    echo "Chat server: externally running at ${CHAT_LLM_URL} (not managed)"
   else
-    echo "Chat llama-server: not running"
+    echo "Chat server: not running"
   fi
 
   if is_running_pid_file "${EMBED_LLM_PID_FILE}"; then
@@ -313,8 +453,8 @@ usage() {
   cat <<EOF
 Usage: scripts/demo_ctl.sh <command>
 Commands:
-  start    Start chat + embed llama-servers (chat only if not already up),
-           API on :${API_PORT}, and Chainlit on :${CHAINLIT_PORT}
+  start    Start chat (CHAT_BACKEND=${CHAT_BACKEND}) + embed server (chat only if
+           not already up), API on :${API_PORT}, and Chainlit on :${CHAINLIT_PORT}
   stop     Stop everything managed via pid files (external chat server left running)
   status   Show process state and health probes for all four services
   logs     Show last 80 lines of llama-server, API, and Chainlit logs
@@ -338,7 +478,7 @@ main() {
       stop_service "Chainlit" "${CHAINLIT_PID_FILE}"
       stop_service "API" "${API_PID_FILE}"
       stop_service "Embed llama-server" "${EMBED_LLM_PID_FILE}"
-      stop_service "Chat llama-server" "${CHAT_LLM_PID_FILE}"
+      stop_chat_llm
       ;;
     status)
       show_status
