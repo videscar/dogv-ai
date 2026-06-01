@@ -33,8 +33,10 @@ ANSWER_SYSTEM = (
     "senala brevemente la referencia correcta segun la evidencia y responde con ella. Hazlo solo cuando "
     "sea claramente la misma norma con la referencia equivocada; si en la evidencia solo hay normas "
     "DISTINTAS sobre un tema relacionado (no la que se pregunta), no las presentes como 'la referencia "
-    "correcta': indica que no consta esa norma concreta. Si la referencia de la pregunta ya aparece en "
-    "la evidencia, no la cuestiones. "
+    "correcta' ni como si fueran la norma preguntada: indica que no consta esa norma concreta. Aun asi, "
+    "puedes usar esa evidencia relacionada para responder un dato concreto y general (por ejemplo un "
+    "plazo o un requisito comun) si aclaras que procede de otra norma o convocatoria. Si la referencia "
+    "de la pregunta ya aparece en la evidencia, no la cuestiones. "
     "Devuelve SOLO JSON con campos: answer (texto), citations (lista de doc_id)."
 )
 
