@@ -5,7 +5,7 @@
   "category": "clean",
   "perturbation": "none",
   "question": "¿Cuál es el importe del sueldo base mensual del subgrupo A1 según las tablas retributivas de la Generalitat de 2026, y qué subida salarial aplican?",
-  "expected_answer": "Sueldo base mensual del A1 = 1.366,74 €. La subida salarial consolidable es del 2,5% respecto a 31/12/2024.",
+  "expected_answer": "Sueldo base mensual del A1 (2026): 1.387,24 € (= 1.366,74 € de 2025 + el incremento adicional del 1,5% para 2026; los 1.366,74 € ya incluían la subida consolidable del 2,5% respecto a 31/12/2024). Subida salarial: 2,5% consolidable + 1,5% adicional para 2026.",
   "should_abstain": false,
   "gold_sets": [
    [
@@ -733,7 +733,7 @@
   "category": "colloquial",
   "perturbation": "no_accents",
   "question": "quant es el sou base mensual dun A1 de la generalitat este any?",
-  "expected_answer": "El sou base mensual del subgrup A1 és 1.366,74 € (taules retributives 2026, increment del 2,5%).",
+  "expected_answer": "El sou base mensual del subgrup A1 per a 2026 és 1.387,24 € (1.366,74 € vigents en 2025 + l'increment addicional de l'1,5% per a 2026).",
   "should_abstain": false,
   "gold_sets": [
    [
@@ -1867,7 +1867,7 @@
   "category": "clean",
   "perturbation": "none",
   "question": "Quina puja salarial recullen les taules retributives de la Generalitat de 2026?",
-  "expected_answer": "Una puja consolidable del 2,5% respecte als imports vigents a 31/12/2024.",
+  "expected_answer": "Dues pujades acumulables: la consolidable del 2,5% (respecte als imports vigents a 31/12/2024) i un increment addicional màxim de l'1,5% per a 2026.",
   "should_abstain": false,
   "gold_sets": [
    [
@@ -1982,7 +1982,7 @@
   "category": "wrong_ref",
   "perturbation": "approx_ref",
   "question": "¿De cuánto es el sueldo base del A1 según el Acuerdo del Consell 30/2026 de tablas retributivas?",
-  "expected_answer": "Las tablas retributivas se publican por el Acuerdo de 30 de enero de 2026 (referencia 2026/3145), no '30/2026'. El sueldo base del A1 es 1.366,74 €.",
+  "expected_answer": "La referencia correcta es el Acuerdo de 30 de enero de 2026 (2026/3145), no '30/2026'. El sueldo base mensual del A1 para 2026 es 1.387,24 € (1.366,74 € en 2025 + el 1,5% adicional).",
   "should_abstain": false,
   "gold_sets": [
    [
@@ -2100,7 +2100,7 @@
   "category": "multihop",
   "perturbation": "multi_doc",
   "question": "Per a l'OPE 2026, quina taxa d'examen es paga (Ordre 23/2026) i quin és el sou base del subgrup A1 (taules 2026) si s'aprova la plaça?",
-  "expected_answer": "Taxa d'examen A1: 30,57 € (A2: 25,48 €). Sou base mensual de l'A1: 1.366,74 €.",
+  "expected_answer": "Taxa d'examen A1: 30,57 € (A2: 25,48 €). Sou base mensual de l'A1 per a 2026: 1.387,24 €.",
   "should_abstain": false,
   "gold_sets": [
    [
