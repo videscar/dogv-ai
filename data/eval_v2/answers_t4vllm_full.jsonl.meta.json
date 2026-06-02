@@ -1,0 +1,17 @@
+{
+ "finished_at": "2026-06-02T01:26:00+0000",
+ "backend": "vllm Qwen3.6-27B-int4 TP2",
+ "change": "rank-weighted program_total pin (32a8239)",
+ "build": {
+  "git_sha": "32a82396e1f45a24bc30b3fbfa335a0bb2c8c286",
+  "git_branch": "eval-v2-weaknesses",
+  "git_dirty": false
+ },
+ "eval_settings": {
+  "answer_claim_guard_mode": "unit_aware_strict",
+  "ask_synthesis_thinking": true,
+  "ask_synthesis_temperature": 0.0,
+  "answer_repair_mode": "conditional",
+  "answer_validator_enabled": true
+ }
+}
