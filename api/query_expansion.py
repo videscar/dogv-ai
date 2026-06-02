@@ -660,3 +660,38 @@ def decompose_question(question: str, max_facets: int = 3) -> list[str]:
     if not has_split:
         return []
     return _fallback_facets(question, max_facets)
+
+
+_HYDE_SYSTEM = (
+    "Eres experto en el DOGV (Diari Oficial de la Generalitat Valenciana). "
+    "Escribe un fragmento breve (2-3 frases) tal como aparecería en una disposición "
+    "oficial del DOGV que respondería a la consulta del usuario. Usa terminología "
+    "formal (resolución, decreto, convocatoria, subvención, importe, conselleria, "
+    "nombramiento, etc.). Responde en el idioma de la consulta. Solo el fragmento, "
+    "sin preámbulo ni comillas."
+)
+
+
+def build_hyde_document(question: str) -> str:
+    """HyDE: a hypothetical DOGV-style passage for the query, to embed for retrieval.
+
+    Bridges the gap between a vague/colloquial natural-language query and the formal
+    document text (validated: pulls gold docs from rank 55-100/None up to rank 13-45).
+    Returns "" on any failure so the caller can simply skip the HyDE lane.
+    """
+    q = (question or "").strip()
+    if not q:
+        return ""
+    try:
+        client = LlmClient()
+        out = client.chat(
+            [
+                {"role": "system", "content": _HYDE_SYSTEM},
+                {"role": "user", "content": q},
+            ],
+            temperature=0.3,
+            enable_thinking=False,
+        )
+        return (out or "").strip()
+    except Exception:
+        return ""

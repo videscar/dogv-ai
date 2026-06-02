@@ -8,7 +8,7 @@ from agent.shared import QAState, return_with_profile, rrf_margin_ratio
 from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
 from api.embed import EmbedClient
-from api.query_expansion import build_bm25_queries, build_prf_query, decompose_question
+from api.query_expansion import build_bm25_queries, build_prf_query, build_hyde_document, decompose_question
 from api.retrieval import (
     RetrievalFilters,
     bm25_search,
@@ -41,6 +41,21 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         if not embeddings or len(embeddings) != 1:
             embeddings = [client.embed(question)]
         query_embedding = embeddings[0]
+
+        # HyDE lane: embed a hypothetical DOGV-style document for the query. Bridges
+        # the vague/colloquial/Valencian query -> formal-document gap that leaves the
+        # gold doc deep in the raw-query ranking. Additive (fused via RRF), so it can
+        # only add recall, never drop the raw-query hits. Best-effort: skip on failure.
+        hyde_embedding = None
+        if getattr(settings, "ask_hyde_enabled", False):
+            try:
+                hyde_text = build_hyde_document(question)
+                if hyde_text:
+                    hyde_embs = client.embed_batch([hyde_text])
+                    if hyde_embs:
+                        hyde_embedding = hyde_embs[0]
+            except Exception:
+                hyde_embedding = None
 
         bm25_facet_questions = [question]
         facets = decompose_question(question, max_facets=max_facets)
@@ -294,6 +309,13 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             if "vector" in lanes:
                 sources.append(vector_hits)
                 weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
+                if hyde_embedding is not None:
+                    with SessionLocal() as db:
+                        hyde_hits = _dedupe_docs(
+                            vector_search(db, hyde_embedding, filters_to_use, limit=100)
+                        )
+                    sources.append(hyde_hits)
+                    weights.append(getattr(settings, "ask_rrf_weight_hyde", 1.0))
             if "bm25" in lanes:
                 sources.append(bm25_hits)
                 weights.append(getattr(settings, "ask_rrf_weight_bm25", 1.0))
