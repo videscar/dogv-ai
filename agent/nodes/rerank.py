@@ -77,15 +77,18 @@ def rerank_titles_node(state: QAState) -> QAState:
         if candidates and rrf_margin_ratio(candidates, probe=expand_probe) < expand_ratio:
             max_candidates = min(len(candidates), max_candidates + expand_candidates)
             top_n = min(len(candidates), top_n + expand_top_n)
-        doc_scores = _doc_similarity_scores(
-            state.get("query_embedding"),
-            [int(item["document_id"]) for item in candidates],
-        )
-        if doc_scores:
+        doc_id_list = [int(item["document_id"]) for item in candidates]
+        doc_scores = _doc_similarity_scores(state.get("query_embedding"), doc_id_list)
+        # Score by max(raw-query, HyDE) similarity so HyDE-recovered docs aren't
+        # demoted here by the raw-query similarity that missed them in the first place.
+        hyde_scores = _doc_similarity_scores(state.get("hyde_embedding"), doc_id_list)
+        if doc_scores or hyde_scores:
+            def _sim(doc_id: int) -> float:
+                return max(doc_scores.get(doc_id, -1.0), hyde_scores.get(doc_id, -1.0))
             candidates = sorted(
                 candidates,
                 key=lambda item: (
-                    doc_scores.get(int(item["document_id"]), -1.0),
+                    _sim(int(item["document_id"])),
                     float(item.get("rrf_score") or 0.0),
                 ),
                 reverse=True,

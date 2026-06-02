@@ -485,6 +485,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             "chunk_candidates": chunk_candidates,
             "query_embedding": query_embedding,
             "query_embeddings": embeddings,
+            "hyde_embedding": hyde_embedding,
             "filters": filters,
             },
             elapsed_seconds=round(elapsed, 3),
