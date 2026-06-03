@@ -689,7 +689,7 @@ def build_hyde_document(question: str) -> str:
                 {"role": "system", "content": _HYDE_SYSTEM},
                 {"role": "user", "content": q},
             ],
-            temperature=0.3,
+            temperature=0.0,
             enable_thinking=False,
         )
         return (out or "").strip()

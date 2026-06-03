@@ -1,0 +1,1161 @@
+{
+ "per_q": [
+  {
+   "id": "v2-001",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    48017
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-002",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    88766
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-003",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    86180
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-004",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    76674
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-005",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    21226
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-006",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    89632
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-007",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    86084
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-008",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    89021
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-009",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    86629
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-010",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    89159
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-011",
+   "category": "annex",
+   "language": "es",
+   "gold": [
+    86763
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-012",
+   "category": "annex",
+   "language": "va",
+   "gold": [
+    88759
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-013",
+   "category": "annex",
+   "language": "es",
+   "gold": [
+    15679
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-014",
+   "category": "annex",
+   "language": "va",
+   "gold": [
+    40613
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-015",
+   "category": "annex",
+   "language": "es",
+   "gold": [
+    86079
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-016",
+   "category": "annex",
+   "language": "va",
+   "gold": [
+    33528
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-017",
+   "category": "annex",
+   "language": "es",
+   "gold": [
+    17892
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-018",
+   "category": "annex",
+   "language": "va",
+   "gold": [
+    84704
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-019",
+   "category": "annex",
+   "language": "es",
+   "gold": [
+    48743
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-020",
+   "category": "annex",
+   "language": "va",
+   "gold": [
+    76655
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-021",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    86200,
+    86529
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-022",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    88759
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-023",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    86084,
+    86667
+   ],
+   "pool_any": true,
+   "pool_full": false,
+   "read_any": true,
+   "read_full": false
+  },
+  {
+   "id": "v2-024",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    89633
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-025",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    84414
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-026",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    76674,
+    87949
+   ],
+   "pool_any": true,
+   "pool_full": false,
+   "read_any": true,
+   "read_full": false
+  },
+  {
+   "id": "v2-027",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    85489
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-028",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    89632
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-029",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    86845
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-030",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    33528
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-031",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    18712
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-032",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    48415
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-033",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    87141
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-034",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    89255
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-035",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    86529
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-036",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    89121
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-037",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    86274
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-038",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    87981
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-039",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    86667
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-040",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    89331
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-041",
+   "category": "wrong_ref",
+   "language": "es",
+   "gold": [
+    86845
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-042",
+   "category": "wrong_ref",
+   "language": "va",
+   "gold": [
+    33528
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-043",
+   "category": "wrong_ref",
+   "language": "es",
+   "gold": [
+    86529
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-044",
+   "category": "wrong_ref",
+   "language": "va",
+   "gold": [
+    84704
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-045",
+   "category": "wrong_ref",
+   "language": "es",
+   "gold": [
+    21226
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-046",
+   "category": "wrong_ref",
+   "language": "va",
+   "gold": [
+    87714
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-047",
+   "category": "multihop",
+   "language": "es",
+   "gold": [
+    86200,
+    86529
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-048",
+   "category": "multihop",
+   "language": "va",
+   "gold": [
+    37586,
+    89633
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-049",
+   "category": "multihop",
+   "language": "es",
+   "gold": [
+    86084,
+    86667
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-050",
+   "category": "multihop",
+   "language": "va",
+   "gold": [
+    76674,
+    87949
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-051",
+   "category": "multihop",
+   "language": "es",
+   "gold": [
+    11627,
+    86267
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-052",
+   "category": "multihop",
+   "language": "va",
+   "gold": [
+    89121,
+    89473
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-053",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    86845
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-054",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    83987
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-055",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    86380
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-056",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    88095
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-057",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    20033
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-058",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    87835
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-059",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    86200
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-060",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    88672
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-061",
+   "category": "annex",
+   "language": "es",
+   "gold": [
+    11627
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-062",
+   "category": "annex",
+   "language": "va",
+   "gold": [
+    89255
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-063",
+   "category": "annex",
+   "language": "es",
+   "gold": [
+    86267
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-064",
+   "category": "annex",
+   "language": "va",
+   "gold": [
+    37580
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-075",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    15679
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-076",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    33528
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-077",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    86380
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-078",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    76674
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-079",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    21226
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-080",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    84704
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-081",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    48743
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-082",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    89473
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-083",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    85222
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-084",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    48415
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-085",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    85457
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-086",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    84494
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-087",
+   "category": "clean",
+   "language": "es",
+   "gold": [
+    87141
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-088",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    39793
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-089",
+   "category": "wrong_ref",
+   "language": "es",
+   "gold": [
+    48017
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-090",
+   "category": "wrong_ref",
+   "language": "va",
+   "gold": [
+    88576
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-091",
+   "category": "wrong_ref",
+   "language": "es",
+   "gold": [
+    18712
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-092",
+   "category": "wrong_ref",
+   "language": "va",
+   "gold": [
+    88766
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-093",
+   "category": "multihop",
+   "language": "es",
+   "gold": [
+    85222,
+    87141
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-094",
+   "category": "multihop",
+   "language": "va",
+   "gold": [
+    48415,
+    89021
+   ],
+   "pool_any": true,
+   "pool_full": false,
+   "read_any": true,
+   "read_full": false
+  },
+  {
+   "id": "v2-095",
+   "category": "multihop",
+   "language": "es",
+   "gold": [
+    17892,
+    18712
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-096",
+   "category": "colloquial",
+   "language": "va",
+   "gold": [
+    76655
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-097",
+   "category": "colloquial",
+   "language": "es",
+   "gold": [
+    85603
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-098",
+   "category": "vague",
+   "language": "va",
+   "gold": [
+    89664
+   ],
+   "pool_any": false,
+   "pool_full": false,
+   "read_any": false,
+   "read_full": false
+  },
+  {
+   "id": "v2-099",
+   "category": "vague",
+   "language": "es",
+   "gold": [
+    85055
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  },
+  {
+   "id": "v2-100",
+   "category": "clean",
+   "language": "va",
+   "gold": [
+    89337
+   ],
+   "pool_any": true,
+   "pool_full": true,
+   "read_any": true,
+   "read_full": true
+  }
+ ],
+ "agg": {
+  "ALL": {
+   "n": 90,
+   "pool_any": 75,
+   "pool_full": 72,
+   "read_any": 75,
+   "read_full": 72
+  },
+  "cat:clean": {
+   "n": 25,
+   "pool_any": 22,
+   "pool_full": 22,
+   "read_any": 22,
+   "read_full": 22
+  },
+  "lang:es": {
+   "n": 45,
+   "pool_any": 39,
+   "pool_full": 38,
+   "read_any": 39,
+   "read_full": 38
+  },
+  "lang:va": {
+   "n": 45,
+   "pool_any": 36,
+   "pool_full": 34,
+   "read_any": 36,
+   "read_full": 34
+  },
+  "cat:annex": {
+   "n": 14,
+   "pool_any": 13,
+   "pool_full": 13,
+   "read_any": 13,
+   "read_full": 13
+  },
+  "cat:vague": {
+   "n": 16,
+   "pool_any": 8,
+   "pool_full": 6,
+   "read_any": 8,
+   "read_full": 6
+  },
+  "cat:colloquial": {
+   "n": 16,
+   "pool_any": 14,
+   "pool_full": 14,
+   "read_any": 14,
+   "read_full": 14
+  },
+  "cat:wrong_ref": {
+   "n": 10,
+   "pool_any": 9,
+   "pool_full": 9,
+   "read_any": 9,
+   "read_full": 9
+  },
+  "cat:multihop": {
+   "n": 9,
+   "pool_any": 9,
+   "pool_full": 8,
+   "read_any": 9,
+   "read_full": 8
+  }
+ }
+}
