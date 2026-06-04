@@ -1,0 +1,25 @@
+[Unit]
+Description=DOGV AI API (FastAPI/uvicorn)
+After=network-online.target postgresql.service dogv-chat.service dogv-embed.service
+Wants=network-online.target dogv-chat.service dogv-embed.service
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=exec
+User=ai-server
+WorkingDirectory=/home/ai-server/dogv-ai
+Environment="PATH=/home/ai-server/dogv-ai/.venv/bin:/usr/bin:/bin"
+EnvironmentFile=/home/ai-server/dogv-ai/.env
+# AUTO_INGEST stays off here — freshness is handled by the dogv-daily-ingest
+# timer; enabling it on the API would trigger a long backfill on every restart.
+ExecStart=/home/ai-server/dogv-ai/.venv/bin/uvicorn api.main:app --host 0.0.0.0 --port 8088
+ExecStartPost=/bin/bash -c 'for _ in $(seq 1 60); do curl -fsS -m 5 http://127.0.0.1:8088/health >/dev/null 2>&1 && exit 0; sleep 1; done; echo "API not healthy after 60s"; exit 1'
+TimeoutStartSec=90
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

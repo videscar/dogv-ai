@@ -1,0 +1,26 @@
+[Unit]
+Description=DOGV AI Chainlit UI
+After=network-online.target dogv-api.service
+Wants=network-online.target dogv-api.service
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=exec
+User=ai-server
+WorkingDirectory=/home/ai-server/dogv-ai
+Environment="PATH=/home/ai-server/dogv-ai/.venv/bin:/usr/bin:/bin"
+Environment="DEBUG=0"
+Environment="BROWSER="
+Environment="CHAINLIT_BACKEND_URL=http://127.0.0.1:8088"
+# Slow queries (vague/multihop) can run ~300s; keep the UI timeout above that.
+Environment="DEMO_REQUEST_TIMEOUT_SECONDS=360"
+EnvironmentFile=/home/ai-server/dogv-ai/.env
+ExecStart=/home/ai-server/dogv-ai/.venv/bin/chainlit run ui/chainlit_app.py --headless --host 0.0.0.0 --port 8501
+Restart=on-failure
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

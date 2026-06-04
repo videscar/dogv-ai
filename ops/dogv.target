@@ -1,0 +1,9 @@
+[Unit]
+Description=DOGV AI full stack (chat + embed + API + Chainlit)
+# A convenience target to start/stop the whole stack together:
+#   systemctl start dogv.target   /   systemctl stop dogv.target
+Wants=dogv-chat.service dogv-embed.service dogv-api.service dogv-chainlit.service
+After=dogv-chat.service dogv-embed.service dogv-api.service dogv-chainlit.service
+
+[Install]
+WantedBy=multi-user.target

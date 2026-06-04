@@ -1,5 +1,73 @@
 # Ops units
 
+## Always-on stack (systemd)
+
+Four native units run the full DOGV stack hands-off, restart on failure, and
+start at boot. They mirror the launch logic in `scripts/demo_ctl.sh` (which
+stays as the dev/manual convenience) but use systemd for lifecycle:
+
+| Unit | Service | Port | GPU |
+|------|---------|------|-----|
+| `dogv-chat.service`     | vLLM Qwen3.6-27B int4-AutoRound, TP2, MTP | 8000 | 0,1 |
+| `dogv-embed.service`    | llama.cpp bge-m3 embeddings               | 8001 | 1   |
+| `dogv-api.service`      | FastAPI/uvicorn                           | 8088 | —   |
+| `dogv-chainlit.service` | Chainlit UI                               | 8501 | —   |
+
+Ordering: chat + embed come up first and each holds "activating" via an
+`ExecStartPost` health poll until `/health` answers, so the API only starts once
+its backends are serving; Chainlit starts after the API. Coupling is `Wants=`
+(not `Requires=`), so a momentary backend crash+restart doesn't cascade — the API
+already degrades gracefully (503 → UI message). `dogv.target` groups all four.
+
+Key gotchas baked into the units (see also `demo_ctl.sh` comments):
+- **chat**: `vllm-env/bin` on `PATH` for flashinfer's `ninja` JIT; `KillMode=control-group`
+  reaps TP workers (else they orphan and pin ~10GB/GPU); `TimeoutStartSec=420`
+  for the ~2.5min cold start.
+- **embed**: `--verbosity 0` (default logging crashed it ~every 40min under load).
+
+### Install (one-time, requires sudo)
+
+```bash
+sudo install -m 0644 ops/dogv-chat.service     /etc/systemd/system/
+sudo install -m 0644 ops/dogv-embed.service    /etc/systemd/system/
+sudo install -m 0644 ops/dogv-api.service      /etc/systemd/system/
+sudo install -m 0644 ops/dogv-chainlit.service /etc/systemd/system/
+sudo install -m 0644 ops/dogv.target           /etc/systemd/system/
+sudo systemctl daemon-reload
+# Enable boot-start for all four, then bring the stack up:
+sudo systemctl enable dogv-chat dogv-embed dogv-api dogv-chainlit
+sudo systemctl start dogv.target
+```
+
+Make sure the manual `demo_ctl.sh` stack is stopped first
+(`scripts/demo_ctl.sh stop`) so the ports are free.
+
+### Verify
+
+```bash
+systemctl status dogv-chat dogv-embed dogv-api dogv-chainlit
+curl -fsS http://127.0.0.1:8088/health   # API up
+curl -fsS http://127.0.0.1:8088/ready    # index ready
+journalctl -u dogv-chat -f               # watch the slow cold start
+```
+
+### Operate
+
+```bash
+sudo systemctl restart dogv-api          # restart one service
+sudo systemctl stop dogv.target          # stop the whole stack
+sudo systemctl start dogv.target         # bring it back up
+```
+
+### Reboot test (required before declaring beta-ready)
+
+```bash
+sudo reboot
+# after it comes back (give chat ~3-4min for cold start):
+systemctl status dogv-chat dogv-embed dogv-api dogv-chainlit
+curl -fsS http://127.0.0.1:8088/ready
+```
+
 ## Daily ingest timer (systemd)
 
 Installs a `dogv-daily-ingest` oneshot service triggered Mon–Fri at
