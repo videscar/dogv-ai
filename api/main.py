@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 from datetime import date
+import json
 import logging
 import time
 import uuid
+from typing import Any, Iterator
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session
 
@@ -166,35 +169,25 @@ def list_issue_documents(issue_id: int, db: Session = Depends(get_db)):
     return docs
 
 
-@app.post("/ask", response_model=AskResponse)
-def ask(payload: AskRequest):
-    if settings.demo_enforce_ready_gate:
-        readiness = build_readiness_payload()
-        if not readiness.get("ready"):
-            raise HTTPException(status_code=503, detail=readiness)
+# Human-readable (Spanish) labels for each graph node, surfaced as live progress
+# steps by the streaming endpoint. Nodes not listed here emit no stage event.
+_STAGE_LABELS: dict[str, str] = {
+    "analyze_intent": "Analizando la consulta",
+    "temporal_guard": "Comprobando el marco temporal",
+    "online_ingest": "Buscando documentos recientes",
+    "retrieve_candidates": "Recuperando documentos del DOGV",
+    "backfill": "Ampliando la búsqueda",
+    "rerank_titles": "Seleccionando los documentos más relevantes",
+    "read_docs": "Leyendo los documentos",
+    "answer_node": "Redactando la respuesta",
+}
 
-    request_id = uuid.uuid4().hex[:8]
-    start = time.monotonic()
-    logger.info(
-        "ask.start req=%s chars=%s debug=%s",
-        request_id,
-        len(payload.question),
-        payload.debug,
-    )
-    result = None
-    try:
-        result = graph.invoke(
-            {
-                "question": payload.question,
-                "request_id": request_id,
-                "debug": payload.debug,
-            }
-        )
-    except Exception:
-        logger.exception("ask.error req=%s", request_id)
-        raise
-    finally:
-        logger.info("ask.end req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
+
+def _build_ask_response(result: dict[str, Any], payload: AskRequest) -> dict[str, Any]:
+    """Turn a finished graph state into the /ask response, persisting a trace.
+
+    Shared by /ask and /ask/stream so both return the identical payload shape.
+    """
     filters = result.get("filters")
     candidates = result.get("candidate_docs") or []
     fusion = [
@@ -219,7 +212,7 @@ def ask(payload: AskRequest):
             "answer": result.get("answer"),
         }
     )
-    response = {
+    response: dict[str, Any] = {
         "answer": result.get("answer", ""),
         "citations": result.get("citations", []),
     }
@@ -231,3 +224,103 @@ def ask(payload: AskRequest):
             "profile": result.get("profile"),
         }
     return response
+
+
+@app.post("/ask", response_model=AskResponse)
+def ask(payload: AskRequest):
+    if settings.demo_enforce_ready_gate:
+        readiness = build_readiness_payload()
+        if not readiness.get("ready"):
+            raise HTTPException(status_code=503, detail=readiness)
+
+    request_id = uuid.uuid4().hex[:8]
+    start = time.monotonic()
+    logger.info(
+        "ask.start req=%s chars=%s debug=%s",
+        request_id,
+        len(payload.question),
+        payload.debug,
+    )
+    try:
+        result = graph.invoke(
+            {
+                "question": payload.question,
+                "request_id": request_id,
+                "debug": payload.debug,
+            }
+        )
+    except Exception:
+        logger.exception("ask.error req=%s", request_id)
+        raise
+    finally:
+        logger.info("ask.end req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
+    return _build_ask_response(result, payload)
+
+
+def _sse(event: str, data: dict[str, Any]) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False, default=str)}\n\n"
+
+
+@app.post("/ask/stream")
+def ask_stream(payload: AskRequest):
+    """Server-Sent Events variant of /ask.
+
+    Emits a `stage` event as each pipeline node completes (so the UI can show
+    live progress instead of a silent spinner), then a single `result` event
+    carrying the same payload as /ask, and finally a `done` event. On failure a
+    single `error` event is emitted in-stream (the HTTP status is already 200 by
+    the time streaming starts), except the readiness gate which 503s up front.
+    """
+    if settings.demo_enforce_ready_gate:
+        readiness = build_readiness_payload()
+        if not readiness.get("ready"):
+            raise HTTPException(status_code=503, detail=readiness)
+
+    request_id = uuid.uuid4().hex[:8]
+
+    def event_stream() -> Iterator[str]:
+        start = time.monotonic()
+        logger.info(
+            "ask.stream.start req=%s chars=%s debug=%s",
+            request_id,
+            len(payload.question),
+            payload.debug,
+        )
+        final_state: dict[str, Any] = {}
+        try:
+            for mode, chunk in graph.stream(
+                {
+                    "question": payload.question,
+                    "request_id": request_id,
+                    "debug": payload.debug,
+                },
+                stream_mode=["updates", "values"],
+            ):
+                if mode == "values":
+                    # Full state after each super-step; the last one is final.
+                    final_state = chunk
+                    continue
+                # mode == "updates": {node_name: state_delta} for the node(s) that
+                # just ran. Emit a friendly progress label for known nodes.
+                for node in chunk or {}:
+                    label = _STAGE_LABELS.get(node)
+                    if label:
+                        yield _sse("stage", {"node": node, "label": label})
+            response = _build_ask_response(final_state, payload)
+            yield _sse("result", response)
+            yield _sse("done", {"elapsed": round(time.monotonic() - start, 2)})
+        except Exception as exc:  # surface the failure in-stream, then log it
+            logger.exception("ask.stream.error req=%s", request_id)
+            yield _sse("error", {"message": "internal_error", "detail": str(exc)})
+        finally:
+            logger.info(
+                "ask.stream.end req=%s elapsed=%.2fs",
+                request_id,
+                time.monotonic() - start,
+            )
+
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )

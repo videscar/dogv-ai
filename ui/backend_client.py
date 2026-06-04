@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+import json
+from typing import Any, AsyncIterator
 
 import httpx
 
@@ -44,6 +45,53 @@ class DogvApiClient:
         payload = {"question": question, "debug": debug}
         return await self._request_json("POST", "/ask", json=payload)
 
+    async def ask_stream(
+        self, question: str, debug: bool = False
+    ) -> AsyncIterator[tuple[str, dict[str, Any]]]:
+        """Yield (event_type, data) tuples from the /ask/stream SSE endpoint.
+
+        Event types: 'stage' (progress), 'result' (final answer payload),
+        'done', 'error'. Connection/timeout/HTTP problems raise the same
+        Backend* errors as ask(), so callers can fall back to the blocking path.
+        """
+        base_url = self.base_url.rstrip("/")
+        # No read timeout between events: synthesis can run minutes with no event
+        # in between; keep a bounded connect timeout so an unreachable backend
+        # still fails fast.
+        read = None if self.timeout_seconds is None else float(self.timeout_seconds)
+        timeout = httpx.Timeout(connect=10.0, read=read, write=10.0, pool=10.0)
+        payload = {"question": question, "debug": debug}
+        try:
+            async with httpx.AsyncClient(base_url=base_url, timeout=timeout) as client:
+                async with client.stream("POST", "/ask/stream", json=payload) as response:
+                    if response.status_code >= 400:
+                        await response.aread()
+                        raise BackendHttpError(
+                            status_code=response.status_code,
+                            detail=_response_detail(response),
+                            message=response.reason_phrase or "Backend error",
+                        )
+                    event = "message"
+                    data_lines: list[str] = []
+                    async for line in response.aiter_lines():
+                        if line == "":
+                            if data_lines:
+                                yield event, _parse_sse_data("\n".join(data_lines))
+                            event, data_lines = "message", []
+                            continue
+                        if line.startswith(":"):
+                            continue  # SSE comment / keep-alive
+                        if line.startswith("event:"):
+                            event = line[len("event:") :].strip()
+                        elif line.startswith("data:"):
+                            data_lines.append(line[len("data:") :].lstrip())
+                    if data_lines:  # flush a trailing event without blank line
+                        yield event, _parse_sse_data("\n".join(data_lines))
+        except httpx.TimeoutException as exc:
+            raise BackendTimeoutError("Request timed out") from exc
+        except httpx.NetworkError as exc:
+            raise BackendUnavailableError("Backend unavailable") from exc
+
     async def _request_json(
         self,
         method: str,
@@ -76,6 +124,14 @@ class DogvApiClient:
         if not isinstance(payload, dict):
             raise BackendProtocolError("Backend returned unexpected JSON payload")
         return payload
+
+
+def _parse_sse_data(raw: str) -> dict[str, Any]:
+    try:
+        parsed = json.loads(raw)
+    except ValueError:
+        return {"raw": raw}
+    return parsed if isinstance(parsed, dict) else {"value": parsed}
 
 
 def _response_detail(response: httpx.Response) -> Any:

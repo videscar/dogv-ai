@@ -150,6 +150,23 @@ async def on_chat_start() -> None:
         await cl.Message(content=_readiness_message(readiness)).send()
 
 
+STREAM_ENABLED = _truthy(os.getenv("DEMO_STREAM_ENABLED", "1"))
+
+
+def _render_answer(response: dict[str, Any]) -> str:
+    answer = (response.get("answer") or "").strip() or "No hay respuesta disponible."
+    citations_block = _render_citations(response.get("citations") or [])
+    return answer if not citations_block else f"{answer}\n\n{citations_block}"
+
+
+def _progress_content(done_labels: list[str], finished: bool = False) -> str:
+    lines = ["**Procesando tu consulta…**", ""]
+    lines += [f"- ✅ {label}" for label in done_labels]
+    if not finished:
+        lines.append("- ⏳ …")
+    return "\n".join(lines)
+
+
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
     question = (message.content or "").strip()
@@ -158,6 +175,56 @@ async def on_message(message: cl.Message) -> None:
         return
 
     client: DogvApiClient = cl.user_session.get("dogv_client") or _client()
+    if STREAM_ENABLED:
+        await _answer_streaming(client, question)
+    else:
+        await _answer_blocking(client, question)
+
+
+async def _answer_streaming(client: DogvApiClient, question: str) -> None:
+    progress = cl.Message(content=_progress_content([]))
+    await progress.send()
+    done_labels: list[str] = []
+    result: dict[str, Any] | None = None
+    try:
+        async for event, data in client.ask_stream(question):
+            if event == "stage":
+                label = str(data.get("label") or "").strip()
+                if label and label not in done_labels:
+                    done_labels.append(label)
+                    progress.content = _progress_content(done_labels)
+                    await progress.update()
+            elif event == "result":
+                result = data
+            elif event == "error":
+                await progress.remove()
+                await cl.Message(content=GENERIC_ERROR_MESSAGE).send()
+                return
+    except BackendTimeoutError:
+        await progress.remove()
+        await cl.Message(content=TIMEOUT_MESSAGE).send()
+        return
+    except BackendUnavailableError:
+        await progress.remove()
+        await cl.Message(content=UNAVAILABLE_MESSAGE).send()
+        return
+    except BackendHttpError as exc:
+        await progress.remove()
+        readiness = _extract_readiness_from_error(exc)
+        if readiness:
+            await cl.Message(content=_readiness_message(readiness)).send()
+            return
+        await cl.Message(content=f"{GENERIC_ERROR_MESSAGE} (HTTP {exc.status_code})").send()
+        return
+
+    await progress.remove()
+    if result is None:
+        await cl.Message(content=GENERIC_ERROR_MESSAGE).send()
+        return
+    await cl.Message(content=_render_answer(result)).send()
+
+
+async def _answer_blocking(client: DogvApiClient, question: str) -> None:
     try:
         response = await client.ask(question)
     except BackendTimeoutError:
@@ -174,8 +241,4 @@ async def on_message(message: cl.Message) -> None:
         await cl.Message(content=f"{GENERIC_ERROR_MESSAGE} (HTTP {exc.status_code})").send()
         return
 
-    answer = (response.get("answer") or "").strip() or "No hay respuesta disponible."
-    citations = response.get("citations") or []
-    citations_block = _render_citations(citations)
-    content = answer if not citations_block else f"{answer}\n\n{citations_block}"
-    await cl.Message(content=content).send()
+    await cl.Message(content=_render_answer(response)).send()
