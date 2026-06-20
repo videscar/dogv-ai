@@ -88,6 +88,12 @@ def main() -> int:
         cand_s, read_s = set(cand), set(read)
         pa = bool(gold & cand_s); pf = gold <= cand_s
         ra = bool(gold & read_s); rf = gold <= read_s
+        # 1-indexed rank(s) of gold doc(s) within the ordered (reranked) candidate
+        # pool and the read payload — None when absent. This is the near-miss vs
+        # deep-miss signal: a high pool_rank means "retrieved but ranked below the
+        # cutoff" (reranker-fixable); absent means "never retrieved" (front-door).
+        pool_ranks = [i + 1 for i, d in enumerate(cand) if d in gold]
+        read_ranks = [i + 1 for i, d in enumerate(read) if d in gold]
         for key in ("ALL", f"cat:{r['category']}", f"lang:{r['language']}"):
             a = agg[key]
             a["n"] += 1
@@ -95,10 +101,14 @@ def main() -> int:
             a["read_any"] += ra; a["read_full"] += rf
         per_q.append({"id": r["id"], "category": r["category"], "language": r["language"],
                       "gold": sorted(gold), "pool_any": pa, "pool_full": pf,
-                      "read_any": ra, "read_full": rf})
+                      "read_any": ra, "read_full": rf,
+                      "pool_rank": (min(pool_ranks) if pool_ranks else None),
+                      "pool_ranks": pool_ranks, "pool_size": len(cand),
+                      "read_rank": (min(read_ranks) if read_ranks else None)})
+        rank_s = f" rank={min(pool_ranks)}/{len(cand)}" if pool_ranks else " rank=MISS"
         miss = "" if pf else ("  <-- POOL MISS" if not pa else "  <-- partial/read")
         print(f"[{r['id']}] {r['category']:10} pool={'F' if pf else ('A' if pa else '-')} "
-              f"read={'F' if rf else ('A' if ra else '-')}{miss}", flush=True)
+              f"read={'F' if rf else ('A' if ra else '-')}{rank_s}{miss}", flush=True)
 
     def line(key):
         a = agg[key]; n = a["n"] or 1
