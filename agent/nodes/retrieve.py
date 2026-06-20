@@ -9,6 +9,7 @@ from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
 from api.embed import EmbedClient
 from api.query_expansion import build_bm25_queries, build_prf_query, build_hyde_document, decompose_question
+from api.query_classifiers import is_reference_query
 from api.retrieval import (
     RetrievalFilters,
     bm25_search,
@@ -46,8 +47,14 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         # the vague/colloquial/Valencian query -> formal-document gap that leaves the
         # gold doc deep in the raw-query ranking. Additive (fused via RRF), so it can
         # only add recall, never drop the raw-query hits. Best-effort: skip on failure.
+        # Conditional: HyDE helps anchor-poor (vague/colloquial) queries but drifts
+        # off the cited disposition for reference-queries, evicting the gold from the
+        # fused pool — so skip the HyDE lane when the query carries a norm citation.
         hyde_embedding = None
-        if getattr(settings, "ask_hyde_enabled", False):
+        hyde_enabled = getattr(settings, "ask_hyde_enabled", False)
+        if hyde_enabled and getattr(settings, "ask_hyde_conditional", True) and is_reference_query(question):
+            hyde_enabled = False
+        if hyde_enabled:
             try:
                 hyde_text = build_hyde_document(question)
                 if hyde_text:

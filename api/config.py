@@ -152,6 +152,7 @@ class Settings(BaseSettings):
     ask_rrf_weight_title: float = 1.0
     ask_rrf_weight_title_lexical: float = 0.8
     ask_hyde_enabled: bool = False  # WS1: validated at retrieval level; needs pool/read-budget tune + full-100 before default-on
+    ask_hyde_conditional: bool = True  # when HyDE on, skip it for reference-queries (HyDE drifts off cited norms; protects e.g. v2-092)
     ask_rrf_weight_hyde: float = 3.0
     ask_fallback_allow_margin: bool = False
     bm25_fuse_weight_chunk: float = 1.0
