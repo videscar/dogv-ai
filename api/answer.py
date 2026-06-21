@@ -198,7 +198,13 @@ def build_answer(
             citations = outcome["citations"]
             diagnostics = outcome["diagnostics"]
             if outcome.get("fallback_required"):
-                fallback_citations = citations or collect_citation_ids(evidence)
+                # Validator rejected the synthesis: validation_fallback_answer is an
+                # abstention-style summary that lists only the top few pubs. Cap the
+                # attached citations to that same count so a low-confidence / out-of-
+                # scope fallback doesn't surface a long citation tail — the citation
+                # floor can pad `evidence` with topical siblings the summary never shows.
+                fallback_max = max(1, int(getattr(settings, "answer_fallback_max_items", 3) or 3))
+                fallback_citations = (citations or collect_citation_ids(evidence))[:fallback_max]
                 # Keep the rejected synthesis so we can see *what* the validator threw
                 # away (vs. only knowing that it dumped). Truncated; debug-only.
                 diagnostics["rejected_answer"] = (answer_text or "")[:600]

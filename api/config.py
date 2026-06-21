@@ -151,8 +151,10 @@ class Settings(BaseSettings):
     ask_rrf_weight_bm25: float = 1.0
     ask_rrf_weight_title: float = 1.0
     ask_rrf_weight_title_lexical: float = 0.8
-    ask_hyde_enabled: bool = False  # WS1: validated at retrieval level; needs pool/read-budget tune + full-100 before default-on
+    ask_hyde_enabled: bool = True  # validated full-100 (HYDE_GATE_FLOOR_REPORT): confidence-gated (margin<0.22) + citation floor => +6 gold_cited vs off, OOS abstention intact
     ask_hyde_conditional: bool = True  # when HyDE on, skip it for reference-queries (HyDE drifts off cited norms; protects e.g. v2-092)
+    ask_hyde_confidence_gated: bool = True  # when HyDE on, fire it only when the baseline pool is low-confidence (shallow RRF margin)
+    ask_hyde_margin_threshold: float = 0.22  # fire HyDE iff baseline rrf_margin < this; calibrated on eval_v2 (keeps every known HyDE recovery v2-020/032/034/035/099, skips confident-baseline regressions v2-023/078)
     ask_rrf_weight_hyde: float = 3.0
     ask_fallback_allow_margin: bool = False
     bm25_fuse_weight_chunk: float = 1.0
@@ -166,6 +168,14 @@ class Settings(BaseSettings):
     ask_read_max_docs: int = 3
     ask_chunks_per_doc: int = 10
     ask_read_retrieval_chunks: int = 4  # retrieval/BM25 chunks preserved per doc (baseline behaviour)
+    # Citation floor: every rerank-selected doc that reached the reader payload must
+    # be citable. extract_evidence (LLM + lexical coverage) silently drops docs with
+    # no keyword overlap — for anchor-poor vague/colloquial queries and annex golds
+    # that is exactly the (often HyDE-recovered) gold (measured on eval_v2: gold
+    # reaches read but no quote for v2-020/039/047/057/079/089). The floor injects the
+    # best chunk of any such doc so the recovered recall actually converts to a citation.
+    ask_read_citation_floor: bool = True
+    ask_read_citation_floor_docs: int = 5  # max payload docs to floor a quote for
     ask_chunk_max_chars: int = 1200
     ask_doc_fallback_chars: int = 12000
     # Final answer synthesis sampling. Thinking mode (temp 1.0 preset) made the

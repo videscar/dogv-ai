@@ -45,24 +45,16 @@ def retrieve_candidates_node(state: QAState) -> QAState:
 
         # HyDE lane: embed a hypothetical DOGV-style document for the query. Bridges
         # the vague/colloquial/Valencian query -> formal-document gap that leaves the
-        # gold doc deep in the raw-query ranking. Additive (fused via RRF), so it can
-        # only add recall, never drop the raw-query hits. Best-effort: skip on failure.
-        # Conditional: HyDE helps anchor-poor (vague/colloquial) queries but drifts
-        # off the cited disposition for reference-queries, evicting the gold from the
-        # fused pool — so skip the HyDE lane when the query carries a norm citation.
+        # gold doc deep in the raw-query ranking. The build (an LLM hop) is DEFERRED
+        # until after a baseline retrieval pass so it only fires on low-confidence
+        # pools (see the confidence gate below). Two static exclusions decided here:
+        #   - master switch ask_hyde_enabled
+        #   - reference-queries: the hypothetical drifts off the cited norm and the
+        #     heavy HyDE RRF lane evicts the correctly-retrieved gold (e.g. v2-092).
         hyde_embedding = None
         hyde_enabled = getattr(settings, "ask_hyde_enabled", False)
         if hyde_enabled and getattr(settings, "ask_hyde_conditional", True) and is_reference_query(question):
             hyde_enabled = False
-        if hyde_enabled:
-            try:
-                hyde_text = build_hyde_document(question)
-                if hyde_text:
-                    hyde_embs = client.embed_batch([hyde_text])
-                    if hyde_embs:
-                        hyde_embedding = hyde_embs[0]
-            except Exception:
-                hyde_embedding = None
 
         bm25_facet_questions = [question]
         facets = decompose_question(question, max_facets=max_facets)
@@ -397,6 +389,32 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             return fused, top_chunks, chunk_candidates, counts, rrf_expanded, soft_language
 
         fused, top_chunks, chunk_candidates, counts, rrf_expanded, soft_language = _compute(filters)
+
+        # Confidence-gate HyDE: the baseline pool (no HyDE) is now computed. Only pay
+        # the HyDE generation+embedding hop when that baseline ranking is low-confidence
+        # — a shallow RRF margin means no document clearly dominates, the anchor-poor
+        # vague/colloquial case HyDE is for. A confident baseline already has the gold
+        # near the top; firing HyDE there only adds latency and risks the reader citing
+        # a drifted sibling. Calibrated on eval_v2: margin<0.22 fires on every query
+        # HyDE is known to recover (v2-020/032/034/035/099) and skips the confident-
+        # baseline regressions (v2-023/078). When it fires, recompute with the HyDE lane.
+        hyde_gate_margin = None
+        if hyde_enabled and getattr(settings, "ask_hyde_confidence_gated", True):
+            hyde_gate_margin = rrf_margin_ratio(fused, probe=expand_probe) if fused else 0.0
+            if hyde_gate_margin >= getattr(settings, "ask_hyde_margin_threshold", 0.22):
+                hyde_enabled = False
+        if hyde_enabled:
+            try:
+                hyde_text = build_hyde_document(question)
+                if hyde_text:
+                    hyde_embs = client.embed_batch([hyde_text])
+                    if hyde_embs:
+                        hyde_embedding = hyde_embs[0]
+            except Exception:
+                hyde_embedding = None
+            if hyde_embedding is not None:
+                fused, top_chunks, chunk_candidates, counts, rrf_expanded, soft_language = _compute(filters)
+
         fallbacks: list[str] = []
         if soft_language:
             fallbacks.append("soft_language")
@@ -472,15 +490,18 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             _relax(RetrievalFilters(), "no_filters")
         used_fallback = "+".join(fallbacks) if fallbacks else None
 
+        hyde_fired = hyde_embedding is not None
         elapsed = time.monotonic() - start
         logger.info(
-            "retrieve.done req=%s candidates=%s chunks=%s sources=%s fallback=%s rrf_expand=%s elapsed=%.2fs",
+            "retrieve.done req=%s candidates=%s chunks=%s sources=%s fallback=%s rrf_expand=%s hyde=%s gate_margin=%s elapsed=%.2fs",
             request_id,
             len(fused),
             len(chunk_candidates),
             counts,
             used_fallback,
             rrf_expanded,
+            hyde_fired,
+            None if hyde_gate_margin is None else round(hyde_gate_margin, 3),
             elapsed,
         )
         return return_with_profile(
@@ -501,6 +522,8 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             fallback=used_fallback,
             rrf_expanded=bool(rrf_expanded),
             source_counts=counts,
+            hyde_fired=hyde_fired,
+            hyde_gate_margin=(None if hyde_gate_margin is None else round(hyde_gate_margin, 3)),
         )
     except Exception:
         logger.exception("retrieve.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)

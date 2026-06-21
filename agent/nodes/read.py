@@ -134,6 +134,67 @@ def _select_chunks(sources: list[tuple[list[dict[str, Any]], int | None]], cap: 
     return out
 
 
+def _citation_floor_evidence(
+    question: str,
+    docs_payload: list[dict[str, Any]],
+    payload_doc_ids: list[int],
+    evidence: list[dict[str, Any]],
+    max_floor: int,
+) -> list[dict[str, Any]]:
+    """Guarantee every doc in the reader payload is citable.
+
+    extract_evidence drops docs with no LLM quote and no keyword coverage — for
+    anchor-poor (vague/colloquial) queries and annex golds that silently discards
+    the recovered gold even though it reached the reader payload with its chunks.
+    For each payload doc missing from `evidence`, in confidence order (rerank-selected
+    docs first, then the coverage/amount/eligibility extras) and capped at `max_floor`,
+    inject its most question-relevant chunk so the answer can cite it. Pure addition:
+    never reorders or drops an existing evidence item.
+    """
+    if max_floor <= 0 or not payload_doc_ids or not docs_payload:
+        return evidence
+    have: set[int] = set()
+    for item in evidence:
+        did = item.get("doc_id") or item.get("document_id")
+        if did is not None:
+            have.add(int(did))
+    by_id = {
+        int(d["document_id"]): d
+        for d in docs_payload
+        if d.get("document_id") is not None
+    }
+    keywords = extract_keywords_simple(question)
+    added: list[dict[str, Any]] = []
+    for did in payload_doc_ids:
+        if len(added) >= max_floor:
+            break
+        did = int(did)
+        if did in have:
+            continue
+        doc = by_id.get(did)
+        if not doc:
+            continue
+        chunks = [c for c in (doc.get("chunks") or []) if c and c.strip()]
+        if not chunks:
+            continue
+        best = chunks[0]
+        if keywords:
+            ranked = max(chunks, key=lambda c: coverage_score(c, keywords))
+            if coverage_score(ranked, keywords) > 0:
+                best = ranked
+        have.add(did)
+        added.append(
+            {
+                "doc_id": did,
+                "quote": best.strip()[:800],
+                "detail": "Extracto del documento mejor clasificado en la recuperacion.",
+            }
+        )
+    if not added:
+        return evidence
+    return evidence + added
+
+
 def read_docs_node(state: QAState) -> QAState:
     start = time.monotonic()
     request_id = state.get("request_id")
@@ -406,6 +467,20 @@ def read_docs_node(state: QAState) -> QAState:
                 evidence = extract_evidence(state["question"], docs_payload, full_docs=full_docs)
                 if not evidence:
                     full_docs = []
+        if evidence and getattr(settings, "ask_read_citation_floor", True):
+            # Convert recovered recall into a citation: make every doc that reached the
+            # reader payload citable, even when the reader extracted no quote for it.
+            # Walk the payload in confidence order (rerank-selected first, then the
+            # coverage/amount/eligibility extras) so a gold rescued as an extra is also
+            # floored. Gated on `evidence` being non-empty so a genuine no-evidence
+            # abstention is never turned into a forced citation.
+            evidence = _citation_floor_evidence(
+                state["question"],
+                docs_payload,
+                doc_ids,
+                evidence,
+                getattr(settings, "ask_read_citation_floor_docs", 5),
+            )
         chunk_count = sum(len(doc.get("chunks") or []) for doc in docs_payload)
         char_count = sum(len(chunk) for doc in docs_payload for chunk in (doc.get("chunks") or []))
         token_est = sum(estimate_tokens(chunk) for doc in docs_payload for chunk in (doc.get("chunks") or []))

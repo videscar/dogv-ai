@@ -76,7 +76,15 @@ def answer_node(state: QAState) -> QAState:
 
         citations = []
         if not cited_ids and evidence:
+            # The synthesis cited nothing (e.g. an abstention like "no hay evidencia"):
+            # fall back to the evidence docs, but cap to the same few the abstention
+            # summary shows so the citation floor's topical padding doesn't surface a
+            # long citation tail under an out-of-scope answer. Grounded answers cite
+            # explicitly and never reach this branch.
+            fallback_max = max(1, int(getattr(settings, "answer_fallback_max_items", 3) or 3))
             for item in evidence:
+                if len(cited_ids) >= fallback_max:
+                    break
                 parsed = _parse_citation_id(item)
                 if parsed is not None:
                     cited_ids.add(parsed)
