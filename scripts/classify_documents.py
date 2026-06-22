@@ -40,13 +40,15 @@ def _parse_llm_urls(raw: str | None) -> list[str]:
     return urls
 
 
-def _count_target_documents(db: Session, start_date=None, end_date=None) -> int:
+def _count_target_documents(db: Session, start_date=None, end_date=None, document_ids=None) -> int:
     q = (
         db.query(DogvDocument.id)
         .join(DogvIssue)
         .filter(DogvDocument.text.isnot(None))
         .filter(DogvDocument.doc_kind.is_(None))
     )
+    if document_ids is not None:
+        q = q.filter(DogvDocument.id.in_(document_ids))
     if start_date:
         q = q.filter(DogvIssue.date >= start_date)
     if end_date:
@@ -54,7 +56,7 @@ def _count_target_documents(db: Session, start_date=None, end_date=None) -> int:
     return q.count()
 
 
-def iter_target_document_ids(db: Session, start_date=None, end_date=None, batch_size: int = 200):
+def iter_target_document_ids(db: Session, start_date=None, end_date=None, batch_size: int = 200, document_ids=None):
     last_id = 0
     while True:
         q = (
@@ -64,6 +66,8 @@ def iter_target_document_ids(db: Session, start_date=None, end_date=None, batch_
             .filter(DogvDocument.doc_kind.is_(None))
             .filter(DogvDocument.id > last_id)
         )
+        if document_ids is not None:
+            q = q.filter(DogvDocument.id.in_(document_ids))
         if start_date:
             q = q.filter(DogvIssue.date >= start_date)
         if end_date:
@@ -96,11 +100,12 @@ def classify_range(
     commit_every: int = 200,
     workers: int | None = None,
     llm_urls: list[str] | None = None,
+    document_ids=None,
 ) -> int:
     workers = max(1, workers or _default_workers())
     llm_urls = llm_urls or _parse_llm_urls(os.getenv("DOGV_CLASSIFY_LLM_URLS"))
     endpoint_count = len(llm_urls)
-    total = _count_target_documents(db, start_date, end_date)
+    total = _count_target_documents(db, start_date, end_date, document_ids=document_ids)
     if endpoint_count > 0:
         print(f"Found {total} documents to classify (workers={workers}, endpoints={endpoint_count})")
     else:
@@ -109,7 +114,7 @@ def classify_range(
 
     executor = ThreadPoolExecutor(max_workers=workers) if workers > 1 else None
     try:
-        for ids in iter_target_document_ids(db, start_date, end_date, batch_size=batch_size):
+        for ids in iter_target_document_ids(db, start_date, end_date, batch_size=batch_size, document_ids=document_ids):
             docs = (
                 db.query(DogvDocument)
                 .options(load_only(DogvDocument.id, DogvDocument.title, DogvDocument.text))

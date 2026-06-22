@@ -1,0 +1,334 @@
+"""Resolve a natural-language disposition reference to a DOGV document.
+
+Used by the on-demand historical-fetch path: when a query explicitly names a
+disposition (e.g. "Decreto 185/2018") that is not in the corpus, we resolve it
+against the DOGV portal's full-text search, recover the disposition's internal
+id + publication date, and hand that date to the normal date-range ingest path.
+
+The portal search (verified 2026-06-22):
+  POST {base}/dogv-portal/dogv/search?lang=&page=0&size=10&sort=fecha,desc
+       body {"texto": "<query>", "seccion": []}
+  -> {totalElements, content:[{id, titulo, seccion, organismo, ...}]}
+Notes:
+- size>=10 is mandatory; size=3 triggers a server-side BigDecimal crash.
+- Ley/Decreto refs are ~unique per year (top-1 is gold). Orden numbers repeat
+  across consellerias within a year, so we rank by the question's topic terms.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import date, datetime
+import logging
+import re
+from typing import Any
+
+import requests
+
+from .config import get_settings
+
+settings = get_settings()
+logger = logging.getLogger("dogv.resolver")
+
+# tipo (normalized) -> regex alternation matching how it appears in a DOGV title
+# (Spanish + Valencian forms). Order matters: check the two-word forms first.
+_TIPO_TITLE_PATTERNS: list[tuple[str, str]] = [
+    ("decreto ley", r"DECRETO[\s-]*LEY|DECRET[\s-]*LLEI"),
+    ("ley", r"LEY|LLEI"),
+    # plain decreto must NOT swallow "DECRETO LEY"
+    ("decreto", r"DECRET(?:O)?(?!\s*(?:LEY|LLEI))"),
+    ("orden", r"ORDEN|ORDRE"),
+    ("resolucion", r"RESOLUCI[OÓ]N|RESOLUCI[OÓ]"),
+    ("acuerdo", r"ACUERDO|ACORD"),
+]
+
+# Spoken/written tipo word in a *question* -> normalized tipo key above.
+_TIPO_QUERY_MAP: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bdecreto[\s-]*ley\b|\bdecret[\s-]*llei\b", re.I), "decreto ley"),
+    (re.compile(r"\bley(?:es)?\b|\bllei(?:s)?\b", re.I), "ley"),
+    (re.compile(r"\bdecreto(?:s)?\b|\bdecret(?:s)?\b", re.I), "decreto"),
+    (re.compile(r"\borden(?:es)?\b|\bordre(?:s)?\b", re.I), "orden"),
+    (re.compile(r"\bresoluci[oó]n(?:es)?\b|\bresoluci[oó](?:ns)?\b", re.I), "resolucion"),
+    (re.compile(r"\bacuerdo(?:s)?\b|\bacord(?:s)?\b", re.I), "acuerdo"),
+]
+
+_NUMBER_YEAR_RE = re.compile(r"\b(\d{1,4})/(\d{2,4})\b")
+
+# tipo -> SQL ILIKE title prefixes (es + va), for checking corpus presence.
+_TIPO_PREFIXES: dict[str, list[str]] = {
+    "ley": ["LEY", "LLEI"],
+    "decreto": ["DECRETO", "DECRET"],
+    "decreto ley": ["DECRETO LEY", "DECRET LLEI"],
+    "orden": ["ORDEN", "ORDRE"],
+    "resolucion": ["RESOLUCIÓN", "RESOLUCIÓ", "RESOLUCION"],
+    "acuerdo": ["ACUERDO", "ACORD"],
+}
+
+# Words that carry no topical signal when disambiguating (Orden case).
+_STOP = {
+    "que", "dice", "sobre", "cual", "cuál", "como", "cómo", "para", "del", "las",
+    "los", "una", "uno", "qué", "que", "regula", "establece", "dispone", "trata",
+    "contenido", "objeto", "principal", "menciona", "mencionan", "fecha", "firmó",
+    "ayudas", "medidas", "the", "and", "materia", "comunitat", "valenciana",
+    "generalitat", "consell", "conselleria", "articulo", "artículo",
+}
+
+
+@dataclass
+class Reference:
+    """A disposition reference parsed out of a user question."""
+
+    tipo: str | None              # normalized tipo key, e.g. "decreto" (may be None)
+    numero: int
+    anyo: int                     # 4-digit year
+    topic_terms: list[str] = field(default_factory=list)
+    raw: str = ""
+
+    @property
+    def num_year(self) -> str:
+        return f"{self.numero}/{self.anyo}"
+
+    def search_text(self) -> str:
+        """Bare reference query. The DOGV search is AND-semantics, so topic terms
+        that don't appear verbatim in the target title would return 0 hits — they
+        are used only for ranking (see _topic_score), never in the query itself."""
+        tipo_word = self.tipo.split()[0] if self.tipo else ""
+        return f"{tipo_word} {self.num_year}".strip()
+
+
+@dataclass
+class ResolvedDoc:
+    disposicion_id: int
+    titulo: str
+    fecha_publicacion: date
+    fecha_disposicion: date | None
+    seccion: str | None
+    organismo: str | None
+    score: float = 0.0
+
+
+def _normalize_year(raw_year: str) -> int:
+    if len(raw_year) == 4:
+        return int(raw_year)
+    # 2-digit year: assume 20xx for <= current decade-ish, else 19xx.
+    y = int(raw_year)
+    return 2000 + y if y < 80 else 1900 + y
+
+
+def parse_reference(question: str) -> Reference | None:
+    """Extract a single explicit disposition reference, or None.
+
+    Conservative: requires an ``N/YYYY`` token. The tipo is inferred from a
+    norm-word in the question when present; topic terms are the remaining
+    content words (used to disambiguate Orden, whose numbers repeat).
+    """
+    if not question:
+        return None
+    m = _NUMBER_YEAR_RE.search(question)
+    if not m:
+        return None
+    numero = int(m.group(1))
+    anyo = _normalize_year(m.group(2))
+    if anyo < 1980 or anyo > 2100:
+        return None
+
+    tipo: str | None = None
+    # Prefer a tipo word that sits near the number; fall back to any in the text.
+    window = question[max(0, m.start() - 30): m.end() + 5]
+    for rx, key in _TIPO_QUERY_MAP:
+        if rx.search(window):
+            tipo = key
+            break
+    if tipo is None:
+        for rx, key in _TIPO_QUERY_MAP:
+            if rx.search(question):
+                tipo = key
+                break
+
+    topic_terms: list[str] = []
+    for tok in re.findall(r"[\wáéíóúüçñ·'-]+", question.lower()):
+        if len(tok) < 4 or tok in _STOP:
+            continue
+        if _NUMBER_YEAR_RE.search(tok) or tok.isdigit():
+            continue
+        # skip the tipo word itself
+        if any(rx.search(tok) for rx, _ in _TIPO_QUERY_MAP):
+            continue
+        if tok not in topic_terms:
+            topic_terms.append(tok)
+
+    return Reference(tipo=tipo, numero=numero, anyo=anyo, topic_terms=topic_terms, raw=m.group(0))
+
+
+def _safe_page_size(size: int) -> int:
+    """The portal computes total/size as a BigDecimal and crashes (HTTP 440,
+    'Non-terminating decimal expansion') when the ratio doesn't terminate. Only
+    2/5-smooth sizes (10, 20, 50, 100, ...) guarantee termination for every total.
+    Snap up to the nearest safe value that is also >= the requested size."""
+    for s in (10, 20, 50, 100, 200, 500, 1000):
+        if s >= size:
+            return s
+    return 1000
+
+
+def _query_lang(text: str) -> str:
+    """Conservative language pick for the resolver. The corpus ingest pulls both
+    languages for a date regardless, so this only decides which language's titles
+    the search returns; default to Spanish (the gold-dominant query language) and
+    switch to Valencian only on unambiguous markers. guess_language() is too eager
+    on shared tokens like 'del'/'Consell' and would search the wrong index."""
+    low = (text or "").lower()
+    if "·" in low or "ç" in low or "l'" in low:
+        return "va_va"
+    return "es_es"
+
+
+def search_dogv(texto: str, lang: str, *, size: int = 50, timeout: int | None = None) -> list[dict[str, Any]]:
+    """POST the DOGV full-text search; return the `content` list (may be empty)."""
+    base = settings.dogv_base_url.rstrip("/")
+    url = f"{base}/dogv-portal/dogv/search"
+    params = {"lang": lang, "page": 0, "size": _safe_page_size(size), "sort": "fecha,desc"}
+    body = {"texto": texto, "seccion": []}
+    to = timeout if timeout is not None else getattr(settings, "request_timeout_seconds", 20)
+    resp = requests.post(url, params=params, json=body, timeout=to)
+    resp.raise_for_status()
+    data = resp.json()
+    if not isinstance(data, dict):
+        return []
+    return data.get("content") or []
+
+
+def _title_matches_ref(titulo: str, ref: Reference) -> bool:
+    if not titulo:
+        return False
+    if ref.num_year not in titulo:
+        return False
+    if ref.tipo:
+        for key, pat in _TIPO_TITLE_PATTERNS:
+            if key == ref.tipo:
+                return bool(re.match(rf"^\s*(?:{pat})\b", titulo, re.I))
+    return True
+
+
+_VA_TITLE_RE = re.compile(r"^\s*(?:DECRET\b|LLEI\b|ORDRE\b|RESOLUCI[OÓ]\b|ACORD\b)", re.I)
+
+
+def _title_language(titulo: str) -> str:
+    """Guess a DOGV title's language from its leading tipo word (es vs va)."""
+    return "va" if _VA_TITLE_RE.match(titulo or "") else "es"
+
+
+def _topic_score(hit: dict[str, Any], ref: Reference) -> float:
+    if not ref.topic_terms:
+        return 0.0
+    organismo = hit.get("organismo") or ""
+    hay = f"{hit.get('titulo') or ''} {organismo}".lower()
+    return float(sum(1 for t in ref.topic_terms if t in hay))
+
+
+def _parse_date(value: Any) -> date | None:
+    if not value:
+        return None
+    s = str(value)[:10]
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def resolve(ref: Reference, lang: str | None = None) -> ResolvedDoc | None:
+    """Resolve a Reference to a DOGV document, or None if not confidently found."""
+    if ref is None:
+        return None
+    search_lang = lang or "es_es"
+    try:
+        # Bare reference; size large enough to hold all same-number dispositions
+        # of the year (Orden numbers repeat across consellerias).
+        hits = search_dogv(ref.search_text(), search_lang, size=50)
+        exact = [h for h in hits if _title_matches_ref(h.get("titulo") or "", ref)]
+        if not exact:
+            # Fallback: drop the tipo word (handles tipo-less questions / odd titles).
+            hits = search_dogv(ref.num_year, search_lang, size=50)
+            exact = [h for h in hits if _title_matches_ref(h.get("titulo") or "", ref)]
+    except Exception:
+        logger.exception("resolver.search_failed ref=%s", ref.num_year)
+        return None
+
+    pool = exact
+    if not pool:
+        return None
+
+    if len(pool) == 1:
+        best = pool[0]
+    else:
+        # Rank by: topic-term overlap (Orden disambiguation), then a title in the
+        # requested language (search returns both es+va), then original order.
+        want_lang = "va" if str(search_lang).startswith("va") else "es"
+        ordered = sorted(
+            enumerate(pool),
+            key=lambda iv: (
+                -_topic_score(iv[1], ref),
+                0 if _title_language(iv[1].get("titulo") or "") == want_lang else 1,
+                iv[0],
+            ),
+        )
+        best = ordered[0][1]
+
+    disp_id = best.get("id")
+    if disp_id is None:
+        return None
+
+    # Recover the authoritative publication date (the issue-date to ingest).
+    fecha_pub = _parse_date(best.get("fechaPublicacion") or best.get("fechaDogv"))
+    fecha_disp = _parse_date(best.get("fechaDisposicion"))
+    titulo = (best.get("titulo") or "").strip()
+    if fecha_pub is None:
+        try:
+            from scripts.sumario_ingest import fetch_disposicion_json
+
+            detail = fetch_disposicion_json(disp_id, search_lang)
+            fecha_pub = _parse_date(detail.get("fechaPublicacion") or detail.get("fechaDogv"))
+            fecha_disp = fecha_disp or _parse_date(detail.get("fechaDisposicion"))
+            titulo = titulo or (detail.get("titulo") or "").strip()
+        except Exception:
+            logger.exception("resolver.detail_failed id=%s", disp_id)
+
+    if fecha_pub is None:
+        return None
+
+    seccion = best.get("seccion")
+    if isinstance(seccion, dict):
+        seccion = seccion.get("descripcion")
+
+    return ResolvedDoc(
+        disposicion_id=int(disp_id),
+        titulo=titulo,
+        fecha_publicacion=fecha_pub,
+        fecha_disposicion=fecha_disp,
+        seccion=seccion if isinstance(seccion, str) else None,
+        organismo=best.get("organismo"),
+        score=_topic_score(best, ref),
+    )
+
+
+def reference_matches_title(ref: Reference, titulo: str) -> bool:
+    """Public: does this title carry the referenced tipo + number/year?"""
+    return _title_matches_ref(titulo or "", ref)
+
+
+def corpus_like_patterns(ref: Reference) -> list[str]:
+    """SQL ILIKE patterns that match this disposition's title in dogv_documents.
+    Used to decide whether the referenced norm is already in the corpus (a plain
+    'DECRETO 3/2020%' prefix won't match 'DECRETO LEY 3/2020...')."""
+    prefixes = _TIPO_PREFIXES.get(ref.tipo or "", [])
+    if prefixes:
+        return [f"{p} {ref.num_year}%" for p in prefixes]
+    return [f"% {ref.num_year}%"]
+
+
+def resolve_question(question: str) -> ResolvedDoc | None:
+    """Convenience: parse + resolve in one call. None if no explicit reference."""
+    ref = parse_reference(question)
+    if ref is None:
+        return None
+    return resolve(ref, _query_lang(question))

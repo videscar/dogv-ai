@@ -8,8 +8,10 @@ from agent.shared import QAState, return_with_profile
 from api.answer import build_answer, no_evidence_answer
 from api.config import get_settings
 from api.db import SessionLocal
+from api.dogv_resolver import parse_reference, reference_matches_title
 from api.dogv_urls import build_html_url, build_pdf_url
 from api.models import DogvDocument, DogvIssue
+from api.query_classifiers import is_reference_query
 
 settings = get_settings()
 logger = logging.getLogger("dogv.graph")
@@ -38,6 +40,30 @@ def _parse_citation_id(value: Any) -> int | None:
         if text.isdigit():
             return int(text)
     return None
+
+
+def _collapse_to_principal(
+    citations: list[dict[str, Any]],
+    question: str,
+    ondemand_doc_id: int | None,
+) -> list[dict[str, Any]]:
+    """For an explicit single-disposition question ("Decreto 185/2018"), surface
+    only the cited disposition itself instead of a long tail of tangential docs —
+    but only when that principal is actually present among the citations. If it is
+    not (we couldn't ground it), leave the citations untouched."""
+    if len(citations) <= 1 or not is_reference_query(question):
+        return citations
+    ref = parse_reference(question)
+    if ref is None:
+        return citations
+    matches = [c for c in citations if reference_matches_title(ref, c.get("title") or "")]
+    if not matches:
+        return citations
+    if len(matches) > 1 and ondemand_doc_id is not None:
+        pinned = [c for c in matches if c.get("document_id") == ondemand_doc_id]
+        if pinned:
+            return pinned[:1]
+    return matches[:1]
 
 
 def answer_node(state: QAState) -> QAState:
@@ -107,6 +133,10 @@ def answer_node(state: QAState) -> QAState:
                         "html_url": build_html_url(doc.html_url),
                     }
                 )
+
+        citations = _collapse_to_principal(
+            citations, state.get("question") or "", state.get("ondemand_doc_id")
+        )
 
         elapsed = time.monotonic() - start
         logger.info(

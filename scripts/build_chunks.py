@@ -338,8 +338,10 @@ def _build_doc_embedding_text(doc: DogvDocument, issue: DogvIssue) -> tuple[str,
     return "\n".join(parts), summary
 
 
-def _count_documents(db: Session, start_date=None, end_date=None, force: bool = False) -> int:
+def _count_documents(db: Session, start_date=None, end_date=None, force: bool = False, document_ids=None) -> int:
     q = db.query(DogvDocument.id).join(DogvIssue).filter(DogvDocument.text.isnot(None))
+    if document_ids is not None:
+        q = q.filter(DogvDocument.id.in_(document_ids))
     if start_date:
         q = q.filter(DogvIssue.date >= start_date)
     if end_date:
@@ -349,7 +351,7 @@ def _count_documents(db: Session, start_date=None, end_date=None, force: bool = 
     return q.count()
 
 
-def iter_document_ids(db: Session, start_date=None, end_date=None, force: bool = False, batch_size: int = 100):
+def iter_document_ids(db: Session, start_date=None, end_date=None, force: bool = False, batch_size: int = 100, document_ids=None):
     last_id = 0
     while True:
         q = (
@@ -358,6 +360,8 @@ def iter_document_ids(db: Session, start_date=None, end_date=None, force: bool =
             .filter(DogvDocument.text.isnot(None))
             .filter(DogvDocument.id > last_id)
         )
+        if document_ids is not None:
+            q = q.filter(DogvDocument.id.in_(document_ids))
         if start_date:
             q = q.filter(DogvIssue.date >= start_date)
         if end_date:
@@ -383,17 +387,18 @@ def build_chunks_for_range(
     build_doc_embeddings: bool = True,
     use_embed_batch: bool = True,
     embed_sleep_ms: int = 0,
+    document_ids=None,
 ) -> int:
     client = EmbedClient()
     tokenizer = _load_embed_tokenizer()
     if tokenizer is None:
         raise RuntimeError("Tokenizer unavailable. Install transformers and ensure the model tokenizer loads.")
-    total = _count_documents(db, start_date, end_date, force=force)
+    total = _count_documents(db, start_date, end_date, force=force, document_ids=document_ids)
     print(f"Found {total} documents to chunk/embed")
 
     processed = 0
     batch_enabled = use_embed_batch and embed_batch_size > 1
-    for ids in iter_document_ids(db, start_date, end_date, force=force, batch_size=batch_size):
+    for ids in iter_document_ids(db, start_date, end_date, force=force, batch_size=batch_size, document_ids=document_ids):
         rows = (
             db.query(DogvDocument, DogvIssue)
             .join(DogvIssue)

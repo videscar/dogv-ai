@@ -176,7 +176,7 @@ _STAGE_LABELS: dict[str, str] = {
     "temporal_guard": "Comprobando el marco temporal",
     "online_ingest": "Buscando documentos recientes",
     "retrieve_candidates": "Recuperando documentos del DOGV",
-    "backfill": "Ampliando la búsqueda",
+    "backfill": "Buscando en el archivo histórico del DOGV",
     "rerank_titles": "Seleccionando los documentos más relevantes",
     "read_docs": "Leyendo los documentos",
     "answer_node": "Redactando la respuesta",

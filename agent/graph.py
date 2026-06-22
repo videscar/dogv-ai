@@ -16,6 +16,7 @@ from agent.nodes import (
 )
 from agent.shared import QAState
 from api.config import get_settings
+from api.query_classifiers import is_reference_query
 
 settings = get_settings()
 logger = logging.getLogger("dogv.graph")
@@ -30,11 +31,17 @@ def _should_continue_after_temporal(state: QAState) -> str:
 def _should_backfill(state: QAState) -> str:
     if not settings.backfill_enabled:
         return "rerank_titles"
-    if state.get("candidate_docs"):
-        return "rerank_titles"
     if state.get("backfill_attempted"):
         return "rerank_titles"
-    return "backfill"
+    # No candidates at all -> try the targeted on-demand fetch.
+    if not state.get("candidate_docs"):
+        return "backfill"
+    # Reference query (names a specific disposition): retrieval may have returned
+    # only tangential same-number/topic docs while the cited norm itself is missing
+    # from the window. Route to backfill; the node cheaply skips if it's in corpus.
+    if is_reference_query(state.get("question") or ""):
+        return "backfill"
+    return "rerank_titles"
 
 
 def build_graph():
