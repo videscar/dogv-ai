@@ -119,61 +119,51 @@ def _merge_ranges(ranges: list[tuple[date, date]]) -> list[tuple[date, date]]:
     return merged
 
 
+# Docs fetched on demand from before the rolling window are pinned via doc_tags
+# (see agent/nodes/backfill.py) and must survive the retention purge — otherwise
+# the next daily maintenance would delete exactly the historical disposition a
+# user asked for. This predicate excludes pinned docs from every purge query.
+_NOT_PINNED = "COALESCE((dd.doc_tags->>'pinned')::boolean, false) = false"
+
+
 def _purge_older_than(db: Session, cutoff: date) -> None:
+    for table in ("rag_chunk", "rag_title", "rag_doc"):
+        db.execute(
+            sa_text(
+                f"""
+                DELETE FROM {table}
+                WHERE document_id IN (
+                    SELECT dd.id
+                    FROM dogv_documents dd
+                    JOIN dogv_issues di ON di.id = dd.issue_id
+                    WHERE di.date < :cutoff AND {_NOT_PINNED}
+                )
+                """
+            ),
+            {"cutoff": cutoff},
+        )
     db.execute(
         sa_text(
-            """
-            DELETE FROM rag_chunk
-            WHERE document_id IN (
-                SELECT dd.id
-                FROM dogv_documents dd
-                JOIN dogv_issues di ON di.id = dd.issue_id
-                WHERE di.date < :cutoff
-            )
+            f"""
+            DELETE FROM dogv_documents dd
+            WHERE dd.issue_id IN (SELECT id FROM dogv_issues WHERE date < :cutoff)
+              AND {_NOT_PINNED}
             """
         ),
         {"cutoff": cutoff},
     )
+    # Keep issues that still have a (pinned) document — the FK and the citation
+    # date depend on the issue row surviving.
     db.execute(
         sa_text(
             """
-            DELETE FROM rag_title
-            WHERE document_id IN (
-                SELECT dd.id
-                FROM dogv_documents dd
-                JOIN dogv_issues di ON di.id = dd.issue_id
-                WHERE di.date < :cutoff
-            )
+            DELETE FROM dogv_issues
+            WHERE date < :cutoff
+              AND id NOT IN (SELECT DISTINCT issue_id FROM dogv_documents)
             """
         ),
         {"cutoff": cutoff},
     )
-    db.execute(
-        sa_text(
-            """
-            DELETE FROM rag_doc
-            WHERE document_id IN (
-                SELECT dd.id
-                FROM dogv_documents dd
-                JOIN dogv_issues di ON di.id = dd.issue_id
-                WHERE di.date < :cutoff
-            )
-            """
-        ),
-        {"cutoff": cutoff},
-    )
-    db.execute(
-        sa_text(
-            """
-            DELETE FROM dogv_documents
-            WHERE issue_id IN (
-                SELECT id FROM dogv_issues WHERE date < :cutoff
-            )
-            """
-        ),
-        {"cutoff": cutoff},
-    )
-    db.execute(sa_text("DELETE FROM dogv_issues WHERE date < :cutoff"), {"cutoff": cutoff})
     db.commit()
 
 
