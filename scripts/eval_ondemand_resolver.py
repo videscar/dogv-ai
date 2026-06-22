@@ -51,12 +51,21 @@ def main() -> int:
         return {"c": c, "ref": ref, "ref_ok": ref_ok, "resolved": resolved,
                 "title_ok": title_ok, "id_ok": id_ok, "got_title": got_title}
 
-    from concurrent.futures import ThreadPoolExecutor
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    results = []
     with ThreadPoolExecutor(max_workers=6) as ex:
-        results = list(ex.map(run_case, cases))
+        futs = {ex.submit(run_case, c): c for c in cases}
+        for fut in as_completed(futs):  # emit per-completion so a kill keeps partials
+            r = fut.result()
+            results.append(r)
+            c = r["c"]
+            ok = r["ref_ok"] and r["title_ok"] and r["id_ok"]
+            rid = r["resolved"].disposicion_id if r["resolved"] else "-"
+            emit(f"[{'PASS' if ok else 'FAIL'}] {c['id']:4} ref={c['ref']:9} id={rid} :: {r['got_title'][:80]!r}")
 
     passed = 0
     failed: list[str] = []
+    emit("--- summary ---")
     for r in results:
         c, ref, resolved = r["c"], r["ref"], r["resolved"]
         ref_ok, title_ok, id_ok, got_title = r["ref_ok"], r["title_ok"], r["id_ok"], r["got_title"]

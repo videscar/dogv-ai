@@ -6,7 +6,7 @@ import time
 from sqlalchemy import text as sa_text
 
 from agent.shared import QAState, return_with_profile
-from api.auto_ingest import ensure_range_ingested
+from api.auto_ingest import ingest_one_disposicion
 from api.config import get_settings
 from api.db import SessionLocal
 from api.dogv_resolver import (
@@ -20,8 +20,6 @@ from api.dogv_resolver import (
 settings = get_settings()
 logger = logging.getLogger("dogv.graph")
 
-DEFAULT_LANGS = ["es_es", "va_va"]
-
 
 def _reference_in_corpus(db, ref: Reference) -> bool:
     """True when the referenced disposition is already an originating doc in the DB."""
@@ -32,26 +30,6 @@ def _reference_in_corpus(db, ref: Reference) -> bool:
         sa_text(f"SELECT 1 FROM dogv_documents WHERE {clause} LIMIT 1"), params
     ).first()
     return row is not None
-
-
-def _find_ondemand_doc_id(db, ref: Reference, fecha_pub) -> int | None:
-    """The dogv_documents.id of the freshly-ingested principal disposition."""
-    patterns = corpus_like_patterns(ref)
-    clause = " OR ".join(f"d.title ILIKE :p{i}" for i in range(len(patterns)))
-    params = {f"p{i}": pat for i, pat in enumerate(patterns)}
-    params["fp"] = fecha_pub
-    row = db.execute(
-        sa_text(
-            f"""
-            SELECT d.id FROM dogv_documents d
-            JOIN dogv_issues i ON d.issue_id = i.id
-            WHERE i.date = :fp AND ({clause})
-            ORDER BY d.id LIMIT 1
-            """
-        ),
-        params,
-    ).first()
-    return int(row[0]) if row else None
 
 
 def _pin_doc(db, doc_id: int) -> None:
@@ -103,18 +81,16 @@ def backfill_node(state: QAState) -> QAState:
             if _reference_in_corpus(db, ref):
                 return _skip("already_in_corpus")
 
-        resolved = resolve(ref, _query_lang(question))
+        lang = _query_lang(question)
+        resolved = resolve(ref, lang)
         if resolved is None:
             return _skip("unresolved")
 
-        # Ingest the disposition's publication-day issue (both languages) through
-        # the normal pipeline: insert -> extract HTML body -> classify -> chunk+embed.
-        ensure_range_ingested(resolved.fecha_publicacion, resolved.fecha_publicacion, DEFAULT_LANGS)
-
-        ondemand_doc_id = None
-        with SessionLocal() as db:
-            ondemand_doc_id = _find_ondemand_doc_id(db, ref, resolved.fecha_publicacion)
-            if ondemand_doc_id is not None:
+        # Ingest just this one disposition (issue-day ingest would fetch ~55 doc
+        # bodies at ~5s each): create the row, extract its body, classify, embed.
+        ondemand_doc_id = ingest_one_disposicion(resolved.disposicion_id, lang)
+        if ondemand_doc_id is not None:
+            with SessionLocal() as db:
                 _pin_doc(db, ondemand_doc_id)
 
         elapsed = time.monotonic() - start

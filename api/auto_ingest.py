@@ -692,3 +692,92 @@ def ensure_month_ingested(target: date, languages: list[str]) -> None:
 
 def ensure_range_ingested(start: date, end: date, languages: list[str]) -> None:
     run_pipeline(start, end, languages)
+
+
+def _norm_field(value: Any) -> str | None:
+    """Flatten a DOGV detail field (often {descripcion: ...}) to plain text."""
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        for k in ("descripcion", "description", "nombre", "name"):
+            if value.get(k):
+                return str(value[k])
+        return str(value)
+    return str(value)
+
+
+def ingest_one_disposicion(disposicion_id: int, lang: str) -> int | None:
+    """Ingest a single DOGV disposition by its internal id (on-demand path).
+
+    Far cheaper than ensure_range_ingested for a whole issue-day: the DOGV portal
+    serves each document body in ~5s, so a 55-doc issue is minutes. Here we create
+    just the one issue + document row from the disposition detail, then run the
+    normal extract -> classify -> chunk/embed steps scoped to that one document.
+    Returns the new dogv_documents.id, or None on failure.
+    """
+    from scripts.sumario_ingest import fetch_disposicion_json
+    from scripts.extract_text import extract_range
+    from scripts.classify_documents import classify_range
+    from scripts.build_chunks import build_chunks_for_range
+    from .models import DogvDocument, DogvIssue
+
+    detail = fetch_disposicion_json(disposicion_id, lang)
+    raw_date = str(detail.get("fechaPublicacion") or detail.get("fechaDogv") or "")[:10]
+    try:
+        pub_date = datetime.strptime(raw_date, "%Y-%m-%d").date()
+    except ValueError:
+        logger.warning("ingest_one.no_date disp_id=%s", disposicion_id)
+        return None
+    numero = _norm_field(detail.get("numeroDogv"))
+
+    with SessionLocal() as db:
+        issue = (
+            db.query(DogvIssue)
+            .filter(DogvIssue.language == lang, DogvIssue.date == pub_date, DogvIssue.numero == numero)
+            .first()
+        )
+        if issue is None:
+            issue = DogvIssue(
+                date=pub_date,
+                numero=numero,
+                language=lang,
+                title=_norm_field(detail.get("tituloDogv")),
+                raw_json={"ondemand": True},
+            )
+            db.add(issue)
+            db.flush()
+
+        doc = (
+            db.query(DogvDocument)
+            .filter(
+                DogvDocument.issue_id == issue.id,
+                sa_text("(dogv_documents.raw_json->>'id') = :did").bindparams(did=str(disposicion_id)),
+            )
+            .first()
+        )
+        if doc is None:
+            doc = DogvDocument(
+                issue_id=issue.id,
+                section=_norm_field(detail.get("seccion")),
+                ref=_norm_field(detail.get("codigoInsercion") or detail.get("cve")),
+                conselleria=_norm_field(detail.get("organismo")),
+                title=_norm_field(detail.get("titulo")),
+                type=_norm_field(detail.get("tipoDocumento")),
+                pdf_url=detail.get("urlPdf"),
+                html_url=None,
+                raw_json=detail,  # carries 'id' so extract_range can fetch the body
+            )
+            db.add(doc)
+            db.flush()
+        doc_id = doc.id
+        db.commit()
+
+    # Extract this doc's text (date window holds only this fresh row), then classify
+    # and chunk+embed it specifically so it becomes retrievable.
+    with SessionLocal() as db:
+        extract_range(db, pub_date, pub_date)
+    with SessionLocal() as db:
+        classify_range(db, document_ids=[doc_id])
+    with SessionLocal() as db:
+        build_chunks_for_range(db, document_ids=[doc_id])
+    return doc_id
