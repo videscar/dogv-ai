@@ -1,0 +1,19 @@
+{
+  "_about": "Gold set for the on-demand historical-fetch resolver. Questions + hand-found gold dispositions from Raul's 'Lote de 50 preguntas.docx' (2026-06-22). gold_title_contains is a distinctive substring of the tester's manually-found DOGV title, used as a non-circular precision check on resolve(). Q1 omitted: it names 'Ley de Transparencia' with no N/YYYY, so it is not an explicit-reference query (out of scope for this feature).",
+  "cases": [
+    {"id": "q2", "question": "¿Cuál es el contenido principal del Decreto 3/2020 del Consell sobre estructura orgánica?", "ref": "3/2020", "tipo": "decreto", "gold_title_contains": "cese de Jesús Ignacio Blanco", "note": "misleading topic: question says estructura orgánica, real doc is a cese"},
+    {"id": "q3", "question": "¿Qué regula la Ley 4/2021 de la Generalitat en materia de función pública?", "ref": "4/2021", "tipo": "ley", "gold_title_contains": "Función Pública Valenciana"},
+    {"id": "q4", "question": "¿En qué fecha se firmó el Decreto 185/2018?", "ref": "185/2018", "tipo": "decreto", "gold_title_contains": "bienes de interés cultural", "gold_id": 332469},
+    {"id": "q5", "question": "¿Cuál es el objeto del Decreto 65/2022?", "ref": "65/2022", "tipo": "decreto", "gold_title_contains": "Escuela de Doctorado de la Universidad de Alicante", "gold_id": 373508},
+    {"id": "q6", "question": "¿Qué medidas se mencionan en la Ley 2/2015 de participación ciudadana?", "ref": "2/2015", "tipo": "ley", "gold_title_contains": "participación ciudadana"},
+    {"id": "q7", "question": "¿Qué ayudas urgentes se mencionan en el Decreto 204/2019?", "ref": "204/2019", "tipo": "decreto", "gold_title_contains": "modificación del Decreto 196/2019"},
+    {"id": "q8", "question": "¿Qué establece la Ley 10/2014 de la Comunitat Valenciana?", "ref": "10/2014", "tipo": "ley", "gold_title_contains": "Salud de la Comunitat Valenciana", "gold_id": 288676},
+    {"id": "q9", "question": "¿Cuál es el contenido del Decreto 39/2020 del Consell?", "ref": "39/2020", "tipo": "decreto", "gold_title_contains": "deportistas de élite"},
+    {"id": "q10", "question": "¿Qué regula la Ley 5/2018 de la Generalitat de la Huerta de Valencia?", "ref": "5/2018", "tipo": "ley", "gold_title_contains": "Huerta de València", "gold_id": 322903},
+    {"id": "q11", "question": "¿Qué dispone la Orden 4/2021 de Educación?", "ref": "4/2021", "tipo": "orden", "gold_title_contains": "modifica la Orden 3/2020"},
+    {"id": "q12", "question": "¿Qué regula la Orden 2/2020 de Hacienda sobre control interno?", "ref": "2/2020", "tipo": "orden", "gold_title_contains": "elaboración del presupuesto de la Generalitat para el ejercicio 2021", "note": "misleading topic: question says control interno"},
+    {"id": "q13", "question": "¿Qué regula la Orden 5/2019 de Medio Ambiente sobre gestión de residuos?", "ref": "5/2019", "tipo": "orden", "gold_title_contains": "ajo tierno", "note": "misleading topic: question says gestión de residuos, real doc is ajo tierno"},
+    {"id": "q14", "question": "¿Qué dispone la Orden 1/2022 de Igualdad?", "ref": "1/2022", "tipo": "orden", "gold_title_contains": "modificación de la Orden 1/2016"},
+    {"id": "q15", "question": "¿Qué establece la Orden 3/2017 de Agricultura sobre ayudas PAC?", "ref": "3/2017", "tipo": "orden", "gold_title_contains": "defensa medioambiental", "note": "misleading topic: question says ayudas PAC, real doc is asociaciones de defensa medioambiental"}
+  ]
+}

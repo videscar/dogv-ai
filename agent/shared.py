@@ -27,6 +27,8 @@ class QAState(TypedDict, total=False):
     answer: str
     citations: list[dict[str, Any]]
     backfill_attempted: bool
+    ondemand_doc_id: int | None
+    ondemand_ref: str | None
     feed_query: bool
     online_ingest_done: bool
     profile: dict[str, Any]
