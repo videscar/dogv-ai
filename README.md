@@ -105,6 +105,8 @@ Usa `.env.example` como plantilla. Ejemplos (valores reales en `api/config.py` y
 - `TEMPORAL_TIMEZONE=Europe/Madrid`
 - `TEMPORAL_WEEK_START=monday`
 - `ASK_LLM_EXPAND=true|false`
+- `ASK_CONTEXTUALIZE_ENABLED=true|false` — rewrite follow-up turns into a standalone query using the conversation history (one cheap LLM hop; no-op when the request carries no history, so single-turn behaviour is unchanged)
+- `ASK_HISTORY_MAX_TURNS=6` — max prior turns (user+assistant messages) the server keeps from a request's `history` for contextualization and synthesis
 - `ASK_RERANK_COVERAGE_KEEP=4`
 - `ASK_RRF_WEIGHT_VECTOR=1.0`
 - `ASK_RRF_WEIGHT_BM25=1.0`
@@ -132,6 +134,7 @@ Usa `.env.example` como plantilla. Ejemplos (valores reales en `api/config.py` y
 - `WARM_INDEX_MONTHS=24`
 - `DEMO_ENFORCE_READY_GATE=true|false`
 - `DEMO_REQUEST_TIMEOUT_SECONDS=60`
+- `DEMO_HISTORY_MAX_TURNS=6` — UI only: how many conversation turns the Chainlit session keeps and sends back as `history` (stored cap is twice this, one user + one assistant message per turn)
 - `CHAINLIT_BACKEND_URL=http://127.0.0.1:8088`
 - `CHAINLIT_ENABLE_DATA_LAYER=false|true`
 - `CHUNK_MIN_TOKENS=300`
