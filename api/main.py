@@ -5,10 +5,10 @@ import json
 import logging
 import time
 import uuid
-from typing import Any, Iterator
+from typing import Any, Iterator, Literal
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from .auto_ingest import start_startup_sync
@@ -86,9 +86,25 @@ class DocumentSummary(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class Turn(BaseModel):
+    """One prior conversation message, supplied by the client (server is stateless)."""
+
+    role: Literal["user", "assistant"]
+    content: str
+
+
 class AskRequest(BaseModel):
     question: str
     debug: bool = False
+    # Prior turns, oldest first. Client-owned; server keeps no session state. The
+    # last `ask_history_max_turns` are used (older turns are dropped defensively).
+    history: list[Turn] = Field(default_factory=list)
+
+    def history_dicts(self) -> list[dict[str, str]]:
+        """Last N turns as plain dicts for the graph state (most-recent-bounded)."""
+        max_turns = max(0, int(getattr(settings, "ask_history_max_turns", 6) or 0))
+        turns = self.history[-max_turns:] if max_turns else []
+        return [{"role": t.role, "content": t.content} for t in turns]
 
 
 class Citation(BaseModel):
@@ -234,12 +250,14 @@ def ask(payload: AskRequest):
             raise HTTPException(status_code=503, detail=readiness)
 
     request_id = uuid.uuid4().hex[:8]
+    history = payload.history_dicts()
     start = time.monotonic()
     logger.info(
-        "ask.start req=%s chars=%s debug=%s",
+        "ask.start req=%s chars=%s debug=%s history_turns=%s",
         request_id,
         len(payload.question),
         payload.debug,
+        len(history),
     )
     try:
         result = graph.invoke(
@@ -247,6 +265,7 @@ def ask(payload: AskRequest):
                 "question": payload.question,
                 "request_id": request_id,
                 "debug": payload.debug,
+                "history": history,
             }
         )
     except Exception:
@@ -277,14 +296,16 @@ def ask_stream(payload: AskRequest):
             raise HTTPException(status_code=503, detail=readiness)
 
     request_id = uuid.uuid4().hex[:8]
+    history = payload.history_dicts()
 
     def event_stream() -> Iterator[str]:
         start = time.monotonic()
         logger.info(
-            "ask.stream.start req=%s chars=%s debug=%s",
+            "ask.stream.start req=%s chars=%s debug=%s history_turns=%s",
             request_id,
             len(payload.question),
             payload.debug,
+            len(history),
         )
         final_state: dict[str, Any] = {}
         try:
@@ -293,6 +314,7 @@ def ask_stream(payload: AskRequest):
                     "question": payload.question,
                     "request_id": request_id,
                     "debug": payload.debug,
+                    "history": history,
                 },
                 stream_mode=["updates", "values"],
             ):

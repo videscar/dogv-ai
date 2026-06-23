@@ -157,6 +157,12 @@ class Settings(BaseSettings):
     ask_hyde_margin_threshold: float = 0.22  # fire HyDE iff baseline rrf_margin < this; calibrated on eval_v2 (keeps every known HyDE recovery v2-020/032/034/035/099, skips confident-baseline regressions v2-023/078)
     ask_rrf_weight_hyde: float = 3.0
     ask_fallback_allow_margin: bool = False
+
+    # Conversation / multi-turn. History is client-owned (sent on each request); the
+    # server stays stateless. With empty history every path below is a no-op, so
+    # single-turn behaviour is unchanged.
+    ask_contextualize_enabled: bool = True  # rewrite follow-up turns into a standalone query using prior turns (one cheap LLM hop; skipped when history is empty)
+    ask_history_max_turns: int = 6  # max prior turns (user+assistant messages) carried into contextualize + synthesis
     bm25_fuse_weight_chunk: float = 1.0
     bm25_fuse_weight_strict: float = 1.2
     bm25_fuse_weight_title: float = 0.9

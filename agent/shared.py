@@ -9,6 +9,13 @@ from api.retrieval import RetrievalFilters
 class QAState(TypedDict, total=False):
     question: str
     debug: bool
+    # Prior conversation turns ({"role": "user"|"assistant", "content": str}),
+    # most-recent last. Empty for single-turn requests.
+    history: list[dict[str, Any]]
+    # The user's verbatim latest message, preserved when contextualize_query
+    # rewrites `question` into a standalone form for retrieval.
+    raw_question: str
+    contextualized: bool
     intent: dict[str, Any]
     language: str
     request_id: str

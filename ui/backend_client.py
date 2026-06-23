@@ -41,12 +41,20 @@ class DogvApiClient:
     async def get_ready(self) -> dict[str, Any]:
         return await self._request_json("GET", "/ready")
 
-    async def ask(self, question: str, debug: bool = False) -> dict[str, Any]:
-        payload = {"question": question, "debug": debug}
+    async def ask(
+        self,
+        question: str,
+        debug: bool = False,
+        history: list[dict[str, str]] | None = None,
+    ) -> dict[str, Any]:
+        payload = {"question": question, "debug": debug, "history": history or []}
         return await self._request_json("POST", "/ask", json=payload)
 
     async def ask_stream(
-        self, question: str, debug: bool = False
+        self,
+        question: str,
+        debug: bool = False,
+        history: list[dict[str, str]] | None = None,
     ) -> AsyncIterator[tuple[str, dict[str, Any]]]:
         """Yield (event_type, data) tuples from the /ask/stream SSE endpoint.
 
@@ -60,7 +68,7 @@ class DogvApiClient:
         # still fails fast.
         read = None if self.timeout_seconds is None else float(self.timeout_seconds)
         timeout = httpx.Timeout(connect=10.0, read=read, write=10.0, pool=10.0)
-        payload = {"question": question, "debug": debug}
+        payload = {"question": question, "debug": debug, "history": history or []}
         try:
             async with httpx.AsyncClient(base_url=base_url, timeout=timeout) as client:
                 async with client.stream("POST", "/ask/stream", json=payload) as response:
