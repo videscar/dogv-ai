@@ -136,6 +136,7 @@ def _render_citations(citations: list[dict[str, Any]]) -> str:
 @cl.on_chat_start
 async def on_chat_start() -> None:
     cl.user_session.set("dogv_client", _client())
+    cl.user_session.set("history", [])
     client: DogvApiClient = cl.user_session.get("dogv_client")
     try:
         readiness = await client.get_ready()
@@ -151,6 +152,27 @@ async def on_chat_start() -> None:
 
 
 STREAM_ENABLED = _truthy(os.getenv("DEMO_STREAM_ENABLED", "1"))
+
+
+def _history_max_messages() -> int:
+    """Stored messages cap = 2 * max turns (one user + one assistant per turn)."""
+    try:
+        turns = int(os.getenv("DEMO_HISTORY_MAX_TURNS", "6"))
+    except ValueError:
+        turns = 6
+    return max(0, turns) * 2
+
+
+def _get_history() -> list[dict[str, str]]:
+    return list(cl.user_session.get("history") or [])
+
+
+def _append_history(question: str, answer: str) -> None:
+    history = _get_history()
+    history.append({"role": "user", "content": question})
+    history.append({"role": "assistant", "content": answer})
+    cap = _history_max_messages()
+    cl.user_session.set("history", history[-cap:] if cap else [])
 
 
 def _render_answer(response: dict[str, Any]) -> str:
@@ -175,19 +197,25 @@ async def on_message(message: cl.Message) -> None:
         return
 
     client: DogvApiClient = cl.user_session.get("dogv_client") or _client()
+    history = _get_history()
     if STREAM_ENABLED:
-        await _answer_streaming(client, question)
+        answer = await _answer_streaming(client, question, history)
     else:
-        await _answer_blocking(client, question)
+        answer = await _answer_blocking(client, question, history)
+    if answer:
+        _append_history(question, answer)
 
 
-async def _answer_streaming(client: DogvApiClient, question: str) -> None:
+async def _answer_streaming(
+    client: DogvApiClient, question: str, history: list[dict[str, str]]
+) -> str | None:
+    """Stream an answer; return the plain answer text (no citations) for history."""
     progress = cl.Message(content=_progress_content([]))
     await progress.send()
     done_labels: list[str] = []
     result: dict[str, Any] | None = None
     try:
-        async for event, data in client.ask_stream(question):
+        async for event, data in client.ask_stream(question, history=history):
             if event == "stage":
                 label = str(data.get("label") or "").strip()
                 if label and label not in done_labels:
@@ -220,13 +248,16 @@ async def _answer_streaming(client: DogvApiClient, question: str) -> None:
     await progress.remove()
     if result is None:
         await cl.Message(content=GENERIC_ERROR_MESSAGE).send()
-        return
+        return None
     await cl.Message(content=_render_answer(result)).send()
+    return (result.get("answer") or "").strip() or None
 
 
-async def _answer_blocking(client: DogvApiClient, question: str) -> None:
+async def _answer_blocking(
+    client: DogvApiClient, question: str, history: list[dict[str, str]]
+) -> str | None:
     try:
-        response = await client.ask(question)
+        response = await client.ask(question, history=history)
     except BackendTimeoutError:
         await cl.Message(content=TIMEOUT_MESSAGE).send()
         return
@@ -242,3 +273,4 @@ async def _answer_blocking(client: DogvApiClient, question: str) -> None:
         return
 
     await cl.Message(content=_render_answer(response)).send()
+    return (response.get("answer") or "").strip() or None
