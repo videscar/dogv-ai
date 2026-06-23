@@ -19,12 +19,19 @@ logger = logging.getLogger("dogv.graph")
 # never drift a good query (cf. HyDE breaking reference-queries).
 CONTEXTUALIZE_SYSTEM = (
     "Eres un asistente del DOGV (Diari Oficial de la Generalitat Valenciana). "
-    "Reescribe el ULTIMO mensaje del usuario como una consulta autonoma y completa, "
-    "usando la conversacion previa SOLO para resolver referencias implicitas ('eso', "
-    "'el segundo', '¿y los plazos?') y correcciones ('no, me referia a X'). "
-    "Si el ultimo mensaje ya es autonomo o cambia de tema, devuelvelo SIN cambios y "
-    "marca is_followup=false. No inventes datos, normas ni nombres que no aparezcan en "
-    "la conversacion. Responde en el idioma del usuario. "
+    "A partir de la conversacion previa y el ULTIMO mensaje del usuario, escribe UNA "
+    "consulta de busqueda autonoma, BREVE y especifica, centrada en lo que el usuario "
+    "quiere AHORA. "
+    "Si el ultimo mensaje corrige o concreta la peticion ('no, me referia a X', 'el de Y', "
+    "'¿y los plazos?'), centra la consulta en ESA correccion y DESCARTA el encuadre vago "
+    "anterior: NO encadenes la pregunta general antigua con los terminos nuevos. "
+    "Usa la terminologia oficial mas especifica que aporte el usuario (nombre del programa, "
+    "organo, año) y omite muletillas ('hi ha res sobre', 'que hay de', 'volia saber'). "
+    "Ejemplo: previa='ajudes per als pobles?' + ultimo='no, el Fons de Cooperacio Municipal' "
+    "-> query='assignacio del Fons de Cooperacio Municipal als municipis i entitats locals'. "
+    "Si el ultimo mensaje ya es autonomo o cambia de tema, devuelvelo SIN cambios y marca "
+    "is_followup=false. No inventes datos, normas ni nombres que no aparezcan en la "
+    "conversacion. Responde en el idioma del usuario. "
     "Devuelve SOLO JSON con campos: query (string), is_followup (boolean)."
 )
 
