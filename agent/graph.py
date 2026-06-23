@@ -8,6 +8,7 @@ from agent.nodes import (
     analyze_intent_node,
     answer_node,
     backfill_node,
+    contextualize_query_node,
     online_ingest_node,
     read_docs_node,
     rerank_titles_node,
@@ -46,6 +47,7 @@ def _should_backfill(state: QAState) -> str:
 
 def build_graph():
     graph = StateGraph(QAState)
+    graph.add_node("contextualize_query", contextualize_query_node)
     graph.add_node("analyze_intent", analyze_intent_node)
     graph.add_node("temporal_guard", temporal_guard_node)
     graph.add_node("online_ingest", online_ingest_node)
@@ -55,7 +57,8 @@ def build_graph():
     graph.add_node("read_docs", read_docs_node)
     graph.add_node("answer_node", answer_node)
 
-    graph.set_entry_point("analyze_intent")
+    graph.set_entry_point("contextualize_query")
+    graph.add_edge("contextualize_query", "analyze_intent")
     graph.add_edge("analyze_intent", "temporal_guard")
     graph.add_conditional_edges(
         "temporal_guard",
