@@ -91,7 +91,13 @@ def answer_node(state: QAState) -> QAState:
                 repair_success=False,
                 fallback_reason="no_evidence",
             )
-        result = build_answer(state["question"], language, evidence, full_docs=full_docs)
+        result = build_answer(
+            state["question"],
+            language,
+            evidence,
+            full_docs=full_docs,
+            history=state.get("history"),
+        )
         answer = result.get("answer") or ""
         diagnostics = result.get("diagnostics") or {}
         cited_ids: set[int] = set()

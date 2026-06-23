@@ -41,7 +41,7 @@ ANSWER_SYSTEM = (
 )
 
 ANSWER_USER = """Idioma de respuesta: {language}
-
+{conversation}
 Pregunta:
 {question}
 
@@ -61,6 +61,37 @@ Notas:
 settings = get_settings()
 logger = logging.getLogger("dogv.answer")
 ANSWER_TIMEOUT = settings.llm_timeout
+
+
+_HISTORY_MAX_TURN_CHARS = 600
+
+
+def _format_history(history: list[dict[str, Any]] | None) -> str:
+    """Render prior turns as an interpret-only context block, or '' when absent.
+
+    The block is explicitly scoped to disambiguating the current question — the
+    answer must still come from this turn's evidence (guards against the model
+    answering from the earlier assistant text instead of the retrieved docs).
+    """
+    if not history:
+        return ""
+    lines: list[str] = []
+    for turn in history:
+        content = str(turn.get("content") or "").strip()
+        if not content:
+            continue
+        if len(content) > _HISTORY_MAX_TURN_CHARS:
+            content = content[:_HISTORY_MAX_TURN_CHARS] + "…"
+        speaker = "Usuario" if str(turn.get("role")) == "user" else "Asistente"
+        lines.append(f"{speaker}: {content}")
+    if not lines:
+        return ""
+    body = "\n".join(lines)
+    return (
+        "\nConversacion previa (usala SOLO para interpretar la pregunta actual; "
+        "responde con la evidencia de este turno y cita sus doc_id, no inventes a "
+        "partir del historial):\n" + body + "\n"
+    )
 
 
 def _format_full_docs(full_docs: list[dict[str, Any]] | None) -> str:
@@ -131,10 +162,12 @@ def build_answer(
     language: str,
     evidence: list[dict[str, Any]],
     full_docs: list[dict[str, Any]] | None = None,
+    history: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     client = LlmClient(timeout=ANSWER_TIMEOUT)
     evidence_block = _format_evidence(evidence) or "Ninguna."
     full_docs_block = _format_full_docs(full_docs)
+    conversation_block = _format_history(history)
     missing_notes = (
         _notes_for_missing_fields(question, evidence, full_docs)
         if settings.answer_missing_notes_enabled
@@ -150,6 +183,7 @@ def build_answer(
             "content": ANSWER_USER.format(
                 question=question,
                 language=language,
+                conversation=conversation_block,
                 evidence=evidence_block,
                 full_docs=full_docs_block,
                 missing_notes=missing_notes,
