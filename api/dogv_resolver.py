@@ -21,6 +21,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 import logging
 import re
+import unicodedata
 from typing import Any
 
 import requests
@@ -145,19 +146,110 @@ def parse_reference(question: str) -> Reference | None:
                 tipo = key
                 break
 
+    return Reference(
+        tipo=tipo, numero=numero, anyo=anyo,
+        topic_terms=_topic_terms_of(question), raw=m.group(0),
+    )
+
+
+def _topic_terms_of(question: str) -> list[str]:
+    """Content words of a question (>=4 chars, not stopwords, not the tipo word or
+    a number/year) used to disambiguate which disposition a question is about."""
     topic_terms: list[str] = []
     for tok in re.findall(r"[\wáéíóúüçñ·'-]+", question.lower()):
         if len(tok) < 4 or tok in _STOP:
             continue
         if _NUMBER_YEAR_RE.search(tok) or tok.isdigit():
             continue
-        # skip the tipo word itself
         if any(rx.search(tok) for rx, _ in _TIPO_QUERY_MAP):
             continue
         if tok not in topic_terms:
             topic_terms.append(tok)
+    return topic_terms
 
-    return Reference(tipo=tipo, numero=numero, anyo=anyo, topic_terms=topic_terms, raw=m.group(0))
+
+# A primary disposition is a self-standing norm (vs a resolución/anuncio/corrección
+# that merely cites one). Only these are valid "norm-target" principals.
+_PRIMARY_TIPOS = {"ley", "decreto", "decreto ley", "orden"}
+
+# A tipo word introduced by an article ("la ley", "el decreto", "del decret",
+# "de la orden") or an interrogative determiner ("qué decreto", "quina llei") ->
+# the question is ABOUT that norm, not just mentioning the word in passing.
+_NAMED_NORM_RE = re.compile(
+    r"\b(?:la|el|las|los|del|de\s+la|de\s+l['’]|d['’]|una?|aquesta?|aquell[ao]?|"
+    r"qu[eé]|quin(?:a|s|es)?)\s+"
+    r"(decreto[\s-]*ley|decret[\s-]*llei|decreto|decret|ley|llei|orden|ordre)\b",
+    re.IGNORECASE,
+)
+
+
+@dataclass
+class NamedNormTarget:
+    """A norm referenced by type + topic but WITHOUT a number/year
+    (e.g. "la Ley de la Función Pública Valenciana"). Lets us recover the
+    principal citation when retrieval found the norm but synthesis cited a doc
+    that only mentions it."""
+
+    tipo: str                       # normalized primary tipo (in _PRIMARY_TIPOS)
+    topic_terms: list[str] = field(default_factory=list)
+    raw: str = ""
+
+
+def parse_named_norm_target(question: str) -> NamedNormTarget | None:
+    """Detect a no-number "type + topic" norm target, or None.
+
+    Deliberately conservative: only fires when there is NO N/YYYY token (those go
+    through parse_reference), an article-introduced primary tipo word is present,
+    and the question carries topic terms to match a title against."""
+    if not question or _NUMBER_YEAR_RE.search(question):
+        return None
+    m = _NAMED_NORM_RE.search(question)
+    if not m:
+        return None
+    tipo = None
+    for rx, key in _TIPO_QUERY_MAP:
+        if rx.search(m.group(1)):
+            tipo = key
+            break
+    if tipo not in _PRIMARY_TIPOS:
+        return None
+    topic_terms = _topic_terms_of(question)
+    if not topic_terms:
+        return None
+    return NamedNormTarget(tipo=tipo, topic_terms=topic_terms, raw=m.group(0))
+
+
+def title_primary_tipo(title: str) -> str | None:
+    """Normalized tipo if `title` is a primary norm (in _PRIMARY_TIPOS), else None.
+    Classified by the leading tipo word, with decreto-ley checked before decreto."""
+    if not title:
+        return None
+    for key, pat in _TIPO_TITLE_PATTERNS:
+        if re.match(rf"^\s*(?:{pat})\b", title, re.I):
+            return key if key in _PRIMARY_TIPOS else None
+    return None
+
+
+def _strip_accents(text: str) -> str:
+    return "".join(
+        c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn"
+    )
+
+
+def named_target_topic_overlap(target: NamedNormTarget, title: str) -> tuple[int, float]:
+    """(# of the target's topic terms found in `title`, coverage ratio)."""
+    if not target.topic_terms:
+        return (0, 0.0)
+    hay = _strip_accents(title.lower())
+    matched = sum(1 for t in target.topic_terms if _strip_accents(t) in hay)
+    return (matched, matched / len(target.topic_terms))
+
+
+def title_num_year(title: str) -> str | None:
+    """The N/YYYY token in a title (to tell es/va twins of one norm from distinct
+    norms when several titles match a named target)."""
+    m = _NUMBER_YEAR_RE.search(title or "")
+    return m.group(0) if m else None
 
 
 def _safe_page_size(size: int) -> int:

@@ -240,6 +240,12 @@ class Settings(BaseSettings):
     answer_repair_mode: str = "conditional"
     answer_fallback_style: str = "concise_summary"
     answer_fallback_max_items: int = 3
+    # When a question targets a specific disposition (by number, or by type+topic
+    # without a number) and that primary norm is in the read set, force it as the
+    # sole citation instead of a tangential doc that merely mentions it. Addresses
+    # Raul's "main reference missing from cites". Default ON: eval_v2 100Q A/B
+    # (2026-06-24) = +1 gold_cited any & full, 0 regressions, answers unchanged.
+    answer_norm_target_citation_enabled: bool = True
 
     # Demo / observability
     demo_enforce_ready_gate: bool = True

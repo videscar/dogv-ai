@@ -8,7 +8,14 @@ from agent.shared import QAState, return_with_profile
 from api.answer import build_answer, no_evidence_answer
 from api.config import get_settings
 from api.db import SessionLocal
-from api.dogv_resolver import parse_reference, reference_matches_title
+from api.dogv_resolver import (
+    named_target_topic_overlap,
+    parse_named_norm_target,
+    parse_reference,
+    reference_matches_title,
+    title_num_year,
+    title_primary_tipo,
+)
 from api.dogv_urls import build_html_url, build_pdf_url
 from api.models import DogvDocument, DogvIssue
 from api.query_classifiers import is_reference_query
@@ -64,6 +71,118 @@ def _collapse_to_principal(
         if pinned:
             return pinned[:1]
     return matches[:1]
+
+
+# A named target needs at least this many topic terms in the title (and this share
+# of them) before we'll force it as the sole citation — guards against coincidental
+# single-word overlaps citing the wrong primary norm.
+_NAMED_MIN_MATCHED = 2
+_NAMED_MIN_RATIO = 0.5
+
+
+def _grounded_meta(state: QAState) -> dict[int, dict[str, Any]]:
+    """doc_id -> {title, rank} for docs actually READ (evidence ∪ full_docs),
+    titles + retrieval rank sourced from the fused candidate pool they came from.
+    Restricting to the read set keeps a forced citation grounded in used evidence."""
+    grounded: set[int] = set()
+    for item in state.get("evidence") or []:
+        did = item.get("doc_id") or item.get("document_id")
+        if did is not None:
+            grounded.add(int(did))
+    for item in state.get("full_docs") or []:
+        did = item.get("document_id") or item.get("doc_id")
+        if did is not None:
+            grounded.add(int(did))
+    meta: dict[int, dict[str, Any]] = {}
+    for rank, cand in enumerate(state.get("candidate_docs") or []):
+        did = cand.get("document_id")
+        if did is None:
+            continue
+        did = int(did)
+        if did in grounded and did not in meta:
+            meta[did] = {"title": cand.get("title") or "", "rank": rank}
+    return meta
+
+
+def _norm_target_doc_id(state: QAState) -> int | None:
+    """If the question targets one specific primary disposition and that norm is in
+    the read set, return its doc id — even when synthesis cited something else.
+
+    Numbered targets ("Decreto 185/2018") match by ref; named targets ("la Ley de
+    la Función Pública Valenciana") match by leading tipo + topic-term overlap.
+    Returns None when there's no norm target or the match is ambiguous/absent."""
+    question = state.get("question") or ""
+    meta = _grounded_meta(state)
+    if not meta:
+        return None
+
+    ref = parse_reference(question)
+    if ref is not None:
+        matches = sorted(
+            (m["rank"], did)
+            for did, m in meta.items()
+            if reference_matches_title(ref, m["title"])
+        )
+        if not matches:
+            return None
+        ondemand = state.get("ondemand_doc_id")
+        for _, did in matches:
+            if did == ondemand:
+                return did
+        return matches[0][1]
+
+    named = parse_named_norm_target(question)
+    if named is None:
+        return None
+    scored: list[tuple[int, int, int]] = []  # (matched, -rank, doc_id)
+    for did, m in meta.items():
+        if title_primary_tipo(m["title"]) != named.tipo:
+            continue
+        matched, ratio = named_target_topic_overlap(named, m["title"])
+        if matched >= _NAMED_MIN_MATCHED and ratio >= _NAMED_MIN_RATIO:
+            scored.append((matched, -m["rank"], did))
+    if not scored:
+        return None
+    scored.sort(reverse=True)
+    top_matched = scored[0][0]
+    # Distinct norms (different N/YYYY) tied at the top -> ambiguous, don't force.
+    top_norms = {
+        title_num_year(meta[did]["title"])
+        for matched, _, did in scored
+        if matched == top_matched
+    }
+    top_norms.discard(None)
+    if len(top_norms) > 1:
+        return None
+    return scored[0][2]
+
+
+def _citation_for_doc(doc_id: int, citations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Single-citation list for `doc_id`, reusing an existing citation dict if the
+    synthesis already cited it, else loading it from the DB."""
+    for c in citations:
+        if c.get("document_id") == doc_id:
+            return [c]
+    with SessionLocal() as db:
+        row = (
+            db.query(DogvDocument, DogvIssue)
+            .join(DogvIssue)
+            .filter(DogvDocument.id == doc_id)
+            .first()
+        )
+    if row is None:
+        return citations
+    doc, issue = row
+    return [
+        {
+            "document_id": doc.id,
+            "title": doc.title,
+            "ref": doc.ref,
+            "issue_date": issue.date.isoformat() if issue.date else None,
+            "pdf_url": build_pdf_url(doc.pdf_url),
+            "html_url": build_html_url(doc.html_url),
+        }
+    ]
 
 
 def answer_node(state: QAState) -> QAState:
@@ -140,9 +259,18 @@ def answer_node(state: QAState) -> QAState:
                     }
                 )
 
-        citations = _collapse_to_principal(
-            citations, state.get("question") or "", state.get("ondemand_doc_id")
-        )
+        if settings.answer_norm_target_citation_enabled:
+            principal_id = _norm_target_doc_id(state)
+            if principal_id is not None:
+                citations = _citation_for_doc(principal_id, citations)
+            else:
+                citations = _collapse_to_principal(
+                    citations, state.get("question") or "", state.get("ondemand_doc_id")
+                )
+        else:
+            citations = _collapse_to_principal(
+                citations, state.get("question") or "", state.get("ondemand_doc_id")
+            )
 
         elapsed = time.monotonic() - start
         logger.info(
