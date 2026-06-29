@@ -84,6 +84,8 @@ class Reference:
     anyo: int                     # 4-digit year
     topic_terms: list[str] = field(default_factory=list)
     raw: str = ""
+    date_day: int | None = None   # disposition day, when the question states one
+    date_month: str | None = None # disposition month token (lowercased, es or va)
 
     @property
     def num_year(self) -> str:
@@ -146,10 +148,32 @@ def parse_reference(question: str) -> Reference | None:
                 tipo = key
                 break
 
+    day, month = _parse_disposition_date(question)
     return Reference(
         tipo=tipo, numero=numero, anyo=anyo,
         topic_terms=_topic_terms_of(question), raw=m.group(0),
+        date_day=day, date_month=month,
     )
+
+
+# "de 30 de octubre" / "de 9 de gener" — the disposition date that disambiguates
+# norms whose N/YYYY repeats across consellerias (each numbers independently).
+_DISP_DATE_RE = re.compile(
+    r"\b(\d{1,2})\s+(?:de\s+|d['’])\s*"
+    r"(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|setiembre|octubre|noviembre|diciembre|"
+    r"gener|febrer|mar[çc]|maig|juny|juliol|agost|setembre|octubre|novembre|desembre)\b",
+    re.IGNORECASE,
+)
+
+
+def _parse_disposition_date(question: str) -> tuple[int | None, str | None]:
+    """Day + month token of the disposition date stated in the question, or
+    (None, None). Used to confirm a same-numbered norm in the corpus is actually
+    the one asked for (the N/YYYY alone is not unique)."""
+    m = _DISP_DATE_RE.search(question or "")
+    if not m:
+        return None, None
+    return int(m.group(1)), m.group(2).lower()
 
 
 def _topic_terms_of(question: str) -> list[str]:

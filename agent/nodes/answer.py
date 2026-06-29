@@ -104,6 +104,26 @@ def _grounded_meta(state: QAState) -> dict[int, dict[str, Any]]:
     return meta
 
 
+def _evidence_doc_meta(state: QAState) -> dict[int, dict[str, Any]]:
+    """doc_id -> {title, ref, issue_date} for every retrieved candidate, so each
+    evidence quote can self-identify its disposition in the synthesis prompt.
+    Sourced from candidate_docs (DB-backed titles), keeping it grounded."""
+    meta: dict[int, dict[str, Any]] = {}
+    for cand in state.get("candidate_docs") or []:
+        did = cand.get("document_id")
+        if did is None:
+            continue
+        did = int(did)
+        if did in meta:
+            continue
+        meta[did] = {
+            "title": cand.get("title") or "",
+            "ref": cand.get("ref") or "",
+            "issue_date": cand.get("issue_date") or "",
+        }
+    return meta
+
+
 def _norm_target_doc_id(state: QAState) -> int | None:
     """If the question targets one specific primary disposition and that norm is in
     the read set, return its doc id — even when synthesis cited something else.
@@ -216,6 +236,7 @@ def answer_node(state: QAState) -> QAState:
             evidence,
             full_docs=full_docs,
             history=state.get("history"),
+            doc_meta=_evidence_doc_meta(state),
         )
         answer = result.get("answer") or ""
         diagnostics = result.get("diagnostics") or {}

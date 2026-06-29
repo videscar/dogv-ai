@@ -111,7 +111,35 @@ def _format_full_docs(full_docs: list[dict[str, Any]] | None) -> str:
     return "\n\n---\n\n".join(blocks)
 
 
-def _format_evidence(evidence: list[dict[str, Any]] | None) -> str:
+def _evidence_id_line(doc_id: Any, meta: dict[int, dict[str, Any]] | None) -> str:
+    """`doc_id:` line plus the document's title/ref/date when known.
+
+    Quotes are extracts from a norm's preamble/articles and rarely restate the
+    disposition's own name; without the title the synthesis LLM can't tell which
+    quote belongs to a norm asked for by number/date, and abstains ("No consta")
+    even when the right doc's content is present. The title comes from the DB via
+    candidate_docs, so it's grounded metadata, not model-generated."""
+    head = f"doc_id: {doc_id}"
+    try:
+        info = (meta or {}).get(int(doc_id))
+    except (TypeError, ValueError):
+        info = None
+    if not info:
+        return head
+    title = str(info.get("title") or "").strip()
+    if title:
+        head += f"\ntitulo: {title}"
+    ref = str(info.get("ref") or "").strip()
+    date = str(info.get("issue_date") or info.get("date") or "").strip()
+    if ref or date:
+        head += "\n" + " | ".join(p for p in (f"ref: {ref}" if ref else "", f"fecha: {date}" if date else "") if p)
+    return head
+
+
+def _format_evidence(
+    evidence: list[dict[str, Any]] | None,
+    doc_meta: dict[int, dict[str, Any]] | None = None,
+) -> str:
     if not evidence:
         return ""
     blocks = []
@@ -120,7 +148,7 @@ def _format_evidence(evidence: list[dict[str, Any]] | None) -> str:
         quote = (item.get("quote") or "").strip()
         if not doc_id or not quote:
             continue
-        blocks.append(f"doc_id: {doc_id}\nquote: {quote}")
+        blocks.append(f"{_evidence_id_line(doc_id, doc_meta)}\nquote: {quote}")
     return "\n\n---\n\n".join(blocks)
 
 
@@ -163,9 +191,10 @@ def build_answer(
     evidence: list[dict[str, Any]],
     full_docs: list[dict[str, Any]] | None = None,
     history: list[dict[str, Any]] | None = None,
+    doc_meta: dict[int, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     client = LlmClient(timeout=ANSWER_TIMEOUT)
-    evidence_block = _format_evidence(evidence) or "Ninguna."
+    evidence_block = _format_evidence(evidence, doc_meta) or "Ninguna."
     full_docs_block = _format_full_docs(full_docs)
     conversation_block = _format_history(history)
     missing_notes = (

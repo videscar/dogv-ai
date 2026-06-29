@@ -21,11 +21,54 @@ settings = get_settings()
 logger = logging.getLogger("dogv.graph")
 
 
+# es<->va month forms, so a date stated in one language still matches the title's
+# other-language twin in the corpus (titles are stored per language).
+_MONTH_FORMS: dict[str, tuple[str, ...]] = {
+    "enero": ("enero", "gener"), "gener": ("enero", "gener"),
+    "febrero": ("febrero", "febrer"), "febrer": ("febrero", "febrer"),
+    "marzo": ("marzo", "març", "marc"), "març": ("marzo", "març", "marc"), "marc": ("marzo", "març", "marc"),
+    "abril": ("abril",),
+    "mayo": ("mayo", "maig"), "maig": ("mayo", "maig"),
+    "junio": ("junio", "juny"), "juny": ("junio", "juny"),
+    "julio": ("julio", "juliol"), "juliol": ("julio", "juliol"),
+    "agosto": ("agosto", "agost"), "agost": ("agosto", "agost"),
+    "septiembre": ("septiembre", "setiembre", "setembre"),
+    "setiembre": ("septiembre", "setiembre", "setembre"),
+    "setembre": ("septiembre", "setiembre", "setembre"),
+    "octubre": ("octubre",),
+    "noviembre": ("noviembre", "novembre"), "novembre": ("noviembre", "novembre"),
+    "diciembre": ("diciembre", "desembre"), "desembre": ("diciembre", "desembre"),
+}
+
+
+def _date_patterns(ref: Reference) -> list[str]:
+    """ILIKE patterns for the disposition date stated in the question (e.g. both
+    '%30 de octubre%' and '%30 d'octubre%'), or [] when no date was parsed."""
+    if not ref.date_day or not ref.date_month:
+        return []
+    months = _MONTH_FORMS.get(ref.date_month, (ref.date_month,))
+    pats: list[str] = []
+    for mo in months:
+        pats.append(f"% {ref.date_day} de {mo}%")
+        pats.append(f"% {ref.date_day} d'{mo}%")
+    return pats
+
+
 def _reference_in_corpus(db, ref: Reference) -> bool:
-    """True when the referenced disposition is already an originating doc in the DB."""
+    """True when the referenced disposition is already an originating doc in the DB.
+
+    "Orden N/YYYY" is NOT a unique key — each conselleria numbers independently —
+    so when the question also states the disposition date, require the corpus
+    title to carry that date too; otherwise a same-numbered order from another
+    body masks a genuinely-missing one and suppresses the on-demand fetch.
+    A false negative here is harmless: it only triggers an idempotent re-fetch."""
     patterns = corpus_like_patterns(ref)
-    clause = " OR ".join(f"title ILIKE :p{i}" for i in range(len(patterns)))
+    clause = "(" + " OR ".join(f"title ILIKE :p{i}" for i in range(len(patterns))) + ")"
     params = {f"p{i}": pat for i, pat in enumerate(patterns)}
+    date_pats = _date_patterns(ref)
+    if date_pats:
+        clause += " AND (" + " OR ".join(f"title ILIKE :d{i}" for i in range(len(date_pats))) + ")"
+        params.update({f"d{i}": pat for i, pat in enumerate(date_pats)})
     row = db.execute(
         sa_text(f"SELECT 1 FROM dogv_documents WHERE {clause} LIMIT 1"), params
     ).first()
