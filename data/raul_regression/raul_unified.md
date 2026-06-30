@@ -38,3 +38,25 @@ Unique questions combined from Raul's two documents (`📌 Lote de 50 preguntas.
 | 28 | test-15 | ¿En qué disposición se realiza oficialmente el cese del cargo a Mazón, President de la Generalitat Valenciana? | REAL DECRETO 1025/2025, de 5 de noviembre | — |
 | 29 | test-15 | ¿Cuáles son las personas vocales del Consejo Valenciano de Transparencia que se dieron por decreto en 2026? | DECRETO 4/2026, de 12 de marzo | — |
 | 30 | test-15 | Necesito que me cites las disposiciones donde figuran las ofertas de empleo público del grupo A1 que se han publicado en mayo de 2026Las disposiciones publicadas en mayo de 2026 que figuran en las evidencias y se refieren a ofertas o convocatorias del subgrupo A1 son: | ORDEN 24/2026, de 12 de mayo | — |
+
+## Baseline run — 2026-06-30 (prod, commit 656bebf code)
+
+**24/30 auto-clean; the other 6 are known limitations / checker artifacts, NOT regressions.**
+This is the regression baseline: a future run is a regression only if a currently-clean
+question flags, or a flagged one degrades further.
+
+Test-15 block (Raul's latest 15): **all effectively correct** — the 3 previously-failing
+reds are fixed (#21 ANEXO→cites 2025/38481; #24 Orden 4/2025→2025/44848; #25 Orden 1/2026
+→2026/850). #30 flags only because the auto-check looks for one norm but the question asks
+for *several* May-2026 A1 dispositions — the answer correctly lists ORDEN 23/2026, 24/2026
+and the 19-May resolución.
+
+Lote-50 residual flags (all pre-existing in Raul's first doc, none a regression):
+- #1 Ley de Transparencia — no-number named law; answers about Ley 1/2022 but cites related
+  docs (the norm-target guarantee doesn't fire without an N/YYYY). Same as Raul's original.
+- #2 Decreto 3/2020 — obscure pre-window *cese* decree; ambiguous "3/2020". Was "No consta"
+  for Raul too.
+- #12 Orden 2/2020 — **actually correct**: corrects the false premise ("no regula el control
+  interno, sino que dicta las normas del presupuesto 2021"), cites 2020/6387.
+- #13 Orden 5/2019 / #15 Orden 3/2017 — obscure pre-window orders; answer doesn't pin the
+  exact sub-topic. Pre-existing limitation.
