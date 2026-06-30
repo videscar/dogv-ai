@@ -41,22 +41,26 @@ Unique questions combined from Raul's two documents (`📌 Lote de 50 preguntas.
 
 ## Baseline run — 2026-06-30 (prod, commit 656bebf code)
 
-**24/30 auto-clean; the other 6 are known limitations / checker artifacts, NOT regressions.**
-This is the regression baseline: a future run is a regression only if a currently-clean
-question flags, or a flagged one degrades further.
+**24/30 auto-clean; the 6 flags re-investigated — 4 were retrieval non-determinism (now
+fixed by the norm-pin), 2 are coverage/aggregation limits.** A future run is a regression
+only if a currently-clean question flags, or a flagged one degrades further.
 
-Test-15 block (Raul's latest 15): **all effectively correct** — the 3 previously-failing
-reds are fixed (#21 ANEXO→cites 2025/38481; #24 Orden 4/2025→2025/44848; #25 Orden 1/2026
-→2026/850). #30 flags only because the auto-check looks for one norm but the question asks
-for *several* May-2026 A1 dispositions — the answer correctly lists ORDEN 23/2026, 24/2026
-and the 19-May resolución.
+### Norm-pin fix (2026-06-30) — #2/#12/#13/#15
+These 4 named norms are all IN the corpus (Decreto 3/2020→2020/279, Orden 2/2020→2020/6387,
+Orden 5/2019→2019/712, Orden 3/2017→2017/982). The flags were **non-determinism**: the
+24mo+bis corpus growth means same-numbered/topic siblings crowd the LLM-driven retrieve+rerank,
+so the exact norm intermittently lost its candidate slot (gold cited on one run, missed on
+the next). Fix: `backfill_node` pins the in-corpus named norm into `norm_pin_doc_ids` and
+`read_docs_node` forces it into the read set, so the norm-target citation guarantee always
+fires. Verified: all 4 cite the gold on BOTH of 2 reruns (single clean citation); each also
+corrects Raul's false premise (Orden 5/2019 = ajo tierno not residuos; Orden 2/2020 = 2021
+budget not control interno; Orden 3/2017 = water-use grants not PAC; Decreto 3/2020 = cese).
 
-Lote-50 residual flags (all pre-existing in Raul's first doc, none a regression):
-- #1 Ley de Transparencia — no-number named law; answers about Ley 1/2022 but cites related
-  docs (the norm-target guarantee doesn't fire without an N/YYYY). Same as Raul's original.
-- #2 Decreto 3/2020 — obscure pre-window *cese* decree; ambiguous "3/2020". Was "No consta"
-  for Raul too.
-- #12 Orden 2/2020 — **actually correct**: corrects the false premise ("no regula el control
-  interno, sino que dicta las normas del presupuesto 2021"), cites 2020/6387.
-- #13 Orden 5/2019 / #15 Orden 3/2017 — obscure pre-window orders; answer doesn't pin the
-  exact sub-topic. Pre-existing limitation.
+### Documented limitations (not safely auto-fixable) — #1, #30
+- **#1 Ley de Transparencia → Ley 1/2022** — pre-window (Apr 2022), NOT in corpus, and the
+  question gives no N/YYYY. The DOGV topic-search ranks Ley 1/2022 behind Ley 2/2016 and
+  non-law announcements, so an auto-fetch would force-cite the WRONG law. Answer names Ley
+  1/2022 in prose but cites the old Ley 2/2015 + a tangential resolution. Coverage gap.
+- **#30 A1 offers May 2026 → Orden 24/2026** — gold IS in corpus (2026/14965, Abogacía
+  A1-02) but dropped from the exhaustive list (sibling of the cited Orden 23/2026). No single
+  norm named → pin can't fire. Aggregation recall ceiling; fixing risks precision broadly.

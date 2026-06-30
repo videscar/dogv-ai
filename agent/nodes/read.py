@@ -199,6 +199,21 @@ def read_docs_node(state: QAState) -> QAState:
     start = time.monotonic()
     request_id = state.get("request_id")
     doc_ids = state.get("selected_doc_ids") or []
+    # Force the backfill-pinned norm (the disposition the question names by N/YYYY,
+    # found in corpus or just on-demand fetched) to the front of the read set, so the
+    # norm-target citation guarantee always has it in evidence regardless of how the
+    # non-deterministic rerank ordered the candidates. No-op when it was already
+    # selected (dedup); only adds when the ranking would otherwise have dropped it.
+    pin_ids = [int(d) for d in (state.get("norm_pin_doc_ids") or []) if d is not None]
+    if pin_ids:
+        seen: set[int] = set()
+        merged: list[int] = []
+        for d in pin_ids + [int(x) for x in doc_ids]:
+            if d in seen:
+                continue
+            seen.add(d)
+            merged.append(d)
+        doc_ids = merged
     if not doc_ids:
         elapsed = time.monotonic() - start
         logger.info("read.skip req=%s reason=no_docs elapsed=%.2fs", request_id, elapsed)

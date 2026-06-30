@@ -36,6 +36,7 @@ class QAState(TypedDict, total=False):
     backfill_attempted: bool
     ondemand_doc_id: int | None
     ondemand_ref: str | None
+    norm_pin_doc_ids: list[int]
     feed_query: bool
     online_ingest_done: bool
     profile: dict[str, Any]

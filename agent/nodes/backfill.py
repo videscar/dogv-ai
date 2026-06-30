@@ -54,25 +54,34 @@ def _date_patterns(ref: Reference) -> list[str]:
     return pats
 
 
-def _reference_in_corpus(db, ref: Reference) -> bool:
-    """True when the referenced disposition is already an originating doc in the DB.
+def _reference_corpus_doc_ids(db, ref: Reference, limit: int = 4) -> list[int]:
+    """Ids of originating docs whose title carries this disposition's tipo+N/YYYY.
 
     "Orden N/YYYY" is NOT a unique key — each conselleria numbers independently —
     so when the question also states the disposition date, require the corpus
     title to carry that date too; otherwise a same-numbered order from another
     body masks a genuinely-missing one and suppresses the on-demand fetch.
-    A false negative here is harmless: it only triggers an idempotent re-fetch."""
+    A false negative here is harmless: it only triggers an idempotent re-fetch.
+
+    Lowest id first so es/va twins resolve to a stable principal."""
     patterns = corpus_like_patterns(ref)
     clause = "(" + " OR ".join(f"title ILIKE :p{i}" for i in range(len(patterns))) + ")"
-    params = {f"p{i}": pat for i, pat in enumerate(patterns)}
+    params: dict = {f"p{i}": pat for i, pat in enumerate(patterns)}
     date_pats = _date_patterns(ref)
     if date_pats:
         clause += " AND (" + " OR ".join(f"title ILIKE :d{i}" for i in range(len(date_pats))) + ")"
         params.update({f"d{i}": pat for i, pat in enumerate(date_pats)})
-    row = db.execute(
-        sa_text(f"SELECT 1 FROM dogv_documents WHERE {clause} LIMIT 1"), params
-    ).first()
-    return row is not None
+    params["lim"] = limit
+    rows = db.execute(
+        sa_text(f"SELECT id FROM dogv_documents WHERE {clause} ORDER BY id LIMIT :lim"),
+        params,
+    ).all()
+    return [int(r[0]) for r in rows]
+
+
+def _reference_in_corpus(db, ref: Reference) -> bool:
+    """True when the referenced disposition is already an originating doc in the DB."""
+    return bool(_reference_corpus_doc_ids(db, ref, limit=1))
 
 
 def _pin_doc(db, doc_id: int) -> None:
@@ -121,8 +130,28 @@ def backfill_node(state: QAState) -> QAState:
             return _skip("no_reference")
 
         with SessionLocal() as db:
-            if _reference_in_corpus(db, ref):
-                return _skip("already_in_corpus")
+            corpus_ids = _reference_corpus_doc_ids(db, ref, limit=4)
+        if corpus_ids:
+            # The norm is already in the corpus. Retrieval+rerank are LLM-driven and
+            # non-deterministic, so the exact norm sometimes loses its candidate slot
+            # to topical same-number/same-subject siblings — the same question then
+            # cites the gold on one run and misses it on the next. Pin it into the
+            # read set so the norm-target citation guarantee fires deterministically.
+            # Only pin an UNAMBIGUOUS principal: a lone corpus match, or — for Orden
+            # numbers that repeat across consellerias — one the question's date already
+            # narrowed to (its es/va twins share that date). Otherwise stay hands-off.
+            pin_ids = corpus_ids if (len(corpus_ids) == 1 or _date_patterns(ref)) else []
+            elapsed = time.monotonic() - start
+            logger.info(
+                "backfill.skip req=%s reason=already_in_corpus pin=%s elapsed=%.2fs",
+                request_id, pin_ids, elapsed,
+            )
+            return return_with_profile(
+                state, "backfill",
+                {"backfill_attempted": True, "norm_pin_doc_ids": pin_ids},
+                elapsed_seconds=round(elapsed, 3), status="skipped",
+                reason="already_in_corpus", pin=pin_ids,
+            )
 
         lang = _query_lang(question)
         resolved = resolve(ref, lang)
@@ -149,6 +178,10 @@ def backfill_node(state: QAState) -> QAState:
                 "backfill_attempted": True,
                 "ondemand_doc_id": ondemand_doc_id,
                 "ondemand_ref": ref.num_year,
+                # Pin the freshly-fetched norm into the read set: after the loop back
+                # to retrieval it must not be re-evicted by the same non-deterministic
+                # ranking that made it absent in the first place.
+                "norm_pin_doc_ids": [ondemand_doc_id] if ondemand_doc_id is not None else [],
             },
             elapsed_seconds=round(elapsed, 3),
             status="fetched",
