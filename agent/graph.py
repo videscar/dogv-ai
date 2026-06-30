@@ -52,6 +52,22 @@ def _should_backfill(state: QAState) -> str:
     return "rerank_titles"
 
 
+def _should_reretrieve_after_backfill(state: QAState) -> str:
+    """Only re-run retrieval when backfill actually fetched a new doc.
+
+    A fetch adds a document the first pass never saw, so retrieval must re-run to
+    place it in the candidate pool (the downstream norm-target citation + evidence
+    metadata read from candidate_docs). Every skip path (already_in_corpus,
+    no_reference, unresolved, inferred_topic_mismatch, error) leaves the corpus
+    untouched, so a second pass reproduces byte-identical candidates — ~10-25s of
+    pure waste. The norm pin (norm_pin_doc_ids) still forces an in-corpus norm into
+    the read set on the skip path without needing a re-retrieve.
+    """
+    if state.get("ondemand_doc_id"):
+        return "retrieve_candidates"
+    return "rerank_titles"
+
+
 def build_graph():
     graph = StateGraph(QAState)
     graph.add_node("contextualize_query", contextualize_query_node)
@@ -78,7 +94,11 @@ def build_graph():
         _should_backfill,
         {"backfill": "backfill", "rerank_titles": "rerank_titles"},
     )
-    graph.add_edge("backfill", "retrieve_candidates")
+    graph.add_conditional_edges(
+        "backfill",
+        _should_reretrieve_after_backfill,
+        {"retrieve_candidates": "retrieve_candidates", "rerank_titles": "rerank_titles"},
+    )
     graph.add_edge("rerank_titles", "read_docs")
     graph.add_edge("read_docs", "answer_node")
     graph.add_edge("answer_node", END)
