@@ -12,9 +12,11 @@ from api.db import SessionLocal
 from api.dogv_resolver import (
     Reference,
     corpus_like_patterns,
+    infer_reference_from_corpus,
     parse_reference,
     resolve,
     _query_lang,
+    _strip_accents,
 )
 
 settings = get_settings()
@@ -79,6 +81,14 @@ def _reference_corpus_doc_ids(db, ref: Reference, limit: int = 4) -> list[int]:
     return [int(r[0]) for r in rows]
 
 
+def _resolved_matches_topic(titulo: str, topic_terms: list[str]) -> bool:
+    """True when the resolved disposition's title carries at least one of the
+    query's topic terms — a guard so an inferred principal that resolves to an
+    unrelated law is never fetched/cited."""
+    hay = _strip_accents((titulo or "").lower())
+    return any(_strip_accents(t) in hay for t in topic_terms if len(t) >= 4)
+
+
 def _reference_in_corpus(db, ref: Reference) -> bool:
     """True when the referenced disposition is already an originating doc in the DB."""
     return bool(_reference_corpus_doc_ids(db, ref, limit=1))
@@ -126,11 +136,23 @@ def backfill_node(state: QAState) -> QAState:
 
         question = state.get("question") or ""
         ref = parse_reference(question)
-        if ref is None:
-            return _skip("no_reference")
-
+        # When the question names a norm by type+topic but no number ("la Ley de
+        # Transparencia"), infer its N/YYYY from how the in-window corpus names it,
+        # so the fetch path can recover a foundational law that predates the window.
+        inferred = False
         with SessionLocal() as db:
+            if ref is None:
+                if settings.infer_named_norm_from_corpus_enabled:
+                    ref = infer_reference_from_corpus(db, question)
+                    inferred = ref is not None
+                if ref is None:
+                    return _skip("no_reference")
             corpus_ids = _reference_corpus_doc_ids(db, ref, limit=4)
+        # An inferred principal carries no number in the question for the answer node
+        # to match against; hand it the resolved ref so it can still force-cite it.
+        norm_target_ref = (
+            {"tipo": ref.tipo, "num_year": ref.num_year} if inferred else None
+        )
         if corpus_ids:
             # The norm is already in the corpus. Retrieval+rerank are LLM-driven and
             # non-deterministic, so the exact norm sometimes loses its candidate slot
@@ -148,7 +170,11 @@ def backfill_node(state: QAState) -> QAState:
             )
             return return_with_profile(
                 state, "backfill",
-                {"backfill_attempted": True, "norm_pin_doc_ids": pin_ids},
+                {
+                    "backfill_attempted": True,
+                    "norm_pin_doc_ids": pin_ids,
+                    "norm_target_ref": norm_target_ref,
+                },
                 elapsed_seconds=round(elapsed, 3), status="skipped",
                 reason="already_in_corpus", pin=pin_ids,
             )
@@ -157,6 +183,11 @@ def backfill_node(state: QAState) -> QAState:
         resolved = resolve(ref, lang)
         if resolved is None:
             return _skip("unresolved")
+        # An inferred principal is a guess from corpus titles — confirm the resolved
+        # disposition actually carries the query's topic before fetching/citing it,
+        # so a mis-inference never force-cites the wrong law.
+        if inferred and not _resolved_matches_topic(resolved.titulo, ref.topic_terms):
+            return _skip("inferred_topic_mismatch")
 
         # Ingest just this one disposition (issue-day ingest would fetch ~55 doc
         # bodies at ~5s each): create the row, extract its body, classify, embed.
@@ -182,6 +213,7 @@ def backfill_node(state: QAState) -> QAState:
                 # to retrieval it must not be re-evicted by the same non-deterministic
                 # ranking that made it absent in the first place.
                 "norm_pin_doc_ids": [ondemand_doc_id] if ondemand_doc_id is not None else [],
+                "norm_target_ref": norm_target_ref,
             },
             elapsed_seconds=round(elapsed, 3),
             status="fetched",

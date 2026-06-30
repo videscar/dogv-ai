@@ -19,6 +19,7 @@ from agent.shared import (
 )
 from api.config import get_settings
 from api.db import SessionLocal
+from api.enumeration import is_enumeration_query
 from api.intent import needs_amounts, needs_eligibility
 from api.models import DogvDocument, DogvIssue
 from api.reader import extract_evidence
@@ -236,6 +237,11 @@ def read_docs_node(state: QAState) -> QAState:
     amount_extra = getattr(settings, "ask_read_amount_docs", 1)
     read_max_docs = getattr(settings, "ask_read_max_docs", 3)
     rerank_cap = getattr(settings, "ask_rerank_max_candidates", read_max_docs)
+    # Enumeration queries ("list all dispositions of mayo 2026") must read the whole
+    # series, not the usual handful — widen the read budget to the enumeration cap so
+    # the augmented candidates actually reach the answer node.
+    if getattr(settings, "enumeration_augment_enabled", False) and is_enumeration_query(question):
+        rerank_cap = getattr(settings, "ask_enumeration_max_candidates", rerank_cap)
     read_max_docs = max(read_max_docs, min(len(doc_ids), rerank_cap))
     expand_ratio = getattr(settings, "ask_rrf_expand_margin_ratio", 0.12)
     expand_probe = getattr(settings, "ask_rrf_margin_probe", 5)

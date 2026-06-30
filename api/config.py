@@ -192,6 +192,15 @@ class Settings(BaseSettings):
     ask_synthesis_temperature: float = 0.0
     ask_rerank_top_n: int = 5
     ask_rerank_max_candidates: int = 10
+    # Enumeration queries ("cítame todas las disposiciones ... de mayo de 2026")
+    # need exhaustive recall, not top-k semantic retrieval. When detected, pull the
+    # month+category matches from SQL into the candidate pool and widen the rerank /
+    # read budget so the whole series can be listed (Raul #30). Gated to enumeration
+    # queries only, so ordinary single-norm questions are unaffected.
+    enumeration_augment_enabled: bool = True
+    enumeration_augment_max: int = 20
+    ask_enumeration_max_candidates: int = 25
+    ask_enumeration_top_n: int = 15
     ask_rerank_expand_candidates: int = 10
     ask_rerank_expand_top_n: int = 2
     ask_rerank_coverage_keep: int = 4
@@ -250,6 +259,11 @@ class Settings(BaseSettings):
     # Raul's "main reference missing from cites". Default ON: eval_v2 100Q A/B
     # (2026-06-24) = +1 gold_cited any & full, 0 regressions, answers unchanged.
     answer_norm_target_citation_enabled: bool = True
+    # When a question names a norm by type+topic but no number ("la Ley de
+    # Transparencia"), infer its N/YYYY from how the in-window corpus titles name it
+    # (modifying/developing norms cite the principal) and on-demand fetch+cite it.
+    # Recovers foundational laws that predate the rolling window (e.g. Raul #1).
+    infer_named_norm_from_corpus_enabled: bool = True
 
     # Demo / observability
     demo_enforce_ready_gate: bool = True

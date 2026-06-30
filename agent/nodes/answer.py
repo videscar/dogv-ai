@@ -9,6 +9,7 @@ from api.answer import build_answer, no_evidence_answer
 from api.config import get_settings
 from api.db import SessionLocal
 from api.dogv_resolver import (
+    Reference,
     named_target_topic_overlap,
     parse_named_norm_target,
     parse_reference,
@@ -124,6 +125,16 @@ def _evidence_doc_meta(state: QAState) -> dict[int, dict[str, Any]]:
     return meta
 
 
+def _ref_from_num_year(tipo: str | None, num_year: str | None) -> Reference | None:
+    """Rebuild a Reference from a backfill-resolved {tipo, 'N/YYYY'} pair."""
+    if not num_year or "/" not in num_year:
+        return None
+    num, _, year = num_year.partition("/")
+    if not (num.isdigit() and year.isdigit()):
+        return None
+    return Reference(tipo=tipo, numero=int(num), anyo=int(year), raw=num_year)
+
+
 def _norm_target_doc_id(state: QAState) -> int | None:
     """If the question targets one specific primary disposition and that norm is in
     the read set, return its doc id — even when synthesis cited something else.
@@ -135,6 +146,25 @@ def _norm_target_doc_id(state: QAState) -> int | None:
     meta = _grounded_meta(state)
     if not meta:
         return None
+
+    # An inferred no-number target (e.g. "la Ley de Transparencia" -> Ley 1/2022,
+    # resolved by backfill) carries no number in the question for parse_reference to
+    # find; match the read set against the ref backfill handed us.
+    target_ref = state.get("norm_target_ref")
+    if target_ref:
+        ref = _ref_from_num_year(target_ref.get("tipo"), target_ref.get("num_year"))
+        if ref is not None:
+            matches = sorted(
+                (m["rank"], did)
+                for did, m in meta.items()
+                if reference_matches_title(ref, m["title"])
+            )
+            if matches:
+                ondemand = state.get("ondemand_doc_id")
+                for _, did in matches:
+                    if did == ondemand:
+                        return did
+                return matches[0][1]
 
     ref = parse_reference(question)
     if ref is not None:

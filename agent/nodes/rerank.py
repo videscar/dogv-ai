@@ -16,11 +16,54 @@ from agent.shared import (
 )
 from api.config import get_settings
 from api.db import SessionLocal
+from api.enumeration import augment_enumeration_candidates, parse_enumeration
+from api.query_classifiers import guess_language
 from api.rerank import prepend_recent_relevant_docs, rerank_titles
 from api.retrieval import top_chunks_for_docs
 
 settings = get_settings()
 logger = logging.getLogger("dogv.graph")
+
+
+def _maybe_augment_enumeration(
+    state: QAState, candidates: list[dict[str, Any]], request_id: str | None
+) -> list[dict[str, Any]] | None:
+    """For an enumeration query, merge the month+category SQL pull into the
+    candidate pool so the whole series is rerankable. Returns the widened list, or
+    None when the query is not an enumeration (caller keeps the original pool)."""
+    if not getattr(settings, "enumeration_augment_enabled", False):
+        return None
+    question = state.get("question") or ""
+    spec = parse_enumeration(question)
+    if spec is None:
+        return None
+    language = state.get("language") or guess_language(question)
+    existing = {
+        int(c["document_id"]) for c in candidates if c.get("document_id") is not None
+    }
+    cap = getattr(settings, "enumeration_augment_max", 20)
+    with SessionLocal() as db:
+        extra = augment_enumeration_candidates(db, spec, language, existing, cap)
+    if not extra:
+        return None
+    logger.info(
+        "rerank.enum_augment req=%s added=%s month=%s..%s groups=%s",
+        request_id, len(extra), spec.date_start, spec.date_end, spec.group_codes,
+    )
+    return candidates + extra
+
+
+def _rerank_updates(
+    doc_ids: list[int],
+    enumeration: list[dict[str, Any]] | None,
+    all_candidates: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """rerank state updates; persists the widened candidate pool for enumeration
+    queries so read_docs reads from the augmented set."""
+    updates: dict[str, Any] = {"selected_doc_ids": doc_ids}
+    if enumeration is not None:
+        updates["candidate_docs"] = all_candidates
+    return updates
 
 
 def _doc_similarity_scores(
@@ -67,9 +110,16 @@ def rerank_titles_node(state: QAState) -> QAState:
     try:
         question = state["question"]
         keywords = extract_keywords_simple(question)
+        enumeration = _maybe_augment_enumeration(state, candidates, request_id)
+        if enumeration is not None:
+            candidates = enumeration
+            all_candidates = enumeration  # persist the widened pool for read_docs
         max_candidates = getattr(settings, "ask_rerank_max_candidates", 10)
         top_n = getattr(settings, "ask_rerank_top_n", 5)
         read_max_docs = getattr(settings, "ask_read_max_docs", 3)
+        if enumeration is not None:
+            max_candidates = getattr(settings, "ask_enumeration_max_candidates", max_candidates)
+            top_n = getattr(settings, "ask_enumeration_top_n", top_n)
         expand_ratio = getattr(settings, "ask_rrf_expand_margin_ratio", 0.12)
         expand_probe = getattr(settings, "ask_rrf_margin_probe", 5)
         expand_candidates = getattr(settings, "ask_rerank_expand_candidates", 10)
@@ -193,7 +243,7 @@ def rerank_titles_node(state: QAState) -> QAState:
             return return_with_profile(
                 state,
                 "rerank",
-                {"selected_doc_ids": doc_ids},
+                _rerank_updates(doc_ids, enumeration, all_candidates),
                 elapsed_seconds=round(elapsed, 3),
                 skipped=True,
                 selected_docs=len(doc_ids),
@@ -240,7 +290,7 @@ def rerank_titles_node(state: QAState) -> QAState:
         return return_with_profile(
             state,
             "rerank",
-            {"selected_doc_ids": doc_ids},
+            _rerank_updates(doc_ids, enumeration, all_candidates),
             elapsed_seconds=round(elapsed, 3),
             skipped=False,
             selected_docs=len(doc_ids),

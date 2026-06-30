@@ -37,6 +37,7 @@ class QAState(TypedDict, total=False):
     ondemand_doc_id: int | None
     ondemand_ref: str | None
     norm_pin_doc_ids: list[int]
+    norm_target_ref: dict[str, str] | None
     feed_query: bool
     online_ingest_done: bool
     profile: dict[str, Any]

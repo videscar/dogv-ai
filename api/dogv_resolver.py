@@ -20,6 +20,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, datetime
 import logging
+import math
 import re
 import unicodedata
 from typing import Any
@@ -448,3 +449,109 @@ def resolve_question(question: str) -> ResolvedDoc | None:
     if ref is None:
         return None
     return resolve(ref, _query_lang(question))
+
+
+_REF_IN_TITLE_RE = re.compile(r"\b\d{1,4}/\d{2,4}\b")
+# How far after a "Ley N/YYYY" token to look for the law's name. DOGV titles read
+# "Ley 1/2022, de 13 de abril, de la Generalitat, de Transparencia y Buen Gobierno"
+# — the topic name sits within ~90 chars of the number.
+_PRINCIPAL_NAME_WINDOW = 90
+
+
+def _infer_principal_ref(
+    titles: list[str], tipo: str, topic_terms: list[str]
+) -> Reference | None:
+    """Pick the principal N/YYYY of `tipo` that the corpus titles name with the
+    query's topic.
+
+    A foundational law that is itself out of the corpus window is still *named* by
+    the in-window norms that modify or develop it (e.g. "LEY 4/2024 ... de
+    modificación de la Ley 1/2022, de 13 de abril, ... de Transparencia y Buen
+    Gobierno"). A DOGV title always states a law's name right after its number, so a
+    topic term landing in the window just after a number is strong evidence that
+    that number is the principal asked about. We score every `tipo`-typed number by
+    how many topic terms fall in its trailing window, summed across titles, and
+    require the winner to dominate — otherwise we stay hands-off (a wrong principal
+    would force-cite the wrong law)."""
+    prefixes = _TIPO_PREFIXES.get(tipo or "")
+    if not prefixes:
+        return None
+    tipo_ref_re = re.compile(
+        rf"(?:{'|'.join(prefixes)})\s+(\d{{1,4}}/\d{{2,4}})", re.I
+    )
+    topic_norm = sorted({_strip_accents(t) for t in topic_terms if len(t) >= 4})
+    if not topic_norm:
+        return None
+
+    # IDF over the gathered titles so a distinctive term ("transparencia") outweighs
+    # a generic one ("publica", which appears in countless law names).
+    n = max(len(titles), 1)
+    df = {t: sum(1 for title in titles if t in _strip_accents(title.lower())) for t in topic_norm}
+    weight = {t: math.log(1 + n / max(df[t], 1)) for t in topic_norm}
+
+    # Score each number by its BEST trailing window (not a sum), so a number that
+    # merely recurs with a generic term can't out-accumulate the real principal.
+    best_score: dict[str, float] = {}
+    freq: dict[str, int] = {}
+    for title in titles:
+        for m in tipo_ref_re.finditer(title):
+            ref = m.group(1)
+            window = title[m.end(): m.end() + _PRINCIPAL_NAME_WINDOW]
+            nxt = _REF_IN_TITLE_RE.search(window)  # don't bleed into the next norm
+            if nxt:
+                window = window[: nxt.start()]
+            wn = _strip_accents(window.lower())
+            ws = sum(weight[t] for t in topic_norm if t in wn)
+            if ws > 0:
+                best_score[ref] = max(best_score.get(ref, 0.0), ws)
+                freq[ref] = freq.get(ref, 0) + 1
+    if not best_score:
+        return None
+    ranked = sorted(best_score, key=lambda r: (best_score[r], freq[r]), reverse=True)
+    best = ranked[0]
+    # The winner must be unambiguous: a lone candidate, or one that strictly beats
+    # the runner-up's topic-proximity score.
+    if len(ranked) > 1 and best_score[ranked[1]] >= best_score[best]:
+        return None
+
+    bm = _NUMBER_YEAR_RE.search(best)
+    if bm is None:
+        return None
+    numero = int(bm.group(1))
+    anyo = _normalize_year(bm.group(2))
+    if anyo < 1980 or anyo > 2100:
+        return None
+    return Reference(
+        tipo=tipo, numero=numero, anyo=anyo, topic_terms=topic_terms, raw=best
+    )
+
+
+def infer_reference_from_corpus(db, question: str) -> Reference | None:
+    """Infer the explicit N/YYYY of a no-number "type + topic" norm target by
+    reading how the corpus names it (see _infer_principal_ref), or None.
+
+    Lets the on-demand fetch recover a foundational law asked for by name only
+    ("la Ley de Transparencia" -> Ley 1/2022) when the law itself predates the
+    window but in-window norms reference it. Conservative: needs an
+    article-introduced primary tipo + topic terms, and a dominant principal."""
+    target = parse_named_norm_target(question)
+    if target is None:
+        return None
+    prefixes = _TIPO_PREFIXES.get(target.tipo or "")
+    if not prefixes:
+        return None
+    terms = [t for t in target.topic_terms if len(t) >= 4]
+    if not terms:
+        return None
+    like = " OR ".join(f"title ILIKE :t{i}" for i in range(len(terms)))
+    params: dict = {f"t{i}": f"%{t}%" for i, t in enumerate(terms)}
+    params["tre"] = rf"({'|'.join(prefixes)})\s+[0-9]+/[0-9]{{2,4}}"
+    from sqlalchemy import text as _sa_text  # local import: keep module import-light
+
+    rows = db.execute(
+        _sa_text(
+            f"SELECT title FROM dogv_documents WHERE title ~* :tre AND ({like}) LIMIT 120"
+        ),
+        params,
+    ).all()
+    return _infer_principal_ref([r[0] for r in rows], target.tipo, target.topic_terms)

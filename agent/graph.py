@@ -17,6 +17,7 @@ from agent.nodes import (
 )
 from agent.shared import QAState
 from api.config import get_settings
+from api.dogv_resolver import parse_named_norm_target
 from api.query_classifiers import is_reference_query
 
 settings = get_settings()
@@ -41,6 +42,12 @@ def _should_backfill(state: QAState) -> str:
     # only tangential same-number/topic docs while the cited norm itself is missing
     # from the window. Route to backfill; the node cheaply skips if it's in corpus.
     if is_reference_query(state.get("question") or ""):
+        return "backfill"
+    # No-number named norm ("la Ley de Transparencia"): backfill can infer its
+    # N/YYYY from how the corpus names it and recover a pre-window foundational law.
+    if settings.infer_named_norm_from_corpus_enabled and parse_named_norm_target(
+        state.get("question") or ""
+    ):
         return "backfill"
     return "rerank_titles"
 
