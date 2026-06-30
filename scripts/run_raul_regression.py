@@ -70,10 +70,16 @@ def run(api: str) -> list[dict]:
         except Exception as exc:  # noqa: BLE001
             row.update(answer="", cites=[], answered=False, cited_norm=None,
                        seconds=None, error=str(exc))
-        # A regression = abstained, OR named a norm it failed to cite, OR errored
+        # A regression = abstained, OR named a norm it failed to cite, OR errored.
+        # Exception: when the answer DID cite the expected norm, an abstain phrase is a
+        # grounded premise-correction ("No consta que la Orden 5/2019 regule residuos:
+        # regula la calidad del ajo tierno"), not a refusal — that's the ideal answer,
+        # so don't count it as abstained.
+        grounded_refutation = (not row["answered"]) and (row["cited_norm"] is True)
+        row["grounded_refutation"] = grounded_refutation
         row["regression"] = bool(
             row["error"]
-            or not row["answered"]
+            or (not row["answered"] and not grounded_refutation)
             or (row["cited_norm"] is False)
         )
         results.append(row)
@@ -103,7 +109,10 @@ def write_report(results: list[dict], out: Path) -> None:
         cn = {True: "✓", False: "✗", None: "—"}[r["cited_norm"]]
         cites = ", ".join(c["ref"] or "?" for c in r["cites"]) or "—"
         q = r["question"].replace("|", "/")[:70]
-        lines.append(f"| {r['id']} | {r['source']} | {'✓' if r['answered'] else '✗'} "
+        # "~" = abstain phrase present but the expected norm IS cited (grounded
+        # premise-correction), which is a correct answer, not a refusal.
+        answered_mark = "✓" if r["answered"] else ("~" if r.get("grounded_refutation") else "✗")
+        lines.append(f"| {r['id']} | {r['source']} | {answered_mark} "
                      f"| {cn} | {cites} | {r['seconds']} | {q} |")
     out.write_text("\n".join(lines) + "\n")
     print(f"\nReport: {out}  ({len(results) - len(regs)}/{len(results)} clean)")
