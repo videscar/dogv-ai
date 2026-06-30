@@ -267,9 +267,19 @@ def process_issue(db: Session, issue: DogvIssue) -> int:
             unchanged += 1
         count += 1
 
+    # A bis (extraordinary) sumario lists only its own edition's dispositions, so it
+    # is INCOMPLETE for the issue (the ordinary edition shares the same date+numero
+    # and is captured separately). Reconciling against it would wrongly delete the
+    # sibling edition's documents, so skip removal entirely for bis sumarios. Also
+    # never reconcile away externally-sourced docs (sibling-edition / on-demand /
+    # pinned) — they legitimately aren't in this sumario.
+    bis_sumario = bool((raw or {}).get("esBis"))
     removed = 0
     for bucket in existing_by_key.values():
         for stale_doc in bucket:
+            tags = stale_doc.doc_tags or {}
+            if bis_sumario or tags.get("sibling_edition") or tags.get("ondemand") or tags.get("pinned"):
+                continue
             _delete_rag_rows(db, stale_doc.id)
             db.delete(stale_doc)
             removed += 1

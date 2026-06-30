@@ -224,6 +224,10 @@ class Settings(BaseSettings):
     auto_ingest_gap_check_backoff_seconds: float = 1.5
     auto_ingest_gap_repair_scan_max_days: int = 45
     backfill_enabled: bool = True
+    # On bis-collision dates the date-sumario JSON returns only one of the ordinary+
+    # bis pair; when on, each ingested date also captures the sibling edition's
+    # dispositions from its sumario PDF so issues are complete at the source.
+    ingest_complete_bis_editions: bool = True
     hot_index_months: int = 6
     warm_index_months: int = 24
 
