@@ -16,6 +16,7 @@ from agent.shared import (
 )
 from api.config import get_settings
 from api.db import SessionLocal
+from api.edition_recency import suppress_stale_editions
 from api.enumeration import augment_enumeration_candidates, parse_enumeration
 from api.query_classifiers import guess_language
 from api.rerank import prepend_recent_relevant_docs, rerank_titles
@@ -57,13 +58,55 @@ def _rerank_updates(
     doc_ids: list[int],
     enumeration: list[dict[str, Any]] | None,
     all_candidates: list[dict[str, Any]],
+    persist_candidates: bool = False,
 ) -> dict[str, Any]:
-    """rerank state updates; persists the widened candidate pool for enumeration
-    queries so read_docs reads from the augmented set."""
+    """rerank state updates; persists the candidate pool for enumeration queries (so
+    read_docs reads the augmented set) or when edition-recency pruned a stale sibling
+    out of the pool (so read_docs' coverage/amount extras can't re-add it)."""
     updates: dict[str, Any] = {"selected_doc_ids": doc_ids}
-    if enumeration is not None:
+    if enumeration is not None or persist_candidates:
         updates["candidate_docs"] = all_candidates
     return updates
+
+
+def _apply_edition_recency(
+    state: QAState,
+    doc_ids: list[int],
+    pool: list[dict[str, Any]],
+    enumeration: list[dict[str, Any]] | None,
+    request_id: str | None,
+) -> tuple[list[int], list[dict[str, Any]], set[int]]:
+    """RC1: drop older sibling-editions from the read set + candidate pool when the query
+    has no explicit past-date target. No-op unless enabled; skipped for enumeration (which
+    wants the whole series) and when a since/until filter already scopes the query to a
+    period (explicit temporal intent is respected). Returns (doc_ids, pool, dropped)."""
+    if not getattr(settings, "ask_edition_recency_enabled", False) or enumeration is not None:
+        return doc_ids, pool, set()
+    filters = state.get("filters")
+    if filters is not None and (
+        getattr(filters, "since_date", None) or getattr(filters, "until_date", None)
+    ):
+        return doc_ids, pool, set()
+    if len(doc_ids) < 2:
+        return doc_ids, pool, set()
+    protected = [int(d) for d in (state.get("norm_pin_doc_ids") or []) if d is not None]
+    with SessionLocal() as db:
+        kept, dropped = suppress_stale_editions(
+            db,
+            doc_ids,
+            pool,
+            sim_threshold=float(getattr(settings, "ask_edition_recency_sim", 0.86)),
+            scan_n=int(getattr(settings, "ask_edition_recency_scan_n", 12)),
+            protected_ids=protected,
+        )
+    if not dropped:
+        return doc_ids, pool, set()
+    logger.info(
+        "rerank.edition_recency req=%s dropped=%s kept=%s stale_ids=%s",
+        request_id, len(dropped), len(kept), sorted(dropped),
+    )
+    pruned = [c for c in pool if int(c.get("document_id")) not in dropped]
+    return kept, pruned, dropped
 
 
 def _doc_similarity_scores(
@@ -233,6 +276,9 @@ def rerank_titles_node(state: QAState) -> QAState:
         llm_top_n = min(len(rerank_candidates), max(top_n, read_max_docs))
         if len(rerank_candidates) <= llm_top_n:
             doc_ids = [item["document_id"] for item in rerank_candidates]
+            doc_ids, all_candidates, dropped = _apply_edition_recency(
+                state, doc_ids, all_candidates, enumeration, request_id
+            )
             elapsed = time.monotonic() - start
             logger.info(
                 "rerank.skip req=%s candidates=%s elapsed=%.2fs",
@@ -243,7 +289,7 @@ def rerank_titles_node(state: QAState) -> QAState:
             return return_with_profile(
                 state,
                 "rerank",
-                _rerank_updates(doc_ids, enumeration, all_candidates),
+                _rerank_updates(doc_ids, enumeration, all_candidates, persist_candidates=bool(dropped)),
                 elapsed_seconds=round(elapsed, 3),
                 skipped=True,
                 selected_docs=len(doc_ids),
@@ -280,6 +326,9 @@ def rerank_titles_node(state: QAState) -> QAState:
         if not doc_ids:
             doc_ids = [item["document_id"] for item in rerank_candidates]
         doc_ids = prepend_recent_relevant_docs(question, keywords, rerank_candidates, doc_ids)
+        doc_ids, all_candidates, dropped = _apply_edition_recency(
+            state, doc_ids, all_candidates, enumeration, request_id
+        )
         elapsed = time.monotonic() - start
         logger.info(
             "rerank.done req=%s selected=%s elapsed=%.2fs",
@@ -290,7 +339,7 @@ def rerank_titles_node(state: QAState) -> QAState:
         return return_with_profile(
             state,
             "rerank",
-            _rerank_updates(doc_ids, enumeration, all_candidates),
+            _rerank_updates(doc_ids, enumeration, all_candidates, persist_candidates=bool(dropped)),
             elapsed_seconds=round(elapsed, 3),
             skipped=False,
             selected_docs=len(doc_ids),

@@ -205,6 +205,18 @@ class Settings(BaseSettings):
     ask_rerank_expand_top_n: int = 2
     ask_rerank_coverage_keep: int = 4
     ask_rerank_recent_keep: int = 2
+    # RC1 — sibling-edition recency. The DOGV re-publishes near-identical documents
+    # across issues (annual convocatòries, recurring nomenaments, subvention rounds).
+    # When several candidates are near-duplicate in doc-embedding space but carry
+    # different issue dates they are editions of the same recurring publication; the
+    # reader otherwise mixes them and can answer from a stale year. With no explicit
+    # past-date target in the query, keep only the newest edition of each family in the
+    # read set and drop the older siblings. Same-issue-date documents are never collapsed
+    # (distinct concurrent publications, not editions). Similarity threshold empirically
+    # separates true editions (>=0.885 doc-embedding cosine) from unrelated docs (<=0.65).
+    ask_edition_recency_enabled: bool = True
+    ask_edition_recency_sim: float = 0.86
+    ask_edition_recency_scan_n: int = 12
     ask_read_expand_docs: int = 2
     ask_read_coverage_docs: int = 2
     ask_read_eligibility_docs: int = 1
