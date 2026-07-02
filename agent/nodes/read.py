@@ -77,17 +77,28 @@ def _window_chunk_text(text: str, cap: int, folded_keywords: list[str]) -> str:
     window = cap - half - 3  # 3 chars for the " … " joiner
     if window <= 0:
         return text[:cap]
-    best_score: tuple[int, int, int] | None = None
+    # Score candidate windows by the keyword kinds they add BEYOND the kept prefix
+    # half. Raw kind/hit counts let a window dense in generic question words
+    # (projecte, guardabosc) outrank the answer section whose distinctive keywords
+    # (quantia, individualitzada) appear only once — dropping text the legacy
+    # [0:cap] prefix used to show (Q7-VA: "Dotzé… 500,00" at offset 701). Marginal
+    # scoring makes the prefix-redundant window lose; if no window adds any new
+    # kind, keep the exact legacy prefix cut.
+    prefix_kinds = {kw for kw in folded_keywords if kw in folded[:half]}
+    best_score: tuple[int, int, int, int] | None = None
     best_start = half
     for anchor in late_anchors:
         start = max(half, min(anchor - 150, len(text) - window))
         segment = folded[start : start + window]
-        kinds = sum(1 for kw in folded_keywords if kw in segment)
+        kinds = {kw for kw in folded_keywords if kw in segment}
+        new_kinds = len(kinds - prefix_kinds)
         total = sum(segment.count(kw) for kw in folded_keywords)
-        score = (kinds, total, -start)
+        score = (new_kinds, len(kinds), total, -start)
         if best_score is None or score > best_score:
             best_score = score
             best_start = start
+    if best_score is None or best_score[0] == 0:
+        return text[:cap]
     # Nudge both cut points back to a whitespace boundary for readability.
     prefix_end = half
     while prefix_end > half - 30 and prefix_end < len(text) and not text[prefix_end - 1].isspace():

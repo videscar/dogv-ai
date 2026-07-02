@@ -33,6 +33,26 @@ def test_deep_answer_text_is_recovered():
     assert " … " in out
 
 
+def test_window_never_loses_legacy_prefix_answer_to_generic_keywords():
+    # Q7-VA shape: the answer ("quantia individualitzada... 500,00") sits in the
+    # legacy-visible zone [half:cap]; a deeper region repeats generic question
+    # words (projecte, guardabosc) more densely. Marginal scoring must keep the
+    # answer window, not the generic one.
+    prefix = ("el projecte es desplegara segons les bases. " * 14)[:600]  # 'projecte' in prefix
+    answer = "Dotze. Quantia individualitzada: cada centre percebra 500,00 euros. "
+    generic = "el projecte guardabosc del projecte guardabosc als centres. " * 10
+    text = prefix + answer + generic
+    out = _window_chunk_text(text, 1200, ["quantia", "individualitzada", "projecte", "guardabosc"])
+    assert "500,00 euros" in out
+
+
+def test_window_falls_back_to_legacy_prefix_when_nothing_new():
+    # every late window only repeats kinds already visible in the prefix half
+    text = ("guardabosc " * 60) + ("guardabosc bla " * 150)
+    out = _window_chunk_text(text, 1200, ["guardabosc"])
+    assert out == text[:1200]
+
+
 def test_accented_text_matches_folded_keywords_at_right_offset():
     filler = "y" * 800
     text = filler + " Retribucions íntegres anuals: 37.804,62 euros." + " z" * 400
