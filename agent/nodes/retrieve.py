@@ -9,6 +9,7 @@ from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
 from api.embed import EmbedClient
 from api.query_expansion import build_bm25_queries, build_prf_query, build_hyde_document, decompose_question
+from api.enumeration import parse_enumeration
 from api.query_classifiers import is_reference_query
 from api.retrieval import (
     RetrievalFilters,
@@ -102,6 +103,15 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         hyde_enabled = getattr(settings, "ask_hyde_enabled", False)
         if hyde_enabled and getattr(settings, "ask_hyde_conditional", True) and is_reference_query(question):
             hyde_enabled = False
+
+        # Semantic anchors are skipped for enumeration queries: those want the
+        # exhaustive month+category series (rerank widens its caps for them), and
+        # anchoring a semantically-top doc displaces series members from the read
+        # set (measured on Raul #30: anchors=2 dropped 3 refs from the listing).
+        anchors_enabled = (
+            getattr(settings, "ask_semantic_anchor_enabled", False)
+            and parse_enumeration(question) is None
+        )
 
         bm25_facet_questions = [question]
         facets = decompose_question(question, max_facets=max_facets)
@@ -437,7 +447,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                     weights=weights,
                 )
                 rrf_expanded = True
-            if getattr(settings, "ask_semantic_anchor_enabled", False):
+            if anchors_enabled:
                 fused, anchors_added = inject_semantic_anchors(
                     fused,
                     sources,
