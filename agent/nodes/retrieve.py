@@ -24,6 +24,53 @@ settings = get_settings()
 logger = logging.getLogger("dogv.graph")
 
 
+def inject_semantic_anchors(
+    fused: list[dict[str, Any]],
+    sources: list[list[dict[str, Any]]],
+    weights: list[float],
+    anchor_lanes: list[list[dict[str, Any]]],
+    anchor_top: int,
+) -> tuple[list[dict[str, Any]], int]:
+    """Guarantee a fused-pool slot for docs at the top of a raw-query semantic lane.
+
+    A paraphrase/annex question gives the answer-bearing doc zero lexical-lane
+    votes, while the correlated BM25 lanes (broad+strict+title, x facets, +PRF)
+    each vote for the same generic near-matches — so a doc that is top-3 by
+    title/chunk embedding similarity can still fall past the capped RRF cutoff.
+    Any doc ranked within `anchor_top` of an anchor lane that fusion evicted is
+    re-fused over the full source set and appended with its true rrf_score, so
+    downstream rerank (which re-sorts by document similarity) gets to judge it.
+    Returns (fused, appended_count); no-op when the anchors already made the pool.
+    """
+    if anchor_top <= 0 or not fused:
+        return fused, 0
+    anchor_ids: list[int] = []
+    for lane in anchor_lanes:
+        for row in lane[:anchor_top]:
+            doc_id = row.get("document_id")
+            if doc_id is not None and int(doc_id) not in anchor_ids:
+                anchor_ids.append(int(doc_id))
+    if not anchor_ids:
+        return fused, 0
+    present = {int(item["document_id"]) for item in fused}
+    missing = [doc_id for doc_id in anchor_ids if doc_id not in present]
+    if not missing:
+        return fused, 0
+    full = rrf_fuse(
+        sources,
+        max_docs=sum(len(source) for source in sources),
+        weights=weights,
+    )
+    by_id = {int(row["document_id"]): row for row in full}
+    appended = 0
+    for doc_id in missing:
+        row = by_id.get(doc_id)
+        if row is not None:
+            fused.append(row)
+            appended += 1
+    return fused, appended
+
+
 def retrieve_candidates_node(state: QAState) -> QAState:
     start = time.monotonic()
     request_id = state.get("request_id")
@@ -305,9 +352,14 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             ) = _run_all_facets(filters_to_use)
             sources: list[list[dict[str, Any]]] = []
             weights: list[float] = []
+            # Raw-query semantic lanes whose top ranks are pool-guaranteed (RC4).
+            # HyDE is excluded: its lane is synthetic-query-driven and separately
+            # gated, and anchoring it would re-open the recall-dilution failure.
+            anchor_lanes: list[list[dict[str, Any]]] = []
             if "vector" in lanes:
                 sources.append(vector_hits)
                 weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
+                anchor_lanes.append(vector_hits)
                 if hyde_embedding is not None:
                     with SessionLocal() as db:
                         hyde_hits = _dedupe_docs(
@@ -321,6 +373,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             if "title" in lanes:
                 sources.append(title_hits)
                 weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
+                anchor_lanes.append(title_hits)
                 if title_lexical_hits and len(title_hits) < min_docs:
                     sources.append(_dedupe_docs(title_lexical_hits))
                     weights.append(getattr(settings, "ask_rrf_weight_title_lexical", 0.8))
@@ -350,12 +403,14 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                     if "vector" in lanes:
                         sources.append(relaxed_vector)
                         weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
+                        anchor_lanes.append(relaxed_vector)
                     if "bm25" in lanes:
                         sources.append(relaxed_bm25)
                         weights.append(getattr(settings, "ask_rrf_weight_bm25", 1.0))
                     if "title" in lanes:
                         sources.append(relaxed_title)
                         weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
+                        anchor_lanes.append(relaxed_title)
                         if relaxed_title_lexical and len(relaxed_title) < min_docs:
                             sources.append(_dedupe_docs(relaxed_title_lexical))
                             weights.append(getattr(settings, "ask_rrf_weight_title_lexical", 0.8))
@@ -382,6 +437,16 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                     weights=weights,
                 )
                 rrf_expanded = True
+            if getattr(settings, "ask_semantic_anchor_enabled", False):
+                fused, anchors_added = inject_semantic_anchors(
+                    fused,
+                    sources,
+                    weights,
+                    anchor_lanes,
+                    anchor_top=getattr(settings, "ask_semantic_anchor_top", 3),
+                )
+                if anchors_added:
+                    counts["semantic_anchors"] = anchors_added
             top_chunks = group_top_chunks(
                 chunk_candidates,
                 per_doc=getattr(settings, "ask_chunks_per_doc", 4),

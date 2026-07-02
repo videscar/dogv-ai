@@ -157,6 +157,14 @@ class Settings(BaseSettings):
     ask_hyde_margin_threshold: float = 0.22  # fire HyDE iff baseline rrf_margin < this; calibrated on eval_v2 (keeps every known HyDE recovery v2-020/032/034/035/099, skips confident-baseline regressions v2-023/078)
     ask_rrf_weight_hyde: float = 3.0
     ask_fallback_allow_margin: bool = False
+    # Semantic-anchor pool guarantee (RC4): a doc ranking in the top-N of a raw-query
+    # semantic lane (title-vector / chunk-vector) is guaranteed a slot in the fused
+    # pool. Paraphrase/annex questions give the gold zero lexical-lane votes while the
+    # correlated BM25 lanes (broad+strict+title x facets+PRF) triple-vote generic noise
+    # past the RRF cutoff (measured: title-rank-3 gold evicted to fused rank 50). The
+    # anchors ride along with their true fused score; rerank still caps the read set.
+    ask_semantic_anchor_enabled: bool = True
+    ask_semantic_anchor_top: int = 3
 
     # Conversation / multi-turn. History is client-owned (sent on each request); the
     # server stays stateless. With empty history every path below is a no-op, so
