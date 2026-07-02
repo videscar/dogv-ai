@@ -191,6 +191,19 @@ class Settings(BaseSettings):
     ask_read_citation_floor: bool = True
     ask_read_citation_floor_docs: int = 5  # max payload docs to floor a quote for
     ask_chunk_max_chars: int = 1200
+    # RC3 (reader/evidence-extraction): a payload chunk longer than ask_chunk_max_chars
+    # was always cut to its PREFIX, silently clipping answer text that sits deep in the
+    # chunk (Q7-ES "Cuantía individualizada… 500,00" at offset 1820/2359; Q12
+    # "37.804,62 €" at offset 1378/1776). With the window enabled the truncation keeps
+    # the word-aligned prefix half plus the half-window with the highest salient-keyword
+    # coverage; chunks with no keyword hits past the prefix keep the exact old cut.
+    ask_chunk_window_enabled: bool = True
+    # RC3: the LLM reader sometimes returns a stitched, non-verbatim "quote" (fragments
+    # joined with "..."), narrowing a whole annex table to the rows it happened to echo
+    # (Q11-ES: 3 "Renuncia" examples from a table whose majority cause is "Decaimiento").
+    # Re-ground such quotes to the window of their best-matching payload chunk so
+    # synthesis sees the surrounding rows; verbatim and unlocatable quotes pass through.
+    ask_quote_reground_enabled: bool = True
     ask_doc_fallback_chars: int = 12000
     # Final answer synthesis sampling. Thinking mode (temp 1.0 preset) made the
     # grounded synthesis non-reproducible (flipped correct/"no consta" on identical

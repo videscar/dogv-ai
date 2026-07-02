@@ -30,6 +30,9 @@ class QAState(TypedDict, total=False):
     top_chunks: dict[int, list[dict[str, Any]]]
     selected_doc_ids: list[int]
     evidence: list[dict[str, Any]]
+    # Reader payload (docs + the exact chunks shown to the evidence extractor),
+    # kept in state for /ask debug introspection only.
+    read_payload: list[dict[str, Any]]
     full_docs: list[dict[str, Any]]
     answer: str
     citations: list[dict[str, Any]]

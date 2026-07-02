@@ -36,6 +36,68 @@ def _strip_accents(value: str) -> str:
     )
 
 
+def _fold_preserving_length(text: str) -> str:
+    """Accent-fold for offset-safe matching: every char maps to exactly one char
+    (its first NFKD base char), so match positions index straight into `text`."""
+    out: list[str] = []
+    for ch in text.lower():
+        base = "".join(
+            c for c in unicodedata.normalize("NFKD", ch) if not unicodedata.combining(c)
+        )
+        out.append(base[0] if base else ch)
+    return "".join(out)
+
+
+def _window_chunk_text(text: str, cap: int, folded_keywords: list[str]) -> str:
+    """Truncate a long chunk to `cap` chars keeping the question-relevant window.
+
+    The naive prefix cut clips answer text that sits deep in a long chunk even
+    though the chunk was selected FOR that content (the lexical/vector lanes match
+    on the full text, the payload then shows only chars [0:cap]). When any salient
+    keyword hits past the prefix half, spend half the budget on the word-aligned
+    prefix (heading/context) and the other half on the window with the best
+    keyword coverage. No hits past the prefix -> exact legacy prefix cut.
+    """
+    if len(text) <= cap:
+        return text
+    if not folded_keywords:
+        return text[:cap]
+    folded = _fold_preserving_length(text)
+    half = cap // 2
+    late_anchors = sorted(
+        {
+            match.start()
+            for kw in folded_keywords
+            for match in re.finditer(re.escape(kw), folded)
+            if match.start() >= half
+        }
+    )
+    if not late_anchors:
+        return text[:cap]
+    window = cap - half - 3  # 3 chars for the " … " joiner
+    if window <= 0:
+        return text[:cap]
+    best_score: tuple[int, int, int] | None = None
+    best_start = half
+    for anchor in late_anchors:
+        start = max(half, min(anchor - 150, len(text) - window))
+        segment = folded[start : start + window]
+        kinds = sum(1 for kw in folded_keywords if kw in segment)
+        total = sum(segment.count(kw) for kw in folded_keywords)
+        score = (kinds, total, -start)
+        if best_score is None or score > best_score:
+            best_score = score
+            best_start = start
+    # Nudge both cut points back to a whitespace boundary for readability.
+    prefix_end = half
+    while prefix_end > half - 30 and prefix_end < len(text) and not text[prefix_end - 1].isspace():
+        prefix_end -= 1
+    start = best_start
+    while start > best_start - 30 and start > half and not text[start - 1].isspace():
+        start -= 1
+    return text[:prefix_end] + " … " + text[start : start + window]
+
+
 def _salient_keywords(question: str, limit: int = 8) -> list[str]:
     """Distinctive, accent-folded tokens (names, places, codes) for lexical chunk lookup."""
     out: list[str] = []
@@ -387,10 +449,11 @@ def read_docs_node(state: QAState) -> QAState:
                         }
                     )
 
+            salient = _salient_keywords(question)
             keyword_chunks = _lexical_chunks_for_docs(
                 db,
                 doc_ids,
-                _salient_keywords(question),
+                salient,
                 per_doc=getattr(settings, "ask_chunks_per_doc", 6),
             )
 
@@ -427,7 +490,10 @@ def read_docs_node(state: QAState) -> QAState:
                     ],
                     target_chunks,
                 )
-                chunks = [c["text"][:chunk_max_chars] for c in merged]
+                if getattr(settings, "ask_chunk_window_enabled", True):
+                    chunks = [_window_chunk_text(c["text"], chunk_max_chars, salient) for c in merged]
+                else:
+                    chunks = [c["text"][:chunk_max_chars] for c in merged]
                 if not chunks and doc.text:
                     chunks = [doc.text[:fallback_chars]]
                 payload.append(
@@ -523,7 +589,7 @@ def read_docs_node(state: QAState) -> QAState:
         return return_with_profile(
             state,
             "read",
-            {"evidence": evidence, "full_docs": full_docs},
+            {"evidence": evidence, "full_docs": full_docs, "read_payload": docs_payload},
             elapsed_seconds=round(elapsed, 3),
             skipped=False,
             docs=len(doc_ids),

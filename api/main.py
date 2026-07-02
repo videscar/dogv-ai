@@ -238,6 +238,7 @@ def _build_ask_response(result: dict[str, Any], payload: AskRequest) -> dict[str
             "candidate_docs": result.get("candidate_docs"),
             "evidence": result.get("evidence"),
             "profile": result.get("profile"),
+            "read_payload": result.get("read_payload"),
         }
     return response
 

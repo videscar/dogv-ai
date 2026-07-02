@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import re
 from typing import Any
 
+from .config import get_settings
 from .llm import LlmClient
 from .reader_extractors import (
     _clean_evidence,
@@ -40,6 +42,82 @@ _PINNED_DETAILS = {
     "Extracto con cantidades.",
     "Importe total/global de la convocatoria o bases.",
 }
+
+
+_ELLIPSIS_SPLIT = re.compile(r"\[\s*(?:\.\.\.|…)\s*\]|\.{3}|…")
+_REGROUND_WINDOW_CHARS = 800
+_REGROUND_CONTEXT_CHARS = 200
+_REGROUND_MIN_FRAGMENT = 15
+
+
+def _normalize_ws(text: str) -> str:
+    return re.sub(r"\s+", " ", text or "").strip()
+
+
+def _reground_evidence(
+    evidence: list[dict[str, Any]],
+    docs: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Force LLM quotes back onto the verbatim source text.
+
+    The reader sometimes returns a stitched "quote" — fragments joined with "…" —
+    which silently narrows a whole annex table to the rows it chose to echo
+    (Q11-ES: three "Renuncia" examples from a table whose majority cause is
+    "Decaimiento", flipping the synthesized answer). A quote that is not a
+    verbatim substring of its doc's payload chunks is replaced with the window of
+    the best-matching chunk around its fragments, so synthesis sees the actual
+    surrounding text. Verbatim quotes and quotes we cannot locate pass through
+    unchanged; doc attribution is never altered.
+    """
+    if not evidence or not docs:
+        return evidence
+    chunks_by_doc: dict[int, list[str]] = {}
+    for doc in docs:
+        doc_id = doc.get("document_id")
+        if doc_id is None:
+            continue
+        normed = [_normalize_ws(c) for c in (doc.get("chunks") or []) if c and c.strip()]
+        if normed:
+            chunks_by_doc[int(doc_id)] = normed
+    out: list[dict[str, Any]] = []
+    for item in evidence:
+        doc_id = item.get("doc_id") or item.get("document_id")
+        quote = _normalize_ws(item.get("quote") or "")
+        chunks = chunks_by_doc.get(int(doc_id)) if doc_id is not None else None
+        if not quote or not chunks:
+            out.append(item)
+            continue
+        if any(quote in chunk for chunk in chunks):
+            out.append(item)
+            continue
+        fragments = [
+            frag.strip(" .,;:¡!¿?\"'«»")
+            for frag in _ELLIPSIS_SPLIT.split(quote)
+        ]
+        fragments = [f for f in fragments if len(f) >= _REGROUND_MIN_FRAGMENT]
+        if not fragments:
+            out.append(item)
+            continue
+        best_idx: int | None = None
+        best_hits: list[int] = []
+        for idx, chunk in enumerate(chunks):
+            hits = [chunk.find(f) for f in fragments if f in chunk]
+            if len(hits) > len(best_hits):
+                best_idx = idx
+                best_hits = hits
+        if best_idx is None:
+            out.append(item)
+            continue
+        chunk = chunks[best_idx]
+        start = max(0, min(min(best_hits) - _REGROUND_CONTEXT_CHARS, len(chunk) - _REGROUND_WINDOW_CHARS))
+        window = chunk[start : start + _REGROUND_WINDOW_CHARS].strip()
+        if not window:
+            out.append(item)
+            continue
+        regrounded = dict(item)
+        regrounded["quote"] = window
+        out.append(regrounded)
+    return out
 
 
 def _phrase_hits(text: str, phrases: list[str]) -> int:
@@ -425,6 +503,8 @@ def extract_evidence(
     try:
         result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
         evidence = _clean_evidence(result.get("evidence") or [])
+        if evidence and getattr(get_settings(), "ask_quote_reground_enabled", True):
+            evidence = _reground_evidence(evidence, docs)
         eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
         program_total = _program_total_evidence(question, docs, full_docs=full_docs)
         if evidence:
