@@ -313,7 +313,8 @@ def read_docs_node(state: QAState) -> QAState:
     # Enumeration queries ("list all dispositions of mayo 2026") must read the whole
     # series, not the usual handful — widen the read budget to the enumeration cap so
     # the augmented candidates actually reach the answer node.
-    if getattr(settings, "enumeration_augment_enabled", False) and is_enumeration_query(question):
+    enumeration_query = is_enumeration_query(question)
+    if getattr(settings, "enumeration_augment_enabled", False) and enumeration_query:
         rerank_cap = getattr(settings, "ask_enumeration_max_candidates", rerank_cap)
     read_max_docs = max(read_max_docs, min(len(doc_ids), rerank_cap))
     expand_ratio = getattr(settings, "ask_rrf_expand_margin_ratio", 0.12)
@@ -501,7 +502,12 @@ def read_docs_node(state: QAState) -> QAState:
                     ],
                     target_chunks,
                 )
-                if getattr(settings, "ask_chunk_window_enabled", True):
+                # Enumeration answers list a series and are hypersensitive to payload
+                # composition — re-windowing chunks swaps borderline series members
+                # (Raul #30 deterministically traded one May-2026 A1 ref for another).
+                # Same guard RC4 needed for semantic anchors: keep the legacy prefix
+                # cut for enumeration queries.
+                if getattr(settings, "ask_chunk_window_enabled", True) and not enumeration_query:
                     chunks = [_window_chunk_text(c["text"], chunk_max_chars, salient) for c in merged]
                 else:
                     chunks = [c["text"][:chunk_max_chars] for c in merged]

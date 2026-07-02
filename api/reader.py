@@ -4,6 +4,7 @@ import re
 from typing import Any
 
 from .config import get_settings
+from .enumeration import is_enumeration_query
 from .llm import LlmClient
 from .reader_extractors import (
     _clean_evidence,
@@ -503,7 +504,14 @@ def extract_evidence(
     try:
         result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
         evidence = _clean_evidence(result.get("evidence") or [])
-        if evidence and getattr(get_settings(), "ask_quote_reground_enabled", True):
+        # Enumeration guard: series answers are hypersensitive to evidence
+        # composition (see the matching guard in read_docs_node) — leave their
+        # quotes untouched.
+        if (
+            evidence
+            and getattr(get_settings(), "ask_quote_reground_enabled", True)
+            and not is_enumeration_query(question)
+        ):
             evidence = _reground_evidence(evidence, docs)
         eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
         program_total = _program_total_evidence(question, docs, full_docs=full_docs)
