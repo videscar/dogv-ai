@@ -1,5 +1,5 @@
 [Unit]
-Description=DOGV AI chat LLM (vLLM Qwen3.6-27B int4-AutoRound, TP2, MTP)
+Description=DOGV AI chat LLM (vLLM 0.23.0, Qwen3.6-27B int4-AutoRound, TP2, MTP, bf16)
 After=network-online.target
 Wants=network-online.target
 # Cold start is ~2.5min (torch.compile + warmup + MTP drafter); don't thrash on
@@ -11,28 +11,37 @@ StartLimitBurst=5
 Type=exec
 User=ai-server
 WorkingDirectory=/home/ai-server/dogv-ai
-# vllm-env/bin must be on PATH: flashinfer JIT-compiles its prefill kernel on the
-# first request via a bare `ninja` subprocess, which ships in that env.
-Environment="PATH=/home/ai-server/vllm-env/bin:/usr/local/bin:/usr/bin:/bin"
+# Tuned 2026-06-26: upgraded from vLLM 0.20.0 (~/vllm-env) to 0.23.0
+# (~/vllm-023-env) — ~5-8% faster decode, 3x KV headroom, latest Qwen3.5/hybrid
+# /MTP fixes. dtype bfloat16 (native; was half), +max-num-batched-tokens 8192,
+# dropped inert --enable-auto-tool-choice/--tool-call-parser. TP2 confirmed
+# faster than single-GPU (decode is VRAM-bandwidth-bound; the no-P2P PCIe
+# all-reduce is cheaper than the halved per-GPU weight reads).
+# vllm-023-env/bin must be on PATH: flashinfer JIT-compiles its prefill kernel on
+# the first request via a bare `ninja` subprocess, which is symlinked into it.
+Environment="PATH=/home/ai-server/vllm-023-env/bin:/usr/local/bin:/usr/bin:/bin"
 Environment="CUDA_VISIBLE_DEVICES=0,1"
 Environment="PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True"
-ExecStart=/home/ai-server/vllm-env/bin/vllm serve /home/ai-server/models/Qwen3.6-27B-int4-AutoRound \
+ExecStart=/home/ai-server/vllm-023-env/bin/vllm serve /home/ai-server/models/Qwen3.6-27B-int4-AutoRound \
   --served-model-name qwen3.6-27b \
-  --dtype half --language-model-only --trust-remote-code \
+  --dtype bfloat16 --language-model-only --trust-remote-code \
   --tensor-parallel-size 2 \
   --max-model-len 131072 \
   --gpu-memory-utilization 0.88 \
   --max-num-seqs 2 \
+  --max-num-batched-tokens 8192 \
   --kv-cache-dtype fp8 \
   --enable-prefix-caching \
   --reasoning-parser qwen3 \
-  --enable-auto-tool-choice --tool-call-parser qwen3_xml \
   --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
   --override-generation-config '{"temperature":0.6,"top_p":0.95,"top_k":20,"min_p":0.0}' \
   --host 127.0.0.1 --port 8000
 # Hold the unit "activating" until the server answers /health, so dependents
 # (ordered After=) only start once chat is actually serving.
 ExecStartPost=/bin/bash -c 'for _ in $(seq 1 330); do curl -fsS -m 5 http://127.0.0.1:8000/health >/dev/null 2>&1 && exit 0; sleep 1; done; echo "vLLM chat not healthy after 330s"; exit 1'
+# Warm the long-prefill kernel so the first real RAG question doesn't pay the
+# one-time torch.compile/flashinfer cost. Best-effort (script always exits 0).
+ExecStartPost=/home/ai-server/dogv-ai/.venv/bin/python /home/ai-server/dogv-ai/scripts/warm_chat_longctx.py --base-url http://127.0.0.1:8000 --model qwen3.6-27b
 TimeoutStartSec=420
 Restart=on-failure
 RestartSec=15

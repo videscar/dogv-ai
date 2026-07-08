@@ -20,9 +20,10 @@ its backends are serving; Chainlit starts after the API. Coupling is `Wants=`
 already degrades gracefully (503 → UI message). `dogv.target` groups all four.
 
 Key gotchas baked into the units (see also `demo_ctl.sh` comments):
-- **chat**: `vllm-env/bin` on `PATH` for flashinfer's `ninja` JIT; `KillMode=control-group`
+- **chat**: `vllm-023-env/bin` on `PATH` for flashinfer's `ninja` JIT; `KillMode=control-group`
   reaps TP workers (else they orphan and pin ~10GB/GPU); `TimeoutStartSec=420`
-  for the ~2.5min cold start.
+  for the ~2.5min cold start; an `ExecStartPost` runs `scripts/warm_chat_longctx.py`
+  so the first real query doesn't pay the one-time long-prefill kernel compile.
 - **embed**: `--verbosity 0` (default logging crashed it ~every 40min under load).
 
 ### Install (one-time, requires sudo)
