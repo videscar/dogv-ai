@@ -1,6 +1,7 @@
 # AGENTS.md
 
-Project: DOGV AI local assistant (FastAPI + LangGraph + PostgreSQL + llama.cpp).
+Project: DOGV AI local assistant (FastAPI + LangGraph + PostgreSQL; chat LLM on
+vLLM, embeddings on llama.cpp — see ops/README.md).
 This file guides coding agents working in this repo.
 
 ## Environment
@@ -14,8 +15,8 @@ This file guides coding agents working in this repo.
 - Reset tables: `python scripts/reset_db.py [--with-cache]`.
 
 ## Run the API
-- Start server: `uvicorn api.main:app --host 0.0.0.0 --port 8088` (or use `bash scripts/demo_ctl.sh start` for the full stack incl. llama-servers + Chainlit).
-- Endpoints: `GET /health`, `GET /issues`, `GET /issues/{issue_id}/documents`, `POST /ask`.
+- Start server: `uvicorn api.main:app --host 0.0.0.0 --port 8088` (or use `bash scripts/demo_ctl.sh start` for the full stack incl. vLLM chat + llama.cpp embed servers + Chainlit).
+- Endpoints: `GET /health`, `GET /ready`, `GET /issues`, `GET /issues/{issue_id}/documents`, `POST /ask`, `POST /ask/stream`.
 
 ## Ingest and indexing
 - Daily or bootstrap: `python scripts/maintain_indices.py --daily` or `--bootstrap`.
@@ -24,9 +25,11 @@ This file guides coding agents working in this repo.
 - Rebuild BM25: `python scripts/rebuild_tsv.py --language va_va --ts-config catalan --batch-size 5000`.
 
 ## Evaluation
-- Build eval set: `python scripts/build_eval_set.py --size 200 --output data/eval_set_v1.json`.
-- Run eval: `python scripts/run_eval.py --input data/eval_set_v1.json --include-nofilter`.
+- Hard suite (100Q, retrieval + answer quality): see `data/eval_v2/README.md`.
+- Retrieval run: `python scripts/run_eval.py --input data/eval_v2/retrieval_input.json`, then `python eval_v2/retrieval_metrics.py data/eval_reports/<run_id>.json`.
+- Answer run: `python eval_v2/collect_answers.py --base-url http://127.0.0.1:8088`, judge, then `python eval_v2/score_answers.py <judgments> <answers>`.
 - Regression gate (default KPI: `hybrid,rerank` at `k=5,10`): `python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json`.
+- External-tester regression (30Q vs prod): `python scripts/run_tester_regression.py`.
 
 ## Code style
 
