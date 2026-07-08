@@ -101,8 +101,6 @@ class AutoIngestPolicy:
 
 @dataclass(frozen=True)
 class AnswerPolicy:
-    mutators_enabled: bool
-    missing_notes_enabled: bool
     validator_enabled: bool
     repair_attempts: int
     claim_guard_mode: str
@@ -274,8 +272,6 @@ class Settings(BaseSettings):
     warm_index_months: int = 24
 
     # Answer pipeline
-    answer_mutators_enabled: bool = False
-    answer_missing_notes_enabled: bool = False
     answer_validator_enabled: bool = True
     answer_repair_attempts: int = 1
     # current_strict flags ANY answer number absent from cited source -> dumps
@@ -413,8 +409,6 @@ class Settings(BaseSettings):
     @property
     def answer(self) -> AnswerPolicy:
         return AnswerPolicy(
-            mutators_enabled=self.answer_mutators_enabled,
-            missing_notes_enabled=self.answer_missing_notes_enabled,
             validator_enabled=self.answer_validator_enabled,
             repair_attempts=self.answer_repair_attempts,
             claim_guard_mode=self.answer_claim_guard_mode,

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Any
 
 from .answer_fallback import (
@@ -9,7 +8,6 @@ from .answer_fallback import (
     no_evidence_fallback,
     validation_fallback_answer,
 )
-from .answer_mutators import apply_coverage_mutators
 from .answer_validator import (
     chat_json_with_retry,
     collect_citation_ids,
@@ -54,8 +52,6 @@ Documentos completos (si existen):
 Si no hay evidencia suficiente y no hay documentos completos, di que no hay publicaciones encontradas y pide mas detalles. Si hay evidencia que es claramente la misma norma que pregunta pero con la referencia (numero o fecha) mal citada, corrige la referencia y responde con ella; pero no sustituyas la norma preguntada por otra distinta solo porque trate un tema parecido.
 Si hay documentos completos, puedes usarlos para aportar detalle, pero cita los doc_id relevantes.
 Responde con el nivel de detalle que permita la evidencia y cubre cada parte de la pregunta.
-Notas:
-{missing_notes}
 """
 
 settings = get_settings()
@@ -152,39 +148,6 @@ def _format_evidence(
     return "\n\n---\n\n".join(blocks)
 
 
-def _needs_amount(question: str) -> bool:
-    return bool(re.search(r"\b(quantia|cuant[ií]a|importe|cantidad|euros?|€)\b", question, re.IGNORECASE))
-
-
-def _needs_beneficiary(question: str) -> bool:
-    if re.search(
-        r"\b(beneficiari|beneficiario|sol·licit[a-z]*|solicit[a-z]*|destinatari|destinatario|propietari|propietario)\b",
-        question,
-        re.IGNORECASE,
-    ):
-        return True
-    return bool(
-        re.search(
-            r"\b(qui|qui[eé]n)(?:\s+\w+){0,3}\s+(pot|poden|puede|pueden|sol·licit[a-z]*|solicit[a-z]*)\b",
-            question,
-            re.IGNORECASE,
-        )
-    )
-
-
-def _notes_for_missing_fields(question: str, evidence: list[dict[str, Any]], full_docs: list[dict[str, Any]] | None) -> str:
-    text = " ".join(str(item.get("quote", "")) for item in (evidence or []))
-    if full_docs:
-        text += " " + " ".join(str(doc.get("text", "")) for doc in full_docs)
-    notes = []
-    if _needs_amount(question):
-        if not re.search(r"\d", text):
-            notes.append("No hay cuantias explicitadas en las evidencias.")
-    if _needs_beneficiary(question) and not re.search(r"\b(benefici|sol·licitud|solicitud|destinatari|propietari)\b", text, re.IGNORECASE):
-        notes.append("No se indica quien puede solicitar/beneficiarios en las evidencias.")
-    return "\n".join(notes) if notes else "Sin notas."
-
-
 def build_answer(
     question: str,
     language: str,
@@ -197,11 +160,6 @@ def build_answer(
     evidence_block = _format_evidence(evidence, doc_meta) or "Ninguna."
     full_docs_block = _format_full_docs(full_docs)
     conversation_block = _format_history(history)
-    missing_notes = (
-        _notes_for_missing_fields(question, evidence, full_docs)
-        if settings.answer_missing_notes_enabled
-        else "Sin notas."
-    )
     system_prompt = ANSWER_SYSTEM
     if "gpt-oss" in str(getattr(client, "model", "") or "").lower():
         system_prompt = f"{ANSWER_SYSTEM}\nReasoning: high"
@@ -215,7 +173,6 @@ def build_answer(
                 conversation=conversation_block,
                 evidence=evidence_block,
                 full_docs=full_docs_block,
-                missing_notes=missing_notes,
             ),
         },
     ]
@@ -239,11 +196,7 @@ def build_answer(
         answer_text = str(result.get("answer") or "").strip()
         citations = normalize_citations(result.get("citations"))
 
-        if settings.answer_mutators_enabled:
-            answer_text = apply_coverage_mutators(answer_text, question, language)
-
         if settings.answer_validator_enabled:
-            coverage_mutators = apply_coverage_mutators if settings.answer_mutators_enabled else None
             outcome = validate_and_repair(
                 client=client,
                 question=question,
@@ -252,10 +205,8 @@ def build_answer(
                 full_docs=full_docs,
                 evidence_block=evidence_block,
                 full_docs_block=full_docs_block,
-                missing_notes=missing_notes,
                 answer_text=answer_text,
                 citations=citations,
-                coverage_mutators=coverage_mutators,
             )
             answer_text = outcome["answer_text"]
             citations = outcome["citations"]

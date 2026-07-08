@@ -16,9 +16,7 @@ class _IdentityClient:
 
 def test_identity_answer_has_no_beneficiary_injection(monkeypatch):
     monkeypatch.setattr(answer, "LlmClient", _IdentityClient)
-    monkeypatch.setattr(answer.settings, "answer_mutators_enabled", False)
     monkeypatch.setattr(answer.settings, "answer_validator_enabled", True)
-    monkeypatch.setattr(answer.settings, "answer_missing_notes_enabled", False)
     monkeypatch.setattr(answer.settings, "answer_repair_attempts", 1)
 
     result = answer.build_answer(

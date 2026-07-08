@@ -39,7 +39,6 @@ def _capture(monkeypatch):
     monkeypatch.setattr(ans, "LlmClient", _DummyClient)
     monkeypatch.setattr(ans, "chat_json_with_retry", _fake_retry)
     monkeypatch.setattr(ans.settings, "answer_validator_enabled", False)
-    monkeypatch.setattr(ans.settings, "answer_mutators_enabled", False)
     return captured
 
 

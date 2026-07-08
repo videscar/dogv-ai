@@ -36,8 +36,6 @@ Errores de validacion detectados:
 {validation_errors}
 
 Corrige la respuesta y las citas para resolver esos errores sin introducir hechos fuera de la evidencia.
-Notas:
-{missing_notes}
 """
 
 settings = get_settings()
@@ -361,7 +359,6 @@ def _repair_answer_once(
     previous_answer: str,
     previous_citations: list[int],
     validation_errors: list[str],
-    missing_notes: str,
 ) -> dict[str, Any]:
     messages = [
         {"role": "system", "content": ANSWER_REPAIR_SYSTEM},
@@ -375,7 +372,6 @@ def _repair_answer_once(
                 previous_answer=previous_answer or "(vacia)",
                 previous_citations=previous_citations,
                 validation_errors="\n".join(f"- {item}" for item in validation_errors) or "- none",
-                missing_notes=missing_notes,
             ),
         },
     ]
@@ -391,10 +387,8 @@ def validate_and_repair(
     full_docs: list[dict[str, Any]] | None,
     evidence_block: str,
     full_docs_block: str,
-    missing_notes: str,
     answer_text: str,
     citations: list[int],
-    coverage_mutators,
 ) -> dict[str, Any]:
     diagnostics: dict[str, Any] = {
         "validation_errors_initial": [],
@@ -461,13 +455,9 @@ def validate_and_repair(
                     previous_answer=answer_text,
                     previous_citations=citations,
                     validation_errors=validation_errors,
-                    missing_notes=missing_notes,
                 )
                 candidate_answer = str(repaired.get("answer") or "").strip()
                 candidate_citations = normalize_citations(repaired.get("citations"))
-
-                if coverage_mutators is not None:
-                    candidate_answer = coverage_mutators(candidate_answer, question, language)
 
                 candidate_validation = validate_answer_details(
                     answer_text=candidate_answer,
