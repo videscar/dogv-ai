@@ -25,6 +25,14 @@ data/missing_chunks_detailed_*.csv
 # Misc
 .ipynb_checkpoints/
 logs/
+.pytest_cache/
+
+# Local tooling / scratch (never source of truth)
+.claude/
+.files/
+deploy/
+/claude
+*.docx
 
 # eval scratch subset runs (intermediate; not authoritative baselines)
 data/eval_v2/answers_w3_unitaware.jsonl
