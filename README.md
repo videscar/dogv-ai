@@ -16,6 +16,35 @@ local (2× GPU de consumo); no sale ningún dato a servicios externos.
 - **UI**: Chainlit (`:8501`) con streaming de progreso.
 - Idiomas: castellano y valenciano (BM25 con configuración `catalan` y fallback a `spanish`).
 
+## El pipeline de un vistazo
+
+```mermaid
+flowchart TD
+    Q([Pregunta + historial]) --> CTX["contextualize · reescritura multi-turno"]
+    CTX --> INT["intent · idioma, tipo, entidades, fechas"]
+    INT --> TG{"temporal_guard"}
+    TG -->|marco temporal inválido| REJ([rechazo explícito])
+    TG -->|ok| OI["online_ingest · frescura (off: la cubre el timer diario)"]
+    OI --> RET
+    subgraph RET["retrieve · recuperación híbrida multi-carril"]
+        V["vector de chunks"] --> RRF
+        B["BM25 de chunks · amplia + estricta + facetas + PRF"] --> RRF
+        TB["BM25 de títulos"] --> RRF
+        TV["vector de títulos"] --> RRF
+        H["HyDE · solo si el pool base es de baja confianza"] -.-> RRF
+        RRF["fusión RRF ponderada · anclas semánticas · relajación de filtros"]
+    end
+    RET --> DEC{"¿cita una norma concreta<br/>o pool vacío?"}
+    DEC -->|sí| BF["backfill · resolver en el portal DOGV<br/>e ingerir al vuelo"]
+    BF -->|documento nuevo ingerido| RET
+    BF -->|ya en corpus / no resuelto| RR
+    DEC -->|no| RR["rerank · LLM top-k + serie de enumeración<br/>+ supresión de ediciones obsoletas"]
+    RR --> RD["read · ventana de keywords + citation floor<br/>+ re-anclaje de citas + doc completo"]
+    RD --> ANS["answer · síntesis determinista + guardia de cifras"]
+    ANS --> OUT([respuesta con citas])
+    ANS --> ABS([abstención explícita si falta evidencia])
+```
+
 ## Arquitectura
 
 ### 1) Ingesta (diaria, systemd timer)
