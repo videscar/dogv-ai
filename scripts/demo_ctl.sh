@@ -29,13 +29,24 @@ CHAT_LLM_ALIAS="${CHAT_LLM_ALIAS:-qwen3.6-27b}"
 #  - cold start is ~2.5min (torch.compile + warmup + MTP drafter load).
 #  - the worker subprocesses must be reaped as a process group on stop, else they
 #    orphan and pin ~10GB/GPU (handled by stop_chat_llm).
-VLLM_BIN="${VLLM_BIN:-${HOME}/vllm-env/bin/vllm}"
+# vLLM 0.23.0 (isolated ~/vllm-023-env) is the tuned default — benchmarked
+# ~5-8% faster decode than 0.20.0 with 3x the KV headroom and the latest
+# Qwen3.5/hybrid/MTP fixes. To fall back to the older 0.20.0 build, set
+# VLLM_BIN=~/vllm-env/bin/vllm (and PATH accordingly for flashinfer's ninja).
+VLLM_BIN="${VLLM_BIN:-${HOME}/vllm-023-env/bin/vllm}"
 VLLM_CHAT_MODEL="${VLLM_CHAT_MODEL:-${HOME}/models/Qwen3.6-27B-int4-AutoRound}"
 VLLM_CHAT_TP="${VLLM_CHAT_TP:-2}"
 VLLM_CHAT_CTX="${VLLM_CHAT_CTX:-131072}"
 VLLM_CHAT_GPU_UTIL="${VLLM_CHAT_GPU_UTIL:-0.88}"
 VLLM_CHAT_CUDA_DEVICES="${VLLM_CHAT_CUDA_DEVICES:-0,1}"
 VLLM_CHAT_HEALTH_WAIT="${VLLM_CHAT_HEALTH_WAIT:-300}"
+# bfloat16 matches the model's native dtype (avoids the bf16->fp16 cast; same
+# Ampere speed). max-num-batched-tokens 8192 lifts the spec-decode default of
+# 2048 (fewer prefill chunks). Tool-call flags are intentionally dropped: the
+# app does no function calling and they add grammar-matcher overhead.
+VLLM_CHAT_DTYPE="${VLLM_CHAT_DTYPE:-bfloat16}"
+VLLM_CHAT_BATCH="${VLLM_CHAT_BATCH:-8192}"
+VLLM_CHAT_SPEC_TOKENS="${VLLM_CHAT_SPEC_TOKENS:-3}"
 
 # llama-server (chat fallback, CHAT_BACKEND=llamacpp) — reuses an existing
 # instance when one is already listening, so other projects sharing the same
@@ -146,16 +157,16 @@ start_chat_vllm() {
       "${CHAT_LLM_PID_FILE}" \
       "${VLLM_BIN}" serve "${VLLM_CHAT_MODEL}" \
       --served-model-name "${CHAT_LLM_ALIAS}" \
-      --dtype half --language-model-only --trust-remote-code \
+      --dtype "${VLLM_CHAT_DTYPE}" --language-model-only --trust-remote-code \
       --tensor-parallel-size "${VLLM_CHAT_TP}" \
       --max-model-len "${VLLM_CHAT_CTX}" \
       --gpu-memory-utilization "${VLLM_CHAT_GPU_UTIL}" \
       --max-num-seqs 2 \
+      --max-num-batched-tokens "${VLLM_CHAT_BATCH}" \
       --kv-cache-dtype fp8 \
       --enable-prefix-caching \
       --reasoning-parser qwen3 \
-      --enable-auto-tool-choice --tool-call-parser qwen3_xml \
-      --speculative-config '{"method":"mtp","num_speculative_tokens":3}' \
+      --speculative-config "{\"method\":\"mtp\",\"num_speculative_tokens\":${VLLM_CHAT_SPEC_TOKENS}}" \
       --override-generation-config '{"temperature":0.6,"top_p":0.95,"top_k":20,"min_p":0.0}' \
       --host "${CHAT_LLM_HOST}" --port "${CHAT_LLM_PORT}" \
     >"${CHAT_LLM_LOG_FILE}" 2>&1 &
@@ -167,6 +178,11 @@ start_chat_vllm() {
     tail -n 40 "${CHAT_LLM_LOG_FILE}" || true
     return 1
   fi
+  # Fire one large prompt so the first real RAG question doesn't eat the one-time
+  # torch.compile/flashinfer cost for the long-prefill shape. Best-effort.
+  echo "Warming long-context prefill kernel..."
+  "${PYTHON_BIN}" "${ROOT_DIR}/scripts/warm_chat_longctx.py" \
+    --base-url "${CHAT_LLM_URL}" --model "${CHAT_LLM_ALIAS}" >>"${CHAT_LLM_LOG_FILE}" 2>&1 || true
   echo "Chat vLLM started (pid=${pid})"
 }
 
