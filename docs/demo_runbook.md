@@ -26,8 +26,8 @@
    - Starts the embed llama-server if absent.
    - Starts the chat llama-server only if no instance is already healthy on `:8000` (so other projects sharing the chat model are not disturbed).
    - Starts FastAPI on `:8088` and Chainlit on `:8501`.
-4. Warm models (single request to each server):
-   - `.venv/bin/python scripts/warm_models.py`
+4. Warm models (long-context chat warmup before the demo):
+   - `.venv/bin/python scripts/warm_chat_longctx.py`
 5. Check status:
    - `bash scripts/demo_ctl.sh status`
 
@@ -81,7 +81,7 @@ Rules:
 - Mitigation: expected when readiness gate is enabled; wait for `/ready.ready=true`.
 
 3. LLM timeout or no response:
-- Mitigation: run `scripts/warm_models.py`, verify `curl http://127.0.0.1:8000/v1/models` and `curl http://127.0.0.1:8001/health`, check GPU pressure with `nvidia-smi`, reduce concurrent load.
+- Mitigation: run `scripts/warm_chat_longctx.py`, verify `curl http://127.0.0.1:8000/v1/models` and `curl http://127.0.0.1:8001/health`, check GPU pressure with `nvidia-smi`, reduce concurrent load.
 
 4. Embed llama-server fails to start:
 - Mitigation: confirm `EMBED_LLM_MODEL` GGUF path exists and is readable; check `logs/demo/embed_llm.log` for VRAM/OOM errors; bge-m3 needs ~600MB on GPU.

@@ -11,7 +11,7 @@ signatura is then resolved to its disposition id via the full-text search.
 This module is the single source of truth for that enumeration/resolution. It is
 used both by the live ingest pipeline (`ingest_pipeline` calls
 `missing_sibling_disposicion_ids` per date so every ingest path captures both
-editions) and by the one-off backfill script (`scripts/recover_bis_editions.py`).
+editions) and by the one-off backfill script (`scripts/oneoff/recover_bis_editions.py`).
 """
 from __future__ import annotations
 
