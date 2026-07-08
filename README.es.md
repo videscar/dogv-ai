@@ -164,27 +164,23 @@ respuesta con un error factual material. Cada run queda ligado al commit exacto 
 produjo (sidecar `.meta.json` + `/health`). Detalle: `data/eval_v2/README.md` y los
 informes en `data/eval_v2/*.md`.
 
-<!-- TODO(eval-refresh 2026-07-08): sustituir por los números del re-run en curso sobre
-     master d11a8c2 (collect_answers → judge → score_answers; run_eval → retrieval_metrics;
-     run_tester_regression) en cuanto termine. Los de abajo son del último run juzgado
-     (junio 2026, mismo pipeline). -->
-Últimos resultados (100Q, junio 2026):
+Últimos resultados (100Q, re-run completo sobre master, 08-07-2026, config de producción):
 
 | Métrica | Valor |
 |---|---|
-| Puntuación global (con puerta factual) | **0.783** |
-| Fidelidad a la evidencia | 0.978 |
-| Tasa de error crítico | 3.3% |
+| Puntuación global (con puerta factual) | **0.700** (baseline de junio con la misma config: 0.622) |
+| Fidelidad a la evidencia | 0.989 |
+| Tasa de error crítico | 1.1% (junio: 6.7%) |
 | Abstención fuera de ámbito | 10/10 |
-| Recuperación (rerank) R@5 = R@10 | 0.767 |
-| MRR (rerank) | 0.600 |
+| Recuperación (rerank) R@10 | 0.744 |
+| MRR (rerank) | 0.582 |
 | Set de regresión del tester externo (30Q) | 30/30 |
 
-**Limitaciones conocidas (medidas, no teóricas):** el recall satura en 0.767 a partir de
-k=5 — un ~23% de las preguntas difíciles nunca recupera el documento oro (techo de los
-embeddings, dominado por consultas vagas y por el valenciano, que va ~11 puntos por detrás
-del castellano); la latencia mediana de `/ask` es ~50–60 s (pipeline multi-etapa con un
-27B local); no hay OCR para PDFs escaneados.
+**Limitaciones conocidas (medidas, no teóricas):** un ~25% de las preguntas difíciles
+nunca recupera el documento oro (techo de los embeddings, dominado por consultas vagas —
+R@10 0.44 — y por el valenciano, que va ~7 puntos por detrás del castellano); la latencia
+mediana de `/ask` es ~50–60 s (pipeline multi-etapa con un 27B local); no hay OCR para
+PDFs escaneados.
 
 Comandos:
 

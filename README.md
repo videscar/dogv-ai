@@ -168,27 +168,22 @@ answer containing a material factual error. Every run is tied to the exact commi
 that produced it (a `.meta.json` sidecar + `/health`). Details:
 `data/eval_v2/README.md` and the reports in `data/eval_v2/*.md`.
 
-<!-- TODO(eval-refresh 2026-07-08): replace with the numbers from the in-flight
-     re-run on master d11a8c2 (collect_answers → judge → score_answers; run_eval →
-     retrieval_metrics; run_tester_regression) once it finishes. The numbers below
-     are from the latest judged run (June 2026, same pipeline). -->
-Latest results (100Q, June 2026):
+Latest results (100Q, full re-run on master, 2026-07-08, production config):
 
 | Metric | Value |
 |---|---|
-| Overall score (with factual gate) | **0.783** |
-| Faithfulness to evidence | 0.978 |
-| Critical error rate | 3.3% |
+| Overall score (with factual gate) | **0.700** (June baseline on same config: 0.622) |
+| Faithfulness to evidence | 0.989 |
+| Critical error rate | 1.1% (June: 6.7%) |
 | Out-of-scope abstention | 10/10 |
-| Retrieval (rerank) R@5 = R@10 | 0.767 |
-| MRR (rerank) | 0.600 |
+| Retrieval (rerank) R@10 | 0.744 |
+| MRR (rerank) | 0.582 |
 | External tester regression set (30Q) | 30/30 |
 
-**Known limitations (measured, not theoretical):** recall saturates at 0.767 from
-k=5 onwards — ~23% of the hard questions never retrieve the gold document (an
-embeddings ceiling, dominated by vague queries and by Valencian, which trails
-Spanish by ~11 points); median `/ask` latency is ~50–60 s (a multi-stage pipeline
-on a local 27B); no OCR for scanned PDFs.
+**Known limitations (measured, not theoretical):** ~25% of the hard questions never
+retrieve the gold document (an embeddings ceiling, dominated by vague queries —
+R@10 0.44 — and by Valencian, which trails Spanish by ~7 points); median `/ask`
+latency is ~50–60 s (a multi-stage pipeline on a local 27B); no OCR for scanned PDFs.
 
 Commands:
 
