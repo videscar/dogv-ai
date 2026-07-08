@@ -4,49 +4,49 @@
    "n": 100,
    "n_answerable": 90,
    "n_oos": 10,
-   "correctness_avg": 0.672,
-   "faithfulness_rate": 1.0,
-   "critical_error_rate": 0.022,
-   "gated_score": 0.667,
-   "abstention_rate": 0.9
+   "correctness_avg": 0.7,
+   "faithfulness_rate": 0.989,
+   "critical_error_rate": 0.011,
+   "gated_score": 0.7,
+   "abstention_rate": 1.0
   },
   "cat:clean": {
    "n": 25,
    "n_answerable": 25,
    "n_oos": 0,
-   "correctness_avg": 0.6,
-   "faithfulness_rate": 1.0,
-   "critical_error_rate": 0.04,
-   "gated_score": 0.6
+   "correctness_avg": 0.68,
+   "faithfulness_rate": 0.96,
+   "critical_error_rate": 0.0,
+   "gated_score": 0.68
   },
   "lang:es": {
    "n": 50,
    "n_answerable": 45,
    "n_oos": 5,
-   "correctness_avg": 0.644,
-   "faithfulness_rate": 1.0,
-   "critical_error_rate": 0.022,
-   "gated_score": 0.644,
-   "abstention_rate": 0.8
+   "correctness_avg": 0.744,
+   "faithfulness_rate": 0.978,
+   "critical_error_rate": 0.0,
+   "gated_score": 0.744,
+   "abstention_rate": 1.0
   },
   "lang:va": {
    "n": 50,
    "n_answerable": 45,
    "n_oos": 5,
-   "correctness_avg": 0.7,
+   "correctness_avg": 0.656,
    "faithfulness_rate": 1.0,
    "critical_error_rate": 0.022,
-   "gated_score": 0.689,
+   "gated_score": 0.656,
    "abstention_rate": 1.0
   },
   "cat:annex": {
    "n": 14,
    "n_answerable": 14,
    "n_oos": 0,
-   "correctness_avg": 0.714,
+   "correctness_avg": 0.857,
    "faithfulness_rate": 1.0,
    "critical_error_rate": 0.0,
-   "gated_score": 0.714
+   "gated_score": 0.857
   },
   "cat:vague": {
    "n": 16,
@@ -61,34 +61,34 @@
    "n": 16,
    "n_answerable": 16,
    "n_oos": 0,
-   "correctness_avg": 0.812,
+   "correctness_avg": 0.719,
    "faithfulness_rate": 1.0,
    "critical_error_rate": 0.062,
-   "gated_score": 0.781
+   "gated_score": 0.719
   },
   "cat:wrong_ref": {
    "n": 10,
    "n_answerable": 10,
    "n_oos": 0,
-   "correctness_avg": 0.55,
+   "correctness_avg": 0.5,
    "faithfulness_rate": 1.0,
    "critical_error_rate": 0.0,
-   "gated_score": 0.55
+   "gated_score": 0.5
   },
   "cat:multihop": {
    "n": 9,
    "n_answerable": 9,
    "n_oos": 0,
-   "correctness_avg": 0.667,
+   "correctness_avg": 0.722,
    "faithfulness_rate": 1.0,
    "critical_error_rate": 0.0,
-   "gated_score": 0.667
+   "gated_score": 0.722
   },
   "cat:out_of_scope": {
    "n": 10,
    "n_answerable": 0,
    "n_oos": 10,
-   "abstention_rate": 0.9
+   "abstention_rate": 1.0
   }
  },
  "per_query": [
@@ -97,11 +97,11 @@
    "category": "clean",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
+   "abstained": false,
+   "gated": 0.5,
    "n_citations": 1
   },
   {
@@ -109,23 +109,23 @@
    "category": "clean",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
-   "n_citations": 1
+   "abstained": true,
+   "gated": 0.0,
+   "n_citations": 3
   },
   {
    "id": "v2-003",
    "category": "clean",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
+   "abstained": false,
+   "gated": 0.0,
    "n_citations": 1
   },
   {
@@ -136,9 +136,9 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.0,
-   "n_citations": 3
+   "n_citations": 1
   },
   {
    "id": "v2-005",
@@ -148,9 +148,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 6
+   "n_citations": 3
   },
   {
    "id": "v2-006",
@@ -160,20 +160,20 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-007",
    "category": "clean",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 2
   },
   {
@@ -184,7 +184,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -196,7 +196,7 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.0,
    "n_citations": 1
   },
@@ -208,9 +208,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-011",
@@ -220,7 +220,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -232,7 +232,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -244,9 +244,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-014",
@@ -256,7 +256,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -268,9 +268,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 2
+   "n_citations": 1
   },
   {
    "id": "v2-016",
@@ -280,7 +280,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -292,7 +292,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 2
   },
@@ -304,9 +304,9 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.0,
-   "n_citations": 8
+   "n_citations": 1
   },
   {
    "id": "v2-019",
@@ -316,7 +316,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -328,7 +328,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -340,9 +340,9 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 8
+   "n_citations": 5
   },
   {
    "id": "v2-022",
@@ -352,9 +352,9 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 7
+   "n_citations": 5
   },
   {
    "id": "v2-023",
@@ -364,21 +364,21 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 2
+   "n_citations": 1
   },
   {
    "id": "v2-024",
    "category": "vague",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
-   "n_citations": 1
+   "abstained": true,
+   "gated": 0.0,
+   "n_citations": 3
   },
   {
    "id": "v2-025",
@@ -388,7 +388,7 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
    "n_citations": 5
   },
@@ -400,9 +400,9 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 9
+   "n_citations": 7
   },
   {
    "id": "v2-027",
@@ -412,9 +412,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 3
+   "n_citations": 1
   },
   {
    "id": "v2-028",
@@ -424,9 +424,9 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 7
+   "n_citations": 3
   },
   {
    "id": "v2-029",
@@ -436,9 +436,9 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.5,
-   "n_citations": 9
+   "n_citations": 3
   },
   {
    "id": "v2-030",
@@ -448,9 +448,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 4
+   "n_citations": 1
   },
   {
    "id": "v2-031",
@@ -460,21 +460,21 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-032",
    "category": "colloquial",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 2,
    "faithful": 1,
-   "critical_error": true,
-   "abstained": null,
-   "gated": 0.0,
-   "n_citations": 2
+   "critical_error": false,
+   "abstained": false,
+   "gated": 1.0,
+   "n_citations": 1
   },
   {
    "id": "v2-033",
@@ -484,7 +484,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -496,20 +496,20 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 2
+   "n_citations": 3
   },
   {
    "id": "v2-035",
    "category": "colloquial",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 1
   },
   {
@@ -517,12 +517,12 @@
    "category": "colloquial",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
-   "n_citations": 2
+   "abstained": false,
+   "gated": 1.0,
+   "n_citations": 1
   },
   {
    "id": "v2-037",
@@ -532,7 +532,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -541,12 +541,12 @@
    "category": "colloquial",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
-   "n_citations": 1
+   "abstained": true,
+   "gated": 0.0,
+   "n_citations": 3
   },
   {
    "id": "v2-039",
@@ -556,20 +556,20 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 2
+   "n_citations": 1
   },
   {
    "id": "v2-040",
    "category": "colloquial",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 1
   },
   {
@@ -580,7 +580,7 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
    "n_citations": 1
   },
@@ -592,9 +592,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 5
+   "n_citations": 10
   },
   {
    "id": "v2-043",
@@ -604,7 +604,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -613,24 +613,24 @@
    "category": "wrong_ref",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
-   "n_citations": 1
+   "abstained": false,
+   "gated": 0.5,
+   "n_citations": 2
   },
   {
    "id": "v2-045",
    "category": "wrong_ref",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
-   "n_citations": 3
+   "abstained": true,
+   "gated": 0.0,
+   "n_citations": 1
   },
   {
    "id": "v2-046",
@@ -640,9 +640,9 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 3
+   "n_citations": 1
   },
   {
    "id": "v2-047",
@@ -652,32 +652,32 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 2
+   "n_citations": 1
   },
   {
    "id": "v2-048",
    "category": "multihop",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
-   "n_citations": 1
+   "abstained": false,
+   "gated": 1.0,
+   "n_citations": 2
   },
   {
    "id": "v2-049",
    "category": "multihop",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 2
   },
   {
@@ -688,20 +688,20 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 3
+   "n_citations": 2
   },
   {
    "id": "v2-051",
    "category": "multihop",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
+   "abstained": false,
+   "gated": 0.0,
    "n_citations": 2
   },
   {
@@ -712,7 +712,7 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
    "n_citations": 2
   },
@@ -724,7 +724,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -736,7 +736,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -746,11 +746,11 @@
    "language": "es",
    "out_of_scope": false,
    "correctness": 1,
-   "faithful": 1,
+   "faithful": 0,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-056",
@@ -760,21 +760,21 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.0,
-   "n_citations": 2
+   "n_citations": 3
   },
   {
    "id": "v2-057",
    "category": "clean",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
-   "n_citations": 1
+   "abstained": false,
+   "gated": 1.0,
+   "n_citations": 3
   },
   {
    "id": "v2-058",
@@ -784,7 +784,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -793,23 +793,23 @@
    "category": "clean",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
-   "n_citations": 7
+   "abstained": false,
+   "gated": 1.0,
+   "n_citations": 1
   },
   {
    "id": "v2-060",
    "category": "clean",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
+   "abstained": true,
+   "gated": 0.0,
    "n_citations": 1
   },
   {
@@ -820,7 +820,7 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.0,
    "n_citations": 1
   },
@@ -832,7 +832,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -841,11 +841,11 @@
    "category": "annex",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 1
   },
   {
@@ -853,11 +853,11 @@
    "category": "annex",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 1
   },
   {
@@ -866,7 +866,7 @@
    "language": "es",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
@@ -878,11 +878,11 @@
    "language": "va",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
-   "n_citations": 8
+   "n_citations": 11
   },
   {
    "id": "v2-067",
@@ -890,11 +890,11 @@
    "language": "es",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
-   "n_citations": 4
+   "n_citations": 11
   },
   {
    "id": "v2-068",
@@ -902,11 +902,11 @@
    "language": "va",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
-   "n_citations": 3
+   "n_citations": 12
   },
   {
    "id": "v2-069",
@@ -914,11 +914,11 @@
    "language": "es",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
-   "abstained": false,
-   "gated": 0.0,
-   "n_citations": 1
+   "abstained": true,
+   "gated": 1.0,
+   "n_citations": 3
   },
   {
    "id": "v2-070",
@@ -926,7 +926,7 @@
    "language": "va",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
@@ -938,7 +938,7 @@
    "language": "es",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
@@ -950,11 +950,11 @@
    "language": "va",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
-   "n_citations": 2
+   "n_citations": 3
   },
   {
    "id": "v2-073",
@@ -962,7 +962,7 @@
    "language": "es",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
@@ -974,7 +974,7 @@
    "language": "va",
    "out_of_scope": true,
    "correctness": null,
-   "faithful": null,
+   "faithful": 1,
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
@@ -988,7 +988,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 2
   },
@@ -1000,9 +1000,9 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.5,
-   "n_citations": 8
+   "n_citations": 3
   },
   {
    "id": "v2-077",
@@ -1012,7 +1012,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 2
   },
@@ -1024,9 +1024,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-079",
@@ -1036,7 +1036,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -1045,35 +1045,35 @@
    "category": "colloquial",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
-   "n_citations": 4
+   "abstained": false,
+   "gated": 0.5,
+   "n_citations": 2
   },
   {
    "id": "v2-081",
    "category": "colloquial",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
-   "n_citations": 1
+   "abstained": true,
+   "gated": 0.0,
+   "n_citations": 3
   },
   {
    "id": "v2-082",
    "category": "colloquial",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
+   "abstained": false,
+   "gated": 0.5,
    "n_citations": 1
   },
   {
@@ -1081,11 +1081,11 @@
    "category": "clean",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
-   "critical_error": true,
-   "abstained": null,
-   "gated": 0.0,
+   "critical_error": false,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 1
   },
   {
@@ -1096,7 +1096,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 2
   },
@@ -1108,7 +1108,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   },
@@ -1120,7 +1120,7 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.0,
    "n_citations": 3
   },
@@ -1129,11 +1129,11 @@
    "category": "clean",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.0,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 1
   },
   {
@@ -1144,9 +1144,9 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 3
   },
   {
    "id": "v2-089",
@@ -1156,9 +1156,9 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.0,
-   "n_citations": 3
+   "n_citations": 2
   },
   {
    "id": "v2-090",
@@ -1168,20 +1168,20 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 3
+   "n_citations": 2
   },
   {
    "id": "v2-091",
    "category": "wrong_ref",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
+   "abstained": false,
+   "gated": 1.0,
    "n_citations": 1
   },
   {
@@ -1192,9 +1192,9 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": true,
    "gated": 0.0,
-   "n_citations": 2
+   "n_citations": 3
   },
   {
    "id": "v2-093",
@@ -1204,7 +1204,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 2
   },
@@ -1216,7 +1216,7 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
    "n_citations": 1
   },
@@ -1228,20 +1228,20 @@
    "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 0.5,
-   "n_citations": 3
+   "n_citations": 2
   },
   {
    "id": "v2-096",
    "category": "colloquial",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 0,
    "faithful": 1,
-   "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
+   "critical_error": true,
+   "abstained": false,
+   "gated": 0.0,
    "n_citations": 2
   },
   {
@@ -1249,24 +1249,24 @@
    "category": "colloquial",
    "language": "es",
    "out_of_scope": false,
-   "correctness": 2,
+   "correctness": 1,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 1.0,
-   "n_citations": 3
+   "abstained": false,
+   "gated": 0.5,
+   "n_citations": 4
   },
   {
    "id": "v2-098",
    "category": "vague",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
-   "gated": 0.5,
-   "n_citations": 7
+   "abstained": false,
+   "gated": 1.0,
+   "n_citations": 4
   },
   {
    "id": "v2-099",
@@ -1276,7 +1276,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 4
   },
@@ -1288,7 +1288,7 @@
    "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": null,
+   "abstained": false,
    "gated": 1.0,
    "n_citations": 1
   }
