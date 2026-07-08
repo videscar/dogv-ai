@@ -504,7 +504,7 @@ def read_docs_node(state: QAState) -> QAState:
                 )
                 # Enumeration answers list a series and are hypersensitive to payload
                 # composition — re-windowing chunks swaps borderline series members
-                # (Raul #30 deterministically traded one May-2026 A1 ref for another).
+                # (tester #30 deterministically traded one May-2026 A1 ref for another).
                 # Same guard RC4 needed for semantic anchors: keep the legacy prefix
                 # cut for enumeration queries.
                 if getattr(settings, "ask_chunk_window_enabled", True) and not enumeration_query:

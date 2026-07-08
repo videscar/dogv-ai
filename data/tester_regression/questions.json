@@ -5,7 +5,7 @@
   "source": "lote-50",
   "named_norm": null,
   "gold_disposition": "Ley 1/2022, de 13 de abril",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 2,
@@ -13,7 +13,7 @@
   "source": "lote-50",
   "named_norm": "DECRETO 3/2020",
   "gold_disposition": "DECRETO 3/2020, de 10 de enero",
-  "raul_note": "Sería este:DECRETO 3/2020, de 10 de enero, del Consell, de cese de Jesús Ignacio Blanco Giner como secretario autonómico de Participación y Transparencia."
+  "tester_note": "Sería este:DECRETO 3/2020, de 10 de enero, del Consell, de cese de Jesús Ignacio Blanco Giner como secretario autonómico de Participación y Transparencia."
  },
  {
   "id": 3,
@@ -21,7 +21,7 @@
   "source": "lote-50",
   "named_norm": "LEY 4/2021",
   "gold_disposition": "LEY 4/2021, de 16 de abril",
-  "raul_note": "El enlace debería ser este:LEY 4/2021, de 16 de abril, de la Generalitat, de la Función Pública Valenciana"
+  "tester_note": "El enlace debería ser este:LEY 4/2021, de 16 de abril, de la Generalitat, de la Función Pública Valenciana"
  },
  {
   "id": 4,
@@ -29,7 +29,7 @@
   "source": "lote-50",
   "named_norm": "DECRETO 185/2018",
   "gold_disposition": "DECRETO 185/2018, de 19 de octubre",
-  "raul_note": "Se firmo el 19 de octubre de 2018 | El enlace sería este:"
+  "tester_note": "Se firmo el 19 de octubre de 2018 | El enlace sería este:"
  },
  {
   "id": 5,
@@ -37,7 +37,7 @@
   "source": "lote-50",
   "named_norm": "DECRETO 65/2022",
   "gold_disposition": "DECRETO 65/2022, de 20 de mayo",
-  "raul_note": "Su objeto real es: | URL del decreto al que debería apuntar:DECRETO 65/2022, de 20 de mayo, del Consell, por el que se autoriza la modificación, por cambio de denominación, de la Escuela de Doctorado de la Universidad de Alicante."
+  "tester_note": "Su objeto real es: | URL del decreto al que debería apuntar:DECRETO 65/2022, de 20 de mayo, del Consell, por el que se autoriza la modificación, por cambio de denominación, de la Escuela de Doctorado de la Universidad de Alicante."
  },
  {
   "id": 6,
@@ -45,7 +45,7 @@
   "source": "lote-50",
   "named_norm": "LEY 2/2015",
   "gold_disposition": "LEY 2/2015, de 2 de abril",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 7,
@@ -53,7 +53,7 @@
   "source": "lote-50",
   "named_norm": "DECRETO 204/2019",
   "gold_disposition": "DECRETO 204/2019, de 7 de octubre",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 8,
@@ -61,7 +61,7 @@
   "source": "lote-50",
   "named_norm": "LEY 10/2014",
   "gold_disposition": "LEY 10/2014, de 29 de diciembre",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 9,
@@ -69,7 +69,7 @@
   "source": "lote-50",
   "named_norm": "DECRETO 39/2020",
   "gold_disposition": "DECRETO 39/2020, de 20 de marzo",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 10,
@@ -77,7 +77,7 @@
   "source": "lote-50",
   "named_norm": "LEY 5/2018",
   "gold_disposition": "LEY 5/2018, de 6 de marzo",
-  "raul_note": "Respuesta escueta y las citas no son acertadas. Deberia mostrar la que se menciona"
+  "tester_note": "Respuesta escueta y las citas no son acertadas. Deberia mostrar la que se menciona"
  },
  {
   "id": 11,
@@ -85,7 +85,7 @@
   "source": "lote-50",
   "named_norm": "ORDEN 4/2021",
   "gold_disposition": "ORDEN 4/2021, de 4 de febrero",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 12,
@@ -93,7 +93,7 @@
   "source": "lote-50",
   "named_norm": "ORDEN 2/2020",
   "gold_disposition": "ORDEN 2/2020, de 31 de julio",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 13,
@@ -101,7 +101,7 @@
   "source": "lote-50",
   "named_norm": "ORDEN 5/2019",
   "gold_disposition": "ORDEN 5/2019, de 16 de enero",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 14,
@@ -109,7 +109,7 @@
   "source": "lote-50",
   "named_norm": "ORDEN 1/2022",
   "gold_disposition": "ORDEN 1/2022 de 13 de julio",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 15,
@@ -117,7 +117,7 @@
   "source": "lote-50",
   "named_norm": "ORDEN 3/2017",
   "gold_disposition": "ORDEN 3/2017, de 20 de enero",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 16,
@@ -125,7 +125,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 76/2025",
   "gold_disposition": "DECRETO 76/2025, de 27 de mayo",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 17,
@@ -133,7 +133,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 77/2025",
   "gold_disposition": "DECRETO 77/2025, de 27 de mayo",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 18,
@@ -141,7 +141,7 @@
   "source": "test-15",
   "named_norm": "ORDEN 4/2025",
   "gold_disposition": "Orden 4/2025, de 14 de marzo",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 19,
@@ -149,7 +149,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 111/2025",
   "gold_disposition": "DECRETO 111/2025, de 29 de julio",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 20,
@@ -157,7 +157,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 114/2025",
   "gold_disposition": "DECRETO 114/2025, de 29 de julio",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 21,
@@ -165,7 +165,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 124/2025",
   "gold_disposition": null,
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 22,
@@ -173,7 +173,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 127/2025",
   "gold_disposition": "DECRETO 127/2025, de 5 de septiembre",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 23,
@@ -181,7 +181,7 @@
   "source": "test-15",
   "named_norm": "ORDEN 11/2025",
   "gold_disposition": "ORDEN 11/2025, de 7 de octubre",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 24,
@@ -189,7 +189,7 @@
   "source": "test-15",
   "named_norm": "ORDEN 4/2025",
   "gold_disposition": "Orden 4/2025 de 30 de octubre",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 25,
@@ -197,7 +197,7 @@
   "source": "test-15",
   "named_norm": "ORDEN 1/2026",
   "gold_disposition": "Orden 1/2026, de 9 de enero",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 26,
@@ -205,7 +205,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 83/2026",
   "gold_disposition": "DECRETO 83/2026, de 5 de junio",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 27,
@@ -213,7 +213,7 @@
   "source": "test-15",
   "named_norm": "DECRETO 58/2026",
   "gold_disposition": "DECRETO 58/2026, de 17 de abril",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 28,
@@ -221,7 +221,7 @@
   "source": "test-15",
   "named_norm": null,
   "gold_disposition": "REAL DECRETO 1025/2025, de 5 de noviembre",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 29,
@@ -229,7 +229,7 @@
   "source": "test-15",
   "named_norm": null,
   "gold_disposition": "DECRETO 4/2026, de 12 de marzo",
-  "raul_note": ""
+  "tester_note": ""
  },
  {
   "id": 30,
@@ -237,6 +237,6 @@
   "source": "test-15",
   "named_norm": null,
   "gold_disposition": "ORDEN 24/2026, de 12 de mayo",
-  "raul_note": ""
+  "tester_note": ""
  }
 ]

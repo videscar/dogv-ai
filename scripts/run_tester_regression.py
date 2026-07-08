@@ -1,17 +1,17 @@
-"""Run Raul's combined gold-tester question set against live prod and report regressions.
+"""Run the external tester's combined gold question set against live prod and report regressions.
 
-Reads data/raul_regression/questions.json (the unified, de-duplicated set extracted
-from both of Raul's documents), asks each question against the running API, and
+Reads data/tester_regression/questions.json (the unified, de-duplicated set extracted
+from both of the tester's documents), asks each question against the running API, and
 checks two regression signals:
   - answered: the model did not abstain ("no consta" / "no puedo confirmar ...");
-  - cited_norm: when the question names a specific disposition (N/YYYY) or Raul gave
-    a gold disposition, at least one citation's title carries that N/YYYY.
+  - cited_norm: when the question names a specific disposition (N/YYYY) or the tester
+    gave a gold disposition, at least one citation's title carries that N/YYYY.
 
 Writes a timestamped markdown report and refreshes the living doc's "last run"
-column. This is the regression harness we re-run before asking Raul to continue.
+column. This is the regression harness we re-run before each new testing round.
 
 Usage:
-    python scripts/run_raul_regression.py [--api http://localhost:8088] [--out PATH]
+    python scripts/run_tester_regression.py [--api http://localhost:8088] [--out PATH]
 """
 from __future__ import annotations
 
@@ -26,13 +26,13 @@ from pathlib import Path
 import requests
 
 ROOT = Path(__file__).resolve().parent.parent
-QFILE = ROOT / "data" / "raul_regression" / "questions.json"
+QFILE = ROOT / "data" / "tester_regression" / "questions.json"
 _ABSTAIN = re.compile(r"no consta|no puedo confirmar|no hay publicaciones|no se encontr", re.I)
 _NY = re.compile(r"\b(\d+/\d{4})\b")
 
 
 def _expected_ny(item: dict) -> str | None:
-    """The N/YYYY the answer should cite — from the named norm or Raul's gold note."""
+    """The N/YYYY the answer should cite — from the named norm or the tester's gold note."""
     for field in ("named_norm", "gold_disposition"):
         m = _NY.search(item.get(field) or "")
         if m:
@@ -92,7 +92,7 @@ def run(api: str) -> list[dict]:
 def write_report(results: list[dict], out: Path) -> None:
     regs = [r for r in results if r["regression"]]
     ts = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
-    lines = [f"# Raul regression run — {ts}", ""]
+    lines = [f"# Tester regression run — {ts}", ""]
     lines.append(f"**{len(results) - len(regs)}/{len(results)} clean**, "
                  f"{len(regs)} regression(s).\n")
     if regs:

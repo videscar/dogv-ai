@@ -216,7 +216,7 @@ class Settings(BaseSettings):
     # Enumeration queries ("cítame todas las disposiciones ... de mayo de 2026")
     # need exhaustive recall, not top-k semantic retrieval. When detected, pull the
     # month+category matches from SQL into the candidate pool and widen the rerank /
-    # read budget so the whole series can be listed (Raul #30). Gated to enumeration
+    # read budget so the whole series can be listed (tester #30). Gated to enumeration
     # queries only, so ordinary single-norm questions are unaffected.
     enumeration_augment_enabled: bool = True
     enumeration_augment_max: int = 20
@@ -289,13 +289,13 @@ class Settings(BaseSettings):
     # When a question targets a specific disposition (by number, or by type+topic
     # without a number) and that primary norm is in the read set, force it as the
     # sole citation instead of a tangential doc that merely mentions it. Addresses
-    # Raul's "main reference missing from cites". Default ON: eval_v2 100Q A/B
+    # the tester's "main reference missing from cites". Default ON: eval_v2 100Q A/B
     # (2026-06-24) = +1 gold_cited any & full, 0 regressions, answers unchanged.
     answer_norm_target_citation_enabled: bool = True
     # When a question names a norm by type+topic but no number ("la Ley de
     # Transparencia"), infer its N/YYYY from how the in-window corpus titles name it
     # (modifying/developing norms cite the principal) and on-demand fetch+cite it.
-    # Recovers foundational laws that predate the rolling window (e.g. Raul #1).
+    # Recovers foundational laws that predate the rolling window (e.g. tester #1).
     infer_named_norm_from_corpus_enabled: bool = True
 
     # Demo / observability

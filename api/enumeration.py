@@ -3,7 +3,7 @@
 Some questions ask the assistant to *list every* disposition matching a structured
 filter — "cítame las disposiciones de ofertas de empleo A1 publicadas en mayo de
 2026". Pure semantic retrieval is the wrong tool for an exhaustive list: it caps at
-k and lets near-identical siblings crowd each other out (Raul #30: gold ORDEN
+k and lets near-identical siblings crowd each other out (tester #30: gold ORDEN
 24/2026 never entered the candidate pool because its siblings ORDEN 23/26 did). For
 these queries we run a deterministic SQL pull over the stated month + category and
 merge the results into the candidate pool, so the reranker/reader can see the whole

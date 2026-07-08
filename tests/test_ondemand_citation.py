@@ -47,7 +47,7 @@ def test_collapse_prefers_pinned_among_multiple_matches():
     assert [c["document_id"] for c in out] == [11]
 
 
-# ---- norm-target citation recovery (the Raul "main reference missing" fix) ----
+# ---- norm-target citation recovery (the tester "main reference missing" fix) ----
 
 # Named (no-number) target: synthesis cited a doc that only mentions the law, but
 # the law itself is in the read set -> recover it as the principal.

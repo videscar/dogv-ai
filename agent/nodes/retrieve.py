@@ -107,7 +107,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         # Semantic anchors are skipped for enumeration queries: those want the
         # exhaustive month+category series (rerank widens its caps for them), and
         # anchoring a semantically-top doc displaces series members from the read
-        # set (measured on Raul #30: anchors=2 dropped 3 refs from the listing).
+        # set (measured on tester #30: anchors=2 dropped 3 refs from the listing).
         anchors_enabled = (
             getattr(settings, "ask_semantic_anchor_enabled", False)
             and parse_enumeration(question) is None

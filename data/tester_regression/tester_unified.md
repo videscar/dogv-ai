@@ -1,12 +1,12 @@
-# Raul gold-tester — unified regression set
+# External gold tester — unified regression set
 
-Unique questions combined from Raul's two documents (`📌 Lote de 50 preguntas.docx` = 15 Q, `15 preguntas de test 2025 y 2026.docx` = 15 Q; 0 duplicates). This is a **living regression doc** — add new questions as Raul sends them and re-run `scripts/run_raul_regression.py` against prod before telling him to continue, to confirm no regressions.
+Unique questions combined from the tester's two documents (`Lote de 50 preguntas.docx` = 15 Q, `15 preguntas de test 2025 y 2026.docx` = 15 Q; 0 duplicates). This is a **living regression doc** — add new questions as the tester sends them and re-run `scripts/run_tester_regression.py` against prod before each new testing round, to confirm no regressions.
 
-- **Question** — verbatim from Raul.
-- **Expected** — the disposition the answer should cite / the gold Raul indicated.
-- **Note** — Raul's correction or remark, where he gave one.
+- **Question** — verbatim from the tester.
+- **Expected** — the disposition the answer should cite / the gold the tester indicated.
+- **Note** — the tester's correction or remark, where given.
 
-| # | Source | Question | Expected disposition | Raul's note |
+| # | Source | Question | Expected disposition | Tester's note |
 |---|--------|----------|----------------------|-------------|
 | 1 | lote-50 | ¿Qué dice la Ley de Transparencia de la Comunitat Valenciana sobre el acceso a la información pública? | Ley 1/2022, de 13 de abril | — |
 | 2 | lote-50 | ¿Cuál es el contenido principal del Decreto 3/2020 del Consell sobre estructura orgánica? | DECRETO 3/2020, de 10 de enero | Sería este:DECRETO 3/2020, de 10 de enero, del Consell, de cese de Jesús Ignacio Blanco Giner como secretario autonómico |
@@ -53,7 +53,7 @@ so the exact norm intermittently lost its candidate slot (gold cited on one run,
 the next). Fix: `backfill_node` pins the in-corpus named norm into `norm_pin_doc_ids` and
 `read_docs_node` forces it into the read set, so the norm-target citation guarantee always
 fires. Verified: all 4 cite the gold on BOTH of 2 reruns (single clean citation); each also
-corrects Raul's false premise (Orden 5/2019 = ajo tierno not residuos; Orden 2/2020 = 2021
+corrects the tester's false premise (Orden 5/2019 = ajo tierno not residuos; Orden 2/2020 = 2021
 budget not control interno; Orden 3/2017 = water-use grants not PAC; Decreto 3/2020 = cese).
 
 ### Documented limitations (not safely auto-fixable) — #1, #30
