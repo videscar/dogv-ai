@@ -23,24 +23,34 @@ from .dogv_resolver import _STOP, _strip_accents
 
 # Month token (es + va) -> month number.
 _MONTHS: dict[str, int] = {
-    "enero": 1, "gener": 1,
-    "febrero": 2, "febrer": 2,
-    "marzo": 3, "marc": 3, "març": 3,
+    "enero": 1,
+    "gener": 1,
+    "febrero": 2,
+    "febrer": 2,
+    "marzo": 3,
+    "marc": 3,
+    "març": 3,
     "abril": 4,
-    "mayo": 5, "maig": 5,
-    "junio": 6, "juny": 6,
-    "julio": 7, "juliol": 7,
-    "agosto": 8, "agost": 8,
-    "septiembre": 9, "setiembre": 9, "setembre": 9,
+    "mayo": 5,
+    "maig": 5,
+    "junio": 6,
+    "juny": 6,
+    "julio": 7,
+    "juliol": 7,
+    "agosto": 8,
+    "agost": 8,
+    "septiembre": 9,
+    "setiembre": 9,
+    "setembre": 9,
     "octubre": 10,
-    "noviembre": 11, "novembre": 11,
-    "diciembre": 12, "desembre": 12,
+    "noviembre": 11,
+    "novembre": 11,
+    "diciembre": 12,
+    "desembre": 12,
 }
 _MONTH_ALT = "|".join(sorted(_MONTHS, key=len, reverse=True))
 # "mayo de 2026", "maig de 2026", "mayo 2026".
-_MONTH_YEAR_RE = re.compile(
-    rf"\b({_MONTH_ALT})\b\s+(?:de\s+|d['’]\s*)?(\d{{4}})\b", re.IGNORECASE
-)
+_MONTH_YEAR_RE = re.compile(rf"\b({_MONTH_ALT})\b\s+(?:de\s+|d['’]\s*)?(\d{{4}})\b", re.IGNORECASE)
 # Group/subgroup codes ("A1", "grupo C2", "subgrupo A1").
 _GROUP_CODE_RE = re.compile(r"\b([ABCDE][12])\b")
 # Cues that a question wants a list of dispositions, not a single one.

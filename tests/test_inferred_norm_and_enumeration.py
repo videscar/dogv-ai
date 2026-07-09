@@ -34,9 +34,7 @@ TITLES_TRANSPARENCIA = [
 def test_infer_principal_picks_distinctive_topic_over_generic():
     # "transparencia" (low-df) must win over "publica" (high-df, in Hacienda/Salud/
     # Función Pública); a frequency-only score would wrongly pick a "publica" law.
-    ref = _infer_principal_ref(
-        TITLES_TRANSPARENCIA, "ley", ["transparencia", "publica"]
-    )
+    ref = _infer_principal_ref(TITLES_TRANSPARENCIA, "ley", ["transparencia", "publica"])
     assert ref is not None
     assert ref.num_year == "1/2022"
     assert ref.tipo == "ley"
@@ -77,8 +75,11 @@ def test_enumeration_detects_list_query():
 
 
 def test_enumeration_ignores_single_norm_query():
-    assert parse_enumeration(
-        "¿Qué dice la Ley de Transparencia sobre el acceso a la información pública?"
-    ) is None
+    assert (
+        parse_enumeration(
+            "¿Qué dice la Ley de Transparencia sobre el acceso a la información pública?"
+        )
+        is None
+    )
     # A month without a list cue is not an enumeration.
     assert not is_enumeration_query("¿Qué decreto regula las ayudas de mayo de 2026?")

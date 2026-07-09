@@ -11,6 +11,7 @@ vs proxy 2/7). These helpers score a citation set against:
 
 Pure functions, no I/O, so they can back both the multi-turn runner and unit tests.
 """
+
 from __future__ import annotations
 
 from collections.abc import Iterable

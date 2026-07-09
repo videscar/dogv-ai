@@ -9,6 +9,7 @@ the flagship that the vague turn-1 misses.
 Usage: python eval_v2/collect_multiturn.py [--base-url http://127.0.0.1:8088] \
            [--set data/eval_v2/eval_multiturn.jsonl] [--out data/eval_v2/answers_multiturn.jsonl]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -44,12 +45,17 @@ def run_scenario(base: str, sc: dict, timeout: float) -> dict:
         cited = [c.get("document_id") for c in (d.get("citations") or [])]
         prof = (d.get("debug") or {}).get("profile") or {}
         ctx = prof.get("contextualize") or {}
-        turns_out.append({
-            "i": ti, "question": q, "answer": answer, "cited_doc_ids": cited,
-            "contextualized": ctx.get("applied"),
-            "rewritten_question": ctx.get("rewritten_question"),
-            "latency_s": round(time.perf_counter() - started, 1),
-        })
+        turns_out.append(
+            {
+                "i": ti,
+                "question": q,
+                "answer": answer,
+                "cited_doc_ids": cited,
+                "contextualized": ctx.get("applied"),
+                "rewritten_question": ctx.get("rewritten_question"),
+                "latency_s": round(time.perf_counter() - started, 1),
+            }
+        )
         # Mirror the UI: append the user turn + the plain answer to history.
         history.append({"role": "user", "content": q})
         history.append({"role": "assistant", "content": answer})
@@ -58,12 +64,16 @@ def run_scenario(base: str, sc: dict, timeout: float) -> dict:
     final = turns_out[-1]
     first = turns_out[0]
     return {
-        "id": sc["id"], "language": sc.get("language"), "seed": sc.get("seed"),
-        "gold_doc_ids": sc.get("gold_doc_ids"), "accept_doc_ids": sorted(accept),
+        "id": sc["id"],
+        "language": sc.get("language"),
+        "seed": sc.get("seed"),
+        "gold_doc_ids": sc.get("gold_doc_ids"),
+        "accept_doc_ids": sorted(accept),
         "turn1_any_hit": citation_any_hit(first["cited_doc_ids"], accept),
         "final_any_hit": citation_any_hit(final["cited_doc_ids"], accept),
         "final_full_hit": citation_full_hit(final["cited_doc_ids"], sc.get("gold_sets")),
-        "turns": turns_out, "note": sc.get("note"),
+        "turns": turns_out,
+        "note": sc.get("note"),
     }
 
 
@@ -97,10 +107,13 @@ def main() -> int:
             fout.write(json.dumps(res, ensure_ascii=False) + "\n")
             fout.flush()
             results.append(res)
-            print(f"[{res['id']}] {res['language']} turn1={'HIT' if res['turn1_any_hit'] else 'miss'} "
-                  f"-> final={'HIT' if res['final_any_hit'] else 'MISS'} "
-                  f"(ctx={res['turns'][-1].get('contextualized')}) gold={res['gold_doc_ids']} "
-                  f"final_cites={res['turns'][-1]['cited_doc_ids']}", flush=True)
+            print(
+                f"[{res['id']}] {res['language']} turn1={'HIT' if res['turn1_any_hit'] else 'miss'} "
+                f"-> final={'HIT' if res['final_any_hit'] else 'MISS'} "
+                f"(ctx={res['turns'][-1].get('contextualized')}) gold={res['gold_doc_ids']} "
+                f"final_cites={res['turns'][-1]['cited_doc_ids']}",
+                flush=True,
+            )
 
     ok = [r for r in results if "error" not in r]
     if ok:

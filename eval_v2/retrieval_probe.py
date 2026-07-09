@@ -13,6 +13,7 @@ reported, with per-category and per-language breakdowns.
 Usage:
   python eval_v2/retrieval_probe.py [--ids v2-001,v2-002] [--set data/eval_v2/eval_set_v2.jsonl]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -75,7 +76,9 @@ def main() -> int:
         want = set(args.ids.split(","))
         rows = [r for r in rows if r["id"] in want]
 
-    agg = defaultdict(lambda: {"n": 0, "pool_any": 0, "pool_full": 0, "read_any": 0, "read_full": 0})
+    agg = defaultdict(
+        lambda: {"n": 0, "pool_any": 0, "pool_full": 0, "read_any": 0, "read_full": 0}
+    )
     per_q = []
     for r in rows:
         if r.get("should_abstain"):
@@ -102,22 +105,38 @@ def main() -> int:
             a["pool_full"] += pf
             a["read_any"] += ra
             a["read_full"] += rf
-        per_q.append({"id": r["id"], "category": r["category"], "language": r["language"],
-                      "gold": sorted(gold), "pool_any": pa, "pool_full": pf,
-                      "read_any": ra, "read_full": rf,
-                      "pool_rank": (min(pool_ranks) if pool_ranks else None),
-                      "pool_ranks": pool_ranks, "pool_size": len(cand),
-                      "read_rank": (min(read_ranks) if read_ranks else None)})
+        per_q.append(
+            {
+                "id": r["id"],
+                "category": r["category"],
+                "language": r["language"],
+                "gold": sorted(gold),
+                "pool_any": pa,
+                "pool_full": pf,
+                "read_any": ra,
+                "read_full": rf,
+                "pool_rank": (min(pool_ranks) if pool_ranks else None),
+                "pool_ranks": pool_ranks,
+                "pool_size": len(cand),
+                "read_rank": (min(read_ranks) if read_ranks else None),
+            }
+        )
         rank_s = f" rank={min(pool_ranks)}/{len(cand)}" if pool_ranks else " rank=MISS"
         miss = "" if pf else ("  <-- POOL MISS" if not pa else "  <-- partial/read")
-        print(f"[{r['id']}] {r['category']:10} pool={'F' if pf else ('A' if pa else '-')} "
-              f"read={'F' if rf else ('A' if ra else '-')}{rank_s}{miss}", flush=True)
+        print(
+            f"[{r['id']}] {r['category']:10} pool={'F' if pf else ('A' if pa else '-')} "
+            f"read={'F' if rf else ('A' if ra else '-')}{rank_s}{miss}",
+            flush=True,
+        )
 
     def line(key):
         a = agg[key]
         n = a["n"] or 1
-        return (f"{key:16} n={a['n']:3}  pool_any={a['pool_any']/n:.2f} pool_full={a['pool_full']/n:.2f}"
-                f"  read_any={a['read_any']/n:.2f} read_full={a['read_full']/n:.2f}")
+        return (
+            f"{key:16} n={a['n']:3}  pool_any={a['pool_any']/n:.2f} pool_full={a['pool_full']/n:.2f}"
+            f"  read_any={a['read_any']/n:.2f} read_full={a['read_full']/n:.2f}"
+        )
+
     print("\n=== PIPELINE RECALL (answerable) ===")
     print(line("ALL"))
     for k in sorted(k for k in agg if k.startswith("cat:")):
@@ -126,8 +145,12 @@ def main() -> int:
         print(" ", line(k))
 
     if args.out:
-        json.dump({"per_q": per_q, "agg": {k: dict(v) for k, v in agg.items()}},
-                  open(args.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        json.dump(
+            {"per_q": per_q, "agg": {k: dict(v) for k, v in agg.items()}},
+            open(args.out, "w", encoding="utf-8"),
+            ensure_ascii=False,
+            indent=1,
+        )
         print(f"\nwrote {args.out}")
     return 0
 

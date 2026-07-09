@@ -56,7 +56,9 @@ def _count_target_documents(db: Session, start_date=None, end_date=None, documen
     return q.count()
 
 
-def iter_target_document_ids(db: Session, start_date=None, end_date=None, batch_size: int = 200, document_ids=None):
+def iter_target_document_ids(
+    db: Session, start_date=None, end_date=None, batch_size: int = 200, document_ids=None
+):
     last_id = 0
     while True:
         q = (
@@ -107,14 +109,18 @@ def classify_range(
     endpoint_count = len(llm_urls)
     total = _count_target_documents(db, start_date, end_date, document_ids=document_ids)
     if endpoint_count > 0:
-        print(f"Found {total} documents to classify (workers={workers}, endpoints={endpoint_count})")
+        print(
+            f"Found {total} documents to classify (workers={workers}, endpoints={endpoint_count})"
+        )
     else:
         print(f"Found {total} documents to classify (workers={workers})")
     updated = 0
 
     executor = ThreadPoolExecutor(max_workers=workers) if workers > 1 else None
     try:
-        for ids in iter_target_document_ids(db, start_date, end_date, batch_size=batch_size, document_ids=document_ids):
+        for ids in iter_target_document_ids(
+            db, start_date, end_date, batch_size=batch_size, document_ids=document_ids
+        ):
             docs = (
                 db.query(DogvDocument)
                 .options(load_only(DogvDocument.id, DogvDocument.title, DogvDocument.text))
@@ -128,7 +134,9 @@ def classify_range(
             if executor is None:
                 for index, doc in enumerate(docs):
                     base_url = llm_urls[index % endpoint_count] if endpoint_count else None
-                    _, result, error = _classify_task(doc.id, doc.title, doc.text, base_url=base_url)
+                    _, result, error = _classify_task(
+                        doc.id, doc.title, doc.text, base_url=base_url
+                    )
                     results[doc.id] = (result, error)
             else:
                 futures: list[Future[tuple[int, dict[str, Any] | None, str | None]]] = [

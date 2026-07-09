@@ -4,6 +4,7 @@ Usage: python eval_v2/mine.py <preset> [limit]
 Presets pull a stratified sample with full cleaned text so questions can be
 authored against real amounts / dates / refs / names, with known gold doc ids.
 """
+
 from __future__ import annotations
 
 import json
@@ -62,11 +63,26 @@ PRESETS = {
     "premios_va": ("doc_kind='Premios' AND di.language='va_va'", 300),
     "empleo_es": ("doc_kind='Empleo Publico' AND di.language='es_es'", 400),
     "empleo_va": ("doc_kind='Empleo Publico' AND di.language='va_va'", 400),
-    "annex_es": ("text_source='pdf' AND di.language='es_es' AND doc_kind IN ('Subvenciones','Ayudas','Becas','Premios')", 400),
-    "annex_va": ("text_source='pdf' AND di.language='va_va' AND doc_kind IN ('Subvenciones','Ayudas','Becas','Premios')", 400),
-    "annex_empleo_es": ("text_source='pdf' AND di.language='es_es' AND doc_kind='Empleo Publico'", 300),
-    "nombr_es": ("doc_kind='Otros' AND di.language='es_es' AND (dd.title ILIKE '%nombr%' OR dd.title ILIKE '%cesa%' OR dd.title ILIKE '%cese%')", 300),
-    "nombr_va": ("doc_kind='Otros' AND di.language='va_va' AND (dd.title ILIKE '%nomen%' OR dd.title ILIKE '%cess%')", 300),
+    "annex_es": (
+        "text_source='pdf' AND di.language='es_es' AND doc_kind IN ('Subvenciones','Ayudas','Becas','Premios')",
+        400,
+    ),
+    "annex_va": (
+        "text_source='pdf' AND di.language='va_va' AND doc_kind IN ('Subvenciones','Ayudas','Becas','Premios')",
+        400,
+    ),
+    "annex_empleo_es": (
+        "text_source='pdf' AND di.language='es_es' AND doc_kind='Empleo Publico'",
+        300,
+    ),
+    "nombr_es": (
+        "doc_kind='Otros' AND di.language='es_es' AND (dd.title ILIKE '%nombr%' OR dd.title ILIKE '%cesa%' OR dd.title ILIKE '%cese%')",
+        300,
+    ),
+    "nombr_va": (
+        "doc_kind='Otros' AND di.language='va_va' AND (dd.title ILIKE '%nomen%' OR dd.title ILIKE '%cess%')",
+        300,
+    ),
 }
 
 
@@ -82,7 +98,9 @@ def main() -> int:
         json.dump(rows, fh, ensure_ascii=False, indent=1)
     print(f"{preset}: wrote {len(rows)} rows -> {out}")
     for r in rows[:topn]:
-        print(f"  id={r['id']} ref={r['ref']} rich={r['richness']} src={r['text_source']} chunks={r['n_chunks']} | {(r['title'] or '')[:80]}")
+        print(
+            f"  id={r['id']} ref={r['ref']} rich={r['richness']} src={r['text_source']} chunks={r['n_chunks']} | {(r['title'] or '')[:80]}"
+        )
     return 0
 
 

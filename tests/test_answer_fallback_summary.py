@@ -40,9 +40,24 @@ def test_validation_fallback_uses_concise_summary(monkeypatch):
             {"doc_id": 103, "quote": "Las solicitudes se presentan telematicamente."},
         ],
         full_docs=[
-            {"document_id": 101, "issue_date": "2025-01-10", "title": "Resolucion ayudas 2025", "ref": "2025/123"},
-            {"document_id": 102, "issue_date": "2025-01-11", "title": "Extracto ayudas 2025", "ref": "2025/124"},
-            {"document_id": 103, "issue_date": "2025-01-12", "title": "Bases ayudas 2025", "ref": "2025/125"},
+            {
+                "document_id": 101,
+                "issue_date": "2025-01-10",
+                "title": "Resolucion ayudas 2025",
+                "ref": "2025/123",
+            },
+            {
+                "document_id": 102,
+                "issue_date": "2025-01-11",
+                "title": "Extracto ayudas 2025",
+                "ref": "2025/124",
+            },
+            {
+                "document_id": 103,
+                "issue_date": "2025-01-12",
+                "title": "Bases ayudas 2025",
+                "ref": "2025/125",
+            },
         ],
     )
 
@@ -68,10 +83,30 @@ def test_validation_fallback_respects_max_items(monkeypatch):
             {"doc_id": 104, "quote": "Texto adicional."},
         ],
         full_docs=[
-            {"document_id": 101, "issue_date": "2025-01-10", "title": "Resolucion ayudas 2025", "ref": "2025/123"},
-            {"document_id": 102, "issue_date": "2025-01-11", "title": "Extracto ayudas 2025", "ref": "2025/124"},
-            {"document_id": 103, "issue_date": "2025-01-12", "title": "Bases ayudas 2025", "ref": "2025/125"},
-            {"document_id": 104, "issue_date": "2025-01-13", "title": "Anuncio ayudas 2025", "ref": "2025/126"},
+            {
+                "document_id": 101,
+                "issue_date": "2025-01-10",
+                "title": "Resolucion ayudas 2025",
+                "ref": "2025/123",
+            },
+            {
+                "document_id": 102,
+                "issue_date": "2025-01-11",
+                "title": "Extracto ayudas 2025",
+                "ref": "2025/124",
+            },
+            {
+                "document_id": 103,
+                "issue_date": "2025-01-12",
+                "title": "Bases ayudas 2025",
+                "ref": "2025/125",
+            },
+            {
+                "document_id": 104,
+                "issue_date": "2025-01-13",
+                "title": "Anuncio ayudas 2025",
+                "ref": "2025/126",
+            },
         ],
     )
 

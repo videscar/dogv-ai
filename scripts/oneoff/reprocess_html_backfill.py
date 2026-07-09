@@ -123,10 +123,7 @@ def reprocess_date(
         return 0, 0, 0
 
     # Phase A — concurrent network: fetch HTML bodies, warm annex PDF cache.
-    tasks = [
-        (doc.id, (doc.raw_json or {}).get("id"), lang, doc.pdf_url)
-        for doc, lang in rows
-    ]
+    tasks = [(doc.id, (doc.raw_json or {}).get("id"), lang, doc.pdf_url) for doc, lang in rows]
     prefetched: dict = {}
     with ThreadPoolExecutor(max_workers=workers) as ex:
         for doc_id, html_text, has_annex in ex.map(_prefetch_worker, tasks):
@@ -162,7 +159,9 @@ def reprocess_date(
             pdf_n += 1
 
     if dry_run:
-        print(f"  {d}  docs={len(rows)}  html={html_n} pdf={pdf_n} none={none_n}  (dry-run, no writes)")
+        print(
+            f"  {d}  docs={len(rows)}  html={html_n} pdf={pdf_n} none={none_n}  (dry-run, no writes)"
+        )
         return html_n, pdf_n, none_n
 
     db.commit()
@@ -172,7 +171,9 @@ def reprocess_date(
     # was nulled above and gets reclassified. Then re-chunk/re-embed (embed).
     classify_range(db, d, d)
     build_chunks_for_range(db, d, d, force=True)
-    action = "rechunked (kept doc_kind, gaps classified)" if skip_classify else "reclassified+rechunked"
+    action = (
+        "rechunked (kept doc_kind, gaps classified)" if skip_classify else "reclassified+rechunked"
+    )
     print(f"  {d}  docs={len(rows)}  html={html_n} pdf={pdf_n} none={none_n}  {action}")
     return html_n, pdf_n, none_n
 
@@ -183,14 +184,18 @@ def main():
     parser.add_argument("--end", help="YYYY-MM-DD")
     parser.add_argument("--all", action="store_true", help="process the entire corpus")
     parser.add_argument("--workers", type=int, default=8, help="concurrent HTML fetchers")
-    parser.add_argument("--dry-run", action="store_true", help="fetch + report only; no DB writes, no servers")
+    parser.add_argument(
+        "--dry-run", action="store_true", help="fetch + report only; no DB writes, no servers"
+    )
     parser.add_argument(
         "--skip-classify",
         action="store_true",
         help="keep existing doc_kind (title-driven); only re-extract + re-chunk/re-embed",
     )
     parser.add_argument("--limit-dates", type=int, help="process at most N dates (pilot)")
-    parser.add_argument("--resume", action="store_true", help="skip dates up to the saved checkpoint")
+    parser.add_argument(
+        "--resume", action="store_true", help="skip dates up to the saved checkpoint"
+    )
     args = parser.parse_args()
 
     if not args.all and not (args.start or args.end):
@@ -211,7 +216,9 @@ def main():
 
         mode = "DRY-RUN" if args.dry_run else "WRITE"
         classify_note = " skip-classify" if args.skip_classify else ""
-        print(f"[{mode}{classify_note}] {len(dates)} issue-dates to process, workers={args.workers}")
+        print(
+            f"[{mode}{classify_note}] {len(dates)} issue-dates to process, workers={args.workers}"
+        )
 
         t_html = t_pdf = t_none = 0
         for d in dates:

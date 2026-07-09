@@ -63,9 +63,7 @@ def main() -> int:
             new_value = float(new_metrics.get(key, 0.0))
             delta = new_value - base_value
             if delta < -args.tolerance:
-                regressions.append(
-                    f"{stage} {key}: {new_value:.4f} (baseline {base_value:.4f})"
-                )
+                regressions.append(f"{stage} {key}: {new_value:.4f} (baseline {base_value:.4f})")
 
     if regressions:
         print("Recall regressions detected:")

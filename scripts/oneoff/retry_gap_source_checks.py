@@ -27,9 +27,7 @@ def _parse_languages(raw: str) -> list[str]:
 
 
 def _failures_table_exists(db) -> bool:
-    exists = db.execute(
-        sa_text("SELECT to_regclass('ingest_gap_source_failures')")
-    ).scalar()
+    exists = db.execute(sa_text("SELECT to_regclass('ingest_gap_source_failures')")).scalar()
     return bool(exists)
 
 

@@ -4,6 +4,7 @@ Usage: python eval_v2/facts.py <doc_id> [doc_id ...]
 For each doc prints meta + the chunk_index/section/text of the chunks that
 carry concrete facts (amounts, %, dates, deadlines, names, refs, quantities).
 """
+
 from __future__ import annotations
 
 import os
@@ -40,8 +41,10 @@ def main() -> int:
                 if not m:
                     print(f"### doc {did}: NOT FOUND")
                     continue
-                print(f"\n### doc_id={m['id']} ref={m['ref']} lang={m['language']} date={m['date']} "
-                      f"kind={m['doc_kind']}/{m['doc_subkind']} src={m['text_source']}")
+                print(
+                    f"\n### doc_id={m['id']} ref={m['ref']} lang={m['language']} date={m['date']} "
+                    f"kind={m['doc_kind']}/{m['doc_subkind']} src={m['text_source']}"
+                )
                 print(f"    conselleria={m['conselleria']}")
                 print(f"    TITLE: {m['title']}")
                 cur.execute(
@@ -59,7 +62,9 @@ def main() -> int:
                     if shown >= 6:
                         break
                 if shown == 0 and rows:
-                    print(f"  [chunk {rows[0]['chunk_index']}] {' '.join((rows[0]['text'] or '').split())[:550]}")
+                    print(
+                        f"  [chunk {rows[0]['chunk_index']}] {' '.join((rows[0]['text'] or '').split())[:550]}"
+                    )
     return 0
 
 

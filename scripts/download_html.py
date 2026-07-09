@@ -36,11 +36,7 @@ def download_html(full_url: str, dest: Path) -> bool:
 
 
 def iter_documents(db: Session, start_date=None, end_date=None):
-    q = (
-        db.query(DogvDocument)
-        .join(DogvIssue)
-        .filter(DogvDocument.html_url.isnot(None))
-    )
+    q = db.query(DogvDocument).join(DogvIssue).filter(DogvDocument.html_url.isnot(None))
     if start_date:
         q = q.filter(DogvIssue.date >= start_date)
     if end_date:

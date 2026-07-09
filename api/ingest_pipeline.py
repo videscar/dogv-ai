@@ -75,7 +75,9 @@ def ingest_range(db: Session, start_date: date, end_date: date, lang: str) -> in
     return total_issues
 
 
-def run_pipeline(start_date: date, end_date: date, languages: list[str], force_chunks: bool = False) -> None:
+def run_pipeline(
+    start_date: date, end_date: date, languages: list[str], force_chunks: bool = False
+) -> None:
     db = SessionLocal()
     try:
         for lang in languages:

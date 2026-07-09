@@ -14,6 +14,7 @@ Per-question gated score:
 
 Usage: python eval_v2/score_answers.py judgments.jsonl answers_raw.jsonl [out.json]
 """
+
 from __future__ import annotations
 
 import json
@@ -41,14 +42,20 @@ def main() -> int:
             gated = 1.0 if j.get("abstained") else 0.0
         else:
             gated = 0.0 if j.get("critical_error") else (int(j.get("correctness", 0)) / 2.0)
-        rows.append({
-            "id": qid, "category": r["category"], "language": r["language"],
-            "out_of_scope": oos,
-            "correctness": j.get("correctness"), "faithful": j.get("faithful"),
-            "critical_error": bool(j.get("critical_error")),
-            "abstained": j.get("abstained"), "gated": gated,
-            "n_citations": r.get("n_citations"),
-        })
+        rows.append(
+            {
+                "id": qid,
+                "category": r["category"],
+                "language": r["language"],
+                "out_of_scope": oos,
+                "correctness": j.get("correctness"),
+                "faithful": j.get("faithful"),
+                "critical_error": bool(j.get("critical_error")),
+                "abstained": j.get("abstained"),
+                "gated": gated,
+                "n_citations": r.get("n_citations"),
+            }
+        )
 
     def agg(items):
         ans = [x for x in items if not x["out_of_scope"]]
@@ -71,8 +78,10 @@ def main() -> int:
     summary = {g: agg(v) for g, v in groups.items()}
 
     def line(d):
-        s = f"n={d['n']:3d} corr={d.get('correctness_avg','-')} faith={d.get('faithfulness_rate','-')} " \
+        s = (
+            f"n={d['n']:3d} corr={d.get('correctness_avg','-')} faith={d.get('faithfulness_rate','-')} "
             f"crit_err={d.get('critical_error_rate','-')} gated={d.get('gated_score','-')}"
+        )
         if "abstention_rate" in d:
             s += f" abstain={d['abstention_rate']}"
         return s
@@ -87,8 +96,12 @@ def main() -> int:
         print(f"  {g[5:]:13s}: {line(summary[g])}")
 
     if out_path:
-        json.dump({"summary": summary, "per_query": rows},
-                  open(out_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        json.dump(
+            {"summary": summary, "per_query": rows},
+            open(out_path, "w", encoding="utf-8"),
+            ensure_ascii=False,
+            indent=1,
+        )
         print(f"\nwrote {out_path}")
     return 0
 

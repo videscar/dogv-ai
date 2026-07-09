@@ -263,8 +263,16 @@ def llm_expand_query(
 
     raw_keywords = result.get("keywords") if isinstance(result, dict) else None
     raw_phrases = result.get("phrases") if isinstance(result, dict) else None
-    keyword_list = [item for item in raw_keywords if isinstance(item, str)] if isinstance(raw_keywords, list) else []
-    phrase_list = [item for item in raw_phrases if isinstance(item, str)] if isinstance(raw_phrases, list) else []
+    keyword_list = (
+        [item for item in raw_keywords if isinstance(item, str)]
+        if isinstance(raw_keywords, list)
+        else []
+    )
+    phrase_list = (
+        [item for item in raw_phrases if isinstance(item, str)]
+        if isinstance(raw_phrases, list)
+        else []
+    )
 
     return normalize_expansion_terms(
         question,
@@ -456,7 +464,7 @@ def build_bm25_query(
     seen: set[str] = set()
 
     for phrase in phrases:
-        quoted = f"\"{phrase}\""
+        quoted = f'"{phrase}"'
         if quoted in seen:
             continue
         seen.add(quoted)
@@ -521,12 +529,7 @@ def build_bm25_queries(
     keywords = intent.get("keywords") if isinstance(intent, dict) else None
 
     phrases = _extract_phrases(question, keywords if isinstance(keywords, list) else None)
-    phrase_tokens = {
-        tok
-        for phrase in phrases
-        for tok in phrase.split()
-        if tok not in _CONNECTORS
-    }
+    phrase_tokens = {tok for phrase in phrases for tok in phrase.split() if tok not in _CONNECTORS}
     anchor_terms = _select_anchor_terms(
         question,
         keywords if isinstance(keywords, list) else None,
@@ -575,7 +578,7 @@ def build_bm25_queries(
     if len(anchor_and_terms) >= 2:
         strict = " ".join(anchor_and_terms)
     elif phrases:
-        phrase_part = " OR ".join(f"\"{phrase}\"" for phrase in phrases[:2])
+        phrase_part = " OR ".join(f'"{phrase}"' for phrase in phrases[:2])
         if anchor_terms:
             term_part = " OR ".join(anchor_terms[:2])
             strict = f"({phrase_part}) ({term_part})"
@@ -611,9 +614,7 @@ def build_prf_query(
         for tok in tokens:
             term_freq[tok] = term_freq.get(tok, 0) + 1
     candidates = [
-        tok
-        for tok in term_freq
-        if tok not in base_tokens and doc_freq.get(tok, 0) >= min_df
+        tok for tok in term_freq if tok not in base_tokens and doc_freq.get(tok, 0) >= min_df
     ]
     if not candidates:
         return None

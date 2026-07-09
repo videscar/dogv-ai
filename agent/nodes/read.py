@@ -41,9 +41,7 @@ def _fold_preserving_length(text: str) -> str:
     (its first NFKD base char), so match positions index straight into `text`."""
     out: list[str] = []
     for ch in text.lower():
-        base = "".join(
-            c for c in unicodedata.normalize("NFKD", ch) if not unicodedata.combining(c)
-        )
+        base = "".join(c for c in unicodedata.normalize("NFKD", ch) if not unicodedata.combining(c))
         out.append(base[0] if base else ch)
     return "".join(out)
 
@@ -143,7 +141,9 @@ def _lexical_chunks_for_docs(
         params[key] = f"%{pat}%"
         like_parts.append(f"(unaccent(lower(rc.text)) LIKE :{key})::int")
     score_sql = " + ".join(like_parts)
-    where_sql = " OR ".join(f"unaccent(lower(rc.text)) LIKE :p{idx}" for idx in range(len(patterns)))
+    where_sql = " OR ".join(
+        f"unaccent(lower(rc.text)) LIKE :p{idx}" for idx in range(len(patterns))
+    )
     sql = sa_text(
         f"""
         WITH ranked AS (
@@ -166,7 +166,9 @@ def _lexical_chunks_for_docs(
     return grouped
 
 
-def _select_chunks(sources: list[tuple[list[dict[str, Any]], int | None]], cap: int) -> list[dict[str, Any]]:
+def _select_chunks(
+    sources: list[tuple[list[dict[str, Any]], int | None]], cap: int
+) -> list[dict[str, Any]]:
     """Merge chunk sources, deduped by chunk_index, capped at `cap`.
 
     Each source carries a guaranteed quota (its first `take` unique chunks are
@@ -232,11 +234,7 @@ def _citation_floor_evidence(
         did = item.get("doc_id") or item.get("document_id")
         if did is not None:
             have.add(int(did))
-    by_id = {
-        int(d["document_id"]): d
-        for d in docs_payload
-        if d.get("document_id") is not None
-    }
+    by_id = {int(d["document_id"]): d for d in docs_payload if d.get("document_id") is not None}
     keywords = extract_keywords_simple(question)
     added: list[dict[str, Any]] = []
     for did in payload_doc_ids:
@@ -334,7 +332,7 @@ def read_docs_node(state: QAState) -> QAState:
             doc_id = int(item["document_id"])
             if doc_id in doc_ids:
                 continue
-            text = (item.get("title") or "")
+            text = item.get("title") or ""
             chunk_list = top_chunks.get(doc_id) or []
             if chunk_list:
                 text = f"{text} {best_snippet(question, chunk_list)}"
@@ -364,7 +362,7 @@ def read_docs_node(state: QAState) -> QAState:
             if doc_id in doc_ids:
                 continue
             if is_base_like(item):
-                text = (item.get("title") or "")
+                text = item.get("title") or ""
                 chunk_list = top_chunks.get(doc_id) or []
                 if chunk_list:
                     text = f"{text} {best_snippet(question, chunk_list)}"
@@ -395,7 +393,7 @@ def read_docs_node(state: QAState) -> QAState:
             chunk_list = top_chunks.get(doc_id) or []
             text = " ".join((c.get("text") or "") for c in chunk_list)
             if not text:
-                text = (item.get("summary") or item.get("text") or item.get("title") or "")
+                text = item.get("summary") or item.get("text") or item.get("title") or ""
             score = _amount_score(text)
             if score > 0:
                 scored.append((score, doc_id))
@@ -433,9 +431,10 @@ def read_docs_node(state: QAState) -> QAState:
                 )
             extra_limit = getattr(settings, "ask_chunks_per_doc", 4)
             if extra_limit > 0:
-                rows = db.execute(
-                    sa_text(
-                        """
+                rows = (
+                    db.execute(
+                        sa_text(
+                            """
                         SELECT document_id, chunk_index, text
                         FROM (
                             SELECT document_id, chunk_index, text,
@@ -449,9 +448,12 @@ def read_docs_node(state: QAState) -> QAState:
                         WHERE rn <= :extra_limit
                         ORDER BY document_id, chunk_index
                         """
-                    ),
-                    {"doc_ids": doc_ids, "extra_limit": extra_limit},
-                ).mappings().all()
+                        ),
+                        {"doc_ids": doc_ids, "extra_limit": extra_limit},
+                    )
+                    .mappings()
+                    .all()
+                )
                 for row in rows:
                     extra_chunks.setdefault(int(row["document_id"]), []).append(
                         {
@@ -507,7 +509,9 @@ def read_docs_node(state: QAState) -> QAState:
                 # Same guard RC4 needed for semantic anchors: keep the legacy prefix
                 # cut for enumeration queries.
                 if getattr(settings, "ask_chunk_window_enabled", True) and not enumeration_query:
-                    chunks = [_window_chunk_text(c["text"], chunk_max_chars, salient) for c in merged]
+                    chunks = [
+                        _window_chunk_text(c["text"], chunk_max_chars, salient) for c in merged
+                    ]
                 else:
                     chunks = [c["text"][:chunk_max_chars] for c in merged]
                 if not chunks and doc.text:
@@ -561,7 +565,9 @@ def read_docs_node(state: QAState) -> QAState:
         top_score = float(candidate_docs[0].get("rrf_score", 0.0)) if candidate_docs else 0.0
         high_confidence = top_score >= confidence_min
 
-        docs_payload = _build_payload(doc_ids, top_chunks, fallback_chunks, keyword_chunks, extra_chunks)
+        docs_payload = _build_payload(
+            doc_ids, top_chunks, fallback_chunks, keyword_chunks, extra_chunks
+        )
         evidence = extract_evidence(state["question"], docs_payload, full_docs=None)
         full_docs = []
         if evidence or high_confidence:
@@ -586,7 +592,9 @@ def read_docs_node(state: QAState) -> QAState:
             )
         chunk_count = sum(len(doc.get("chunks") or []) for doc in docs_payload)
         char_count = sum(len(chunk) for doc in docs_payload for chunk in (doc.get("chunks") or []))
-        token_est = sum(estimate_tokens(chunk) for doc in docs_payload for chunk in (doc.get("chunks") or []))
+        token_est = sum(
+            estimate_tokens(chunk) for doc in docs_payload for chunk in (doc.get("chunks") or [])
+        )
         full_token_est = sum(estimate_tokens(doc.get("text") or "") for doc in full_docs)
         elapsed = time.monotonic() - start
         logger.info(

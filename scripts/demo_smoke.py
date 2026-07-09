@@ -87,7 +87,9 @@ def main() -> int:
     parser.add_argument("--log-path", default="")
     args = parser.parse_args()
 
-    log_path = Path(args.log_path) if args.log_path else Path("logs/demo") / f"smoke_{_now_ts()}.log"
+    log_path = (
+        Path(args.log_path) if args.log_path else Path("logs/demo") / f"smoke_{_now_ts()}.log"
+    )
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
     lines: list[str] = []

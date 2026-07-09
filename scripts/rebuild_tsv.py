@@ -29,18 +29,22 @@ def rebuild_tsv(language: str, ts_config: str, batch_size: int) -> None:
         last_id = 0
         updated = 0
         while True:
-            ids = db.execute(
-                sa_text(
-                    """
+            ids = (
+                db.execute(
+                    sa_text(
+                        """
                     SELECT id
                     FROM rag_chunk
                     WHERE language = :language AND id > :last_id
                     ORDER BY id
                     LIMIT :batch_size
                     """
-                ),
-                {"language": language, "last_id": last_id, "batch_size": batch_size},
-            ).scalars().all()
+                    ),
+                    {"language": language, "last_id": last_id, "batch_size": batch_size},
+                )
+                .scalars()
+                .all()
+            )
             if not ids:
                 break
 

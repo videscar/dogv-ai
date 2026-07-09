@@ -63,7 +63,7 @@ def _embed_with_retry(
         try:
             return _try_embed(text)
         except Exception as exc:
-            wait = min(30, 2 ** attempt)
+            wait = min(30, 2**attempt)
             print(f"[warn] embed failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s")
             time.sleep(wait)
     if fallback_strip_diacritics:
@@ -74,8 +74,10 @@ def _embed_with_retry(
                 try:
                     return _try_embed(stripped)
                 except Exception as exc:
-                    wait = min(30, 2 ** attempt)
-                    print(f"[warn] embed failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s")
+                    wait = min(30, 2**attempt)
+                    print(
+                        f"[warn] embed failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s"
+                    )
                     time.sleep(wait)
     if fallback_ascii:
         ascii_text = _strip_to_ascii(text)
@@ -85,8 +87,10 @@ def _embed_with_retry(
                 try:
                     return _try_embed(ascii_text)
                 except Exception as exc:
-                    wait = min(30, 2 ** attempt)
-                    print(f"[warn] embed failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s")
+                    wait = min(30, 2**attempt)
+                    print(
+                        f"[warn] embed failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s"
+                    )
                     time.sleep(wait)
     if raise_on_fail:
         raise RuntimeError("embed failed after retries")
@@ -143,8 +147,10 @@ def _embed_batch_with_retry(
         try:
             return client.embed_batch(batch)
         except Exception as exc:
-            wait = min(30, 2 ** attempt)
-            print(f"[warn] embed_batch failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s")
+            wait = min(30, 2**attempt)
+            print(
+                f"[warn] embed_batch failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s"
+            )
             time.sleep(wait)
     # Fallback to per-item embedding for better resilience
     embeddings: list[list[float]] = []
@@ -202,8 +208,10 @@ def _embed_many_batched(
         try:
             return list(client.embed_batch(texts))
         except Exception as exc:
-            wait = min(30, 2 ** attempt)
-            print(f"[warn] aux embed_batch failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s")
+            wait = min(30, 2**attempt)
+            print(
+                f"[warn] aux embed_batch failed (attempt {attempt}/{attempts}): {exc}; retry in {wait}s"
+            )
             time.sleep(wait)
     return [
         _embed_with_retry(
@@ -225,6 +233,7 @@ def _normalize_chunk_text(text: str) -> str:
     if not text:
         return ""
     return text
+
 
 @lru_cache(maxsize=1)
 def _load_embed_tokenizer() -> Any | None:
@@ -338,7 +347,9 @@ def _build_doc_embedding_text(doc: DogvDocument, issue: DogvIssue) -> tuple[str,
     return "\n".join(parts), summary
 
 
-def _count_documents(db: Session, start_date=None, end_date=None, force: bool = False, document_ids=None) -> int:
+def _count_documents(
+    db: Session, start_date=None, end_date=None, force: bool = False, document_ids=None
+) -> int:
     q = db.query(DogvDocument.id).join(DogvIssue).filter(DogvDocument.text.isnot(None))
     if document_ids is not None:
         q = q.filter(DogvDocument.id.in_(document_ids))
@@ -351,7 +362,14 @@ def _count_documents(db: Session, start_date=None, end_date=None, force: bool = 
     return q.count()
 
 
-def iter_document_ids(db: Session, start_date=None, end_date=None, force: bool = False, batch_size: int = 100, document_ids=None):
+def iter_document_ids(
+    db: Session,
+    start_date=None,
+    end_date=None,
+    force: bool = False,
+    batch_size: int = 100,
+    document_ids=None,
+):
     last_id = 0
     while True:
         q = (
@@ -392,13 +410,17 @@ def build_chunks_for_range(
     client = EmbedClient()
     tokenizer = _load_embed_tokenizer()
     if tokenizer is None:
-        raise RuntimeError("Tokenizer unavailable. Install transformers and ensure the model tokenizer loads.")
+        raise RuntimeError(
+            "Tokenizer unavailable. Install transformers and ensure the model tokenizer loads."
+        )
     total = _count_documents(db, start_date, end_date, force=force, document_ids=document_ids)
     print(f"Found {total} documents to chunk/embed")
 
     processed = 0
     batch_enabled = use_embed_batch and embed_batch_size > 1
-    for ids in iter_document_ids(db, start_date, end_date, force=force, batch_size=batch_size, document_ids=document_ids):
+    for ids in iter_document_ids(
+        db, start_date, end_date, force=force, batch_size=batch_size, document_ids=document_ids
+    ):
         rows = (
             db.query(DogvDocument, DogvIssue)
             .join(DogvIssue)
@@ -427,9 +449,15 @@ def build_chunks_for_range(
                 continue
 
             if force:
-                db.execute(sa_text("DELETE FROM rag_chunk WHERE document_id = :doc_id"), {"doc_id": doc.id})
-                db.execute(sa_text("DELETE FROM rag_title WHERE document_id = :doc_id"), {"doc_id": doc.id})
-                db.execute(sa_text("DELETE FROM rag_doc WHERE document_id = :doc_id"), {"doc_id": doc.id})
+                db.execute(
+                    sa_text("DELETE FROM rag_chunk WHERE document_id = :doc_id"), {"doc_id": doc.id}
+                )
+                db.execute(
+                    sa_text("DELETE FROM rag_title WHERE document_id = :doc_id"), {"doc_id": doc.id}
+                )
+                db.execute(
+                    sa_text("DELETE FROM rag_doc WHERE document_id = :doc_id"), {"doc_id": doc.id}
+                )
 
             chunks = chunk_text(
                 raw_text,

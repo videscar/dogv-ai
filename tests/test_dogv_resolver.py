@@ -78,7 +78,7 @@ def test_title_language():
 def test_safe_page_size_avoids_bigdecimal_crash():
     # only 2/5-smooth sizes (total/size always terminates) are allowed
     assert _safe_page_size(3) == 10
-    assert _safe_page_size(30) == 50      # 30 has a factor of 3 -> snap up
+    assert _safe_page_size(30) == 50  # 30 has a factor of 3 -> snap up
     assert _safe_page_size(50) == 50
     assert _safe_page_size(10) == 10
     for s in (_safe_page_size(n) for n in range(1, 60)):

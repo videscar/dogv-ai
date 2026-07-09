@@ -127,7 +127,9 @@ def _evidence_id_line(doc_id: Any, meta: dict[int, dict[str, Any]] | None) -> st
     ref = str(info.get("ref") or "").strip()
     date = str(info.get("issue_date") or info.get("date") or "").strip()
     if ref or date:
-        head += "\n" + " | ".join(p for p in (f"ref: {ref}" if ref else "", f"fecha: {date}" if date else "") if p)
+        head += "\n" + " | ".join(
+            p for p in (f"ref: {ref}" if ref else "", f"fecha: {date}" if date else "") if p
+        )
     return head
 
 

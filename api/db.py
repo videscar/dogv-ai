@@ -15,12 +15,17 @@ except Exception:  # pragma: no cover - optional dependency until runtime
     register_vector = None
 
 if register_vector:
+
     @event.listens_for(engine, "connect")
     def _register_vector(dbapi_connection, connection_record):
         register_vector(dbapi_connection)
 
+
 SessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, expire_on_commit=False, bind=engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+    bind=engine,
 )
 
 Base = declarative_base()

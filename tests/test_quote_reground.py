@@ -15,7 +15,10 @@ TABLE = (
 def _docs():
     return [
         {"document_id": 112345, "chunks": ["RESOLUCION de 28 de junio de 2026 titulo", TABLE]},
-        {"document_id": 12417, "chunks": ["Los terminos municipales de Alfara del Patriarca quedan exentos"]},
+        {
+            "document_id": 12417,
+            "chunks": ["Los terminos municipales de Alfara del Patriarca quedan exentos"],
+        },
     ]
 
 
@@ -36,7 +39,13 @@ def test_stitched_quote_is_replaced_with_source_window():
 
 
 def test_unlocatable_quote_kept_as_is():
-    ev = [{"doc_id": 112345, "quote": "texto totalmente inventado por el lector... otra parte inventada", "detail": "d"}]
+    ev = [
+        {
+            "doc_id": 112345,
+            "quote": "texto totalmente inventado por el lector... otra parte inventada",
+            "detail": "d",
+        }
+    ]
     assert _reground_evidence(ev, _docs()) == ev
 
 

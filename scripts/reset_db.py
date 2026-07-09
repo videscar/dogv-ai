@@ -24,7 +24,14 @@ def main():
 
     db = SessionLocal()
     try:
-        for table in ("rag_chunk", "rag_title", "rag_doc", "qa_traces", "dogv_documents", "dogv_issues"):
+        for table in (
+            "rag_chunk",
+            "rag_title",
+            "rag_doc",
+            "qa_traces",
+            "dogv_documents",
+            "dogv_issues",
+        ):
             exists = db.execute(sa_text("SELECT to_regclass(:name)"), {"name": table}).scalar()
             if exists:
                 db.execute(sa_text(f"TRUNCATE TABLE {table} RESTART IDENTITY CASCADE"))

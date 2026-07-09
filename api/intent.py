@@ -12,7 +12,9 @@ from .taxonomy import canonical_doc_kind, canonical_doc_subkind, normalize_text
 def needs_amounts(question: str) -> bool:
     if not question:
         return False
-    return bool(re.search(r"\b(quantia|cuant[ií]a|importe|cantidad|euros?|€)\b", question, re.IGNORECASE))
+    return bool(
+        re.search(r"\b(quantia|cuant[ií]a|importe|cantidad|euros?|€)\b", question, re.IGNORECASE)
+    )
 
 
 def needs_eligibility(question: str) -> bool:
@@ -205,7 +207,9 @@ def normalize_intent(raw: Any, question: str | None = None) -> dict[str, Any]:
         inferred_since, inferred_until = _infer_year_range(question)
         since_date = inferred_since
         until_date = inferred_until
-    needs_online = bool(data.get("needs_online")) if isinstance(data.get("needs_online"), bool) else False
+    needs_online = (
+        bool(data.get("needs_online")) if isinstance(data.get("needs_online"), bool) else False
+    )
 
     return {
         "language": language,
@@ -250,8 +254,12 @@ def analyze_intent_and_expand(
         result = client.chat_json(messages, temperature=0.0, enable_thinking=False)
         intent = normalize_intent(result, question=question)
         expansion_obj = result.get("expansion") if isinstance(result, dict) else None
-        raw_keywords = _string_list(result.get("expansion_keywords") if isinstance(result, dict) else None)
-        raw_phrases = _string_list(result.get("expansion_phrases") if isinstance(result, dict) else None)
+        raw_keywords = _string_list(
+            result.get("expansion_keywords") if isinstance(result, dict) else None
+        )
+        raw_phrases = _string_list(
+            result.get("expansion_phrases") if isinstance(result, dict) else None
+        )
         if isinstance(expansion_obj, dict):
             if not raw_keywords:
                 raw_keywords = _string_list(expansion_obj.get("keywords"))

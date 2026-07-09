@@ -19,6 +19,7 @@ Usage:
     python scripts/recover_bis_editions.py --all                       # full backfill
     python scripts/recover_bis_editions.py --all --dry-run
 """
+
 from __future__ import annotations
 
 import argparse
@@ -56,21 +57,42 @@ def recover_date(date_iso: str, numero: str, lang: str, dry_run: bool) -> dict:
     have = existing_refs(target_sigs, lang)
     missing = target_sigs - have
     stats = {
-        "date": date_iso, "numero": numero, "lang": lang,
-        "in_pdfs": len(target_sigs), "already": len(have), "missing": len(missing),
-        "resolved": 0, "ingested": 0, "unresolved": [], "failed": [],
+        "date": date_iso,
+        "numero": numero,
+        "lang": lang,
+        "in_pdfs": len(target_sigs),
+        "already": len(have),
+        "missing": len(missing),
+        "resolved": 0,
+        "ingested": 0,
+        "unresolved": [],
+        "failed": [],
     }
     if not missing:
-        logger.info("recover %s/%s %s: complete (pdf=%d already=%d)",
-                    date_iso, numero, lang, len(target_sigs), len(have))
+        logger.info(
+            "recover %s/%s %s: complete (pdf=%d already=%d)",
+            date_iso,
+            numero,
+            lang,
+            len(target_sigs),
+            len(have),
+        )
         return stats
 
     resolved = resolve_signatura_ids(missing, titles, lang)
     stats["resolved"] = len(resolved)
     stats["unresolved"] = sorted(missing - set(resolved))
-    logger.info("recover %s/%s %s: pdf=%d already=%d missing=%d resolved=%d unresolved=%d",
-                date_iso, numero, lang, len(target_sigs), len(have),
-                len(missing), len(resolved), len(stats["unresolved"]))
+    logger.info(
+        "recover %s/%s %s: pdf=%d already=%d missing=%d resolved=%d unresolved=%d",
+        date_iso,
+        numero,
+        lang,
+        len(target_sigs),
+        len(have),
+        len(missing),
+        len(resolved),
+        len(stats["unresolved"]),
+    )
     if dry_run:
         return stats
 
@@ -84,8 +106,14 @@ def recover_date(date_iso: str, numero: str, lang: str, dry_run: bool) -> dict:
         except Exception:
             logger.exception("ingest_fail sig=%s disp_id=%s lang=%s", sig, disp_id, lang)
             stats["failed"].append(sig)
-    logger.info("recover %s/%s %s: ingested=%d failed=%d",
-                date_iso, numero, lang, stats["ingested"], len(stats["failed"]))
+    logger.info(
+        "recover %s/%s %s: ingested=%d failed=%d",
+        date_iso,
+        numero,
+        lang,
+        stats["ingested"],
+        len(stats["failed"]),
+    )
     return stats
 
 
@@ -120,8 +148,10 @@ def main() -> None:
             targets = []
             for lang in langs:
                 row = db.execute(
-                    sa_text("SELECT numero FROM dogv_issues WHERE date=:d AND language=:l "
-                            "AND numero IS NOT NULL"),
+                    sa_text(
+                        "SELECT numero FROM dogv_issues WHERE date=:d AND language=:l "
+                        "AND numero IS NOT NULL"
+                    ),
                     {"d": args.date, "l": lang},
                 ).first()
                 if row:
@@ -129,10 +159,18 @@ def main() -> None:
     else:
         ap.error("pass --date or --all")
 
-    logger.info("recover start: %d issue(s) workers=%d dry_run=%s",
-                len(targets), args.workers, args.dry_run)
-    totals = {"in_pdfs": 0, "already": 0, "missing": 0, "resolved": 0, "ingested": 0,
-              "unresolved": 0, "failed": 0}
+    logger.info(
+        "recover start: %d issue(s) workers=%d dry_run=%s", len(targets), args.workers, args.dry_run
+    )
+    totals = {
+        "in_pdfs": 0,
+        "already": 0,
+        "missing": 0,
+        "resolved": 0,
+        "ingested": 0,
+        "unresolved": 0,
+        "failed": 0,
+    }
     t0 = time.time()
 
     def _one(target):
@@ -155,6 +193,7 @@ def main() -> None:
         # Issue-level parallelism: distinct dates don't collide (extract/classify/
         # chunk are scoped per date / per doc-id). Bounded to spare the embed+LLM.
         from concurrent.futures import ThreadPoolExecutor
+
         with ThreadPoolExecutor(max_workers=args.workers) as ex:
             for s in ex.map(_one, targets):
                 _acc(s)

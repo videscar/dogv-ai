@@ -55,7 +55,9 @@ def _default_workers() -> int:
         return 4
 
 
-def iter_documents(db: Session, start_date=None, end_date=None) -> list[tuple[str | None, str | None]]:
+def iter_documents(
+    db: Session, start_date=None, end_date=None
+) -> list[tuple[str | None, str | None]]:
     # Select only the two URL columns; the full ORM object isn't needed and the
     # range can span the whole warm window (tens of thousands of rows).
     q = (
@@ -95,7 +97,9 @@ def _download_one(html_url: str | None, pdf_url: str | None) -> str | None:
     return None
 
 
-def download_assets(db: Session, start_date=None, end_date=None, workers: int | None = None) -> None:
+def download_assets(
+    db: Session, start_date=None, end_date=None, workers: int | None = None
+) -> None:
     docs = iter_documents(db, start_date, end_date)
     workers = max(1, workers or _default_workers())
     if start_date or end_date:

@@ -90,10 +90,7 @@ def _reground_evidence(
         if any(quote in chunk for chunk in chunks):
             out.append(item)
             continue
-        fragments = [
-            frag.strip(" .,;:¡!¿?\"'«»")
-            for frag in _ELLIPSIS_SPLIT.split(quote)
-        ]
+        fragments = [frag.strip(" .,;:¡!¿?\"'«»") for frag in _ELLIPSIS_SPLIT.split(quote)]
         fragments = [f for f in fragments if len(f) >= _REGROUND_MIN_FRAGMENT]
         if not fragments:
             out.append(item)
@@ -109,7 +106,9 @@ def _reground_evidence(
             out.append(item)
             continue
         chunk = chunks[best_idx]
-        start = max(0, min(min(best_hits) - _REGROUND_CONTEXT_CHARS, len(chunk) - _REGROUND_WINDOW_CHARS))
+        start = max(
+            0, min(min(best_hits) - _REGROUND_CONTEXT_CHARS, len(chunk) - _REGROUND_WINDOW_CHARS)
+        )
         window = chunk[start : start + _REGROUND_WINDOW_CHARS].strip()
         if not window:
             out.append(item)
@@ -265,7 +264,7 @@ def _coverage_rank_evidence(
     scored: list[tuple[int, int, int, int, int, bool, bool, dict[str, Any]]] = []
     for idx, item in enumerate(evidence):
         doc_id = item.get("doc_id") or item.get("document_id")
-        quote = (item.get("quote") or "")
+        quote = item.get("quote") or ""
         matches = _matched_keywords(quote, keywords)
         phrase_score = _phrase_hits(quote, phrases)
         entity_score = _entity_hits(quote, entities)
@@ -277,7 +276,9 @@ def _coverage_rank_evidence(
         detail = item.get("detail") or ""
         is_pinned = detail in _PINNED_DETAILS
         is_list_like = _looks_like_list(quote)
-        scored.append((-score[0], -score[1], -score[2], -score[3], idx, is_pinned, is_list_like, item))
+        scored.append(
+            (-score[0], -score[1], -score[2], -score[3], idx, is_pinned, is_list_like, item)
+        )
 
     existing_docs = {
         int(item.get("doc_id") or item.get("document_id"))
@@ -312,13 +313,15 @@ def _coverage_rank_evidence(
     if extras:
         idx = len(scored)
         for extra in extras:
-            quote = (extra.get("quote") or "")
+            quote = extra.get("quote") or ""
             matches = _matched_keywords(quote, keywords)
             phrase_score = _phrase_hits(quote, phrases)
             entity_score = _entity_hits(quote, entities)
             score = (phrase_score, entity_score, len(matches), _score_text(quote, list(matches)))
             is_list_like = _looks_like_list(quote)
-            scored.append((-score[0], -score[1], -score[2], -score[3], idx, False, is_list_like, extra))
+            scored.append(
+                (-score[0], -score[1], -score[2], -score[3], idx, False, is_list_like, extra)
+            )
             idx += 1
 
     has_phrase_hits = False
@@ -364,7 +367,7 @@ def _coverage_rank_evidence(
 
     for item in pinned:
         doc_id = item.get("doc_id")
-        quote = (item.get("quote") or "")
+        quote = item.get("quote") or ""
         if doc_id is None or not quote:
             continue
         key = (int(doc_id), quote)
@@ -377,7 +380,7 @@ def _coverage_rank_evidence(
 
     for item in combined:
         doc_id = item.get("doc_id")
-        quote = (item.get("quote") or "")
+        quote = item.get("quote") or ""
         if doc_id is None or not quote:
             continue
         key = (int(doc_id), quote)
@@ -498,7 +501,10 @@ def extract_evidence(
     client = LlmClient()
     messages = [
         {"role": "system", "content": READER_SYSTEM},
-        {"role": "user", "content": READER_USER.format(question=question, docs="\n\n---\n\n".join(blocks))},
+        {
+            "role": "user",
+            "content": READER_USER.format(question=question, docs="\n\n---\n\n".join(blocks)),
+        },
     ]
     try:
         result = client.chat_json(messages, temperature=0.0, enable_thinking=False)

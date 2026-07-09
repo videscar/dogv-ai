@@ -29,7 +29,7 @@ def test_json_from_text_extracts_first_balanced_object():
 
 
 def test_json_from_text_strips_think_blocks_before_parsing():
-    text = "<think>step 1...step 2...</think>{\"answer\":\"ok\",\"citations\":[1]}"
+    text = '<think>step 1...step 2...</think>{"answer":"ok","citations":[1]}'
     assert llm._json_from_text(text) == {"answer": "ok", "citations": [1]}
 
 
@@ -53,13 +53,7 @@ class _FakeResponse:
 
 
 def _chat_response(content: str) -> _FakeResponse:
-    return _FakeResponse(
-        {
-            "choices": [
-                {"message": {"role": "assistant", "content": content}}
-            ]
-        }
-    )
+    return _FakeResponse({"choices": [{"message": {"role": "assistant", "content": content}}]})
 
 
 def test_chat_json_requests_openai_json_response_format(monkeypatch):
@@ -73,7 +67,9 @@ def test_chat_json_requests_openai_json_response_format(monkeypatch):
 
     monkeypatch.setattr(llm.requests, "post", _fake_post)
 
-    client = llm.LlmClient(base_url="http://localhost:9999", model="fake", timeout=5, max_tokens=128)
+    client = llm.LlmClient(
+        base_url="http://localhost:9999", model="fake", timeout=5, max_tokens=128
+    )
     result = client.chat_json([{"role": "user", "content": "hi"}])
 
     payload = captured["payload"]
@@ -96,7 +92,9 @@ def test_chat_json_retries_without_response_format_when_parser_fails(monkeypatch
 
     monkeypatch.setattr(llm.requests, "post", _fake_post)
 
-    client = llm.LlmClient(base_url="http://localhost:9999", model="fake", timeout=5, max_tokens=128)
+    client = llm.LlmClient(
+        base_url="http://localhost:9999", model="fake", timeout=5, max_tokens=128
+    )
     result = client.chat_json([{"role": "user", "content": "hi"}])
 
     assert len(calls) == 2
@@ -112,7 +110,9 @@ def test_chat_json_raises_when_both_passes_fail(monkeypatch):
         lambda url, json, timeout: _chat_response("still not json"),
     )
 
-    client = llm.LlmClient(base_url="http://localhost:9999", model="fake", timeout=5, max_tokens=128)
+    client = llm.LlmClient(
+        base_url="http://localhost:9999", model="fake", timeout=5, max_tokens=128
+    )
     try:
         client.chat_json([{"role": "user", "content": "hi"}])
     except ValueError as exc:

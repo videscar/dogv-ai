@@ -106,7 +106,11 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         #     heavy HyDE RRF lane evicts the correctly-retrieved gold (e.g. v2-092).
         hyde_embedding = None
         hyde_enabled = getattr(settings, "ask_hyde_enabled", False)
-        if hyde_enabled and getattr(settings, "ask_hyde_conditional", True) and is_reference_query(question):
+        if (
+            hyde_enabled
+            and getattr(settings, "ask_hyde_conditional", True)
+            and is_reference_query(question)
+        ):
             hyde_enabled = False
 
         # Semantic anchors are skipped for enumeration queries: those want the
@@ -142,7 +146,9 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 deduped.append(item)
             return deduped
 
-        def _merge_docs(primary: list[dict[str, Any]], secondary: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        def _merge_docs(
+            primary: list[dict[str, Any]], secondary: list[dict[str, Any]]
+        ) -> list[dict[str, Any]]:
             merged: list[dict[str, Any]] = []
             seen: set[int] = set()
             for item in primary + secondary:
@@ -205,7 +211,9 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 bm25_strict_hits: list[dict[str, Any]] = []
                 bm25_title_hits: list[dict[str, Any]] = []
                 if "bm25" in lanes:
-                    bm25_hits_raw = bm25_search(db, bm25_query_value, filters_to_use, limit=bm25_limit)
+                    bm25_hits_raw = bm25_search(
+                        db, bm25_query_value, filters_to_use, limit=bm25_limit
+                    )
                     bm25_hits = _dedupe_docs(bm25_hits_raw)
                     if bm25_strict_value:
                         bm25_strict_hits = bm25_search(
@@ -230,25 +238,37 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                         secondary_weights = []
                         if bm25_hits:
                             secondary_sources.append(bm25_hits)
-                            secondary_weights.append(getattr(settings, "bm25_fuse_weight_chunk", 1.0))
+                            secondary_weights.append(
+                                getattr(settings, "bm25_fuse_weight_chunk", 1.0)
+                            )
                         if bm25_title_hits:
                             secondary_sources.append(bm25_title_hits)
-                            secondary_weights.append(getattr(settings, "bm25_fuse_weight_title", 0.9))
+                            secondary_weights.append(
+                                getattr(settings, "bm25_fuse_weight_title", 0.9)
+                            )
                     else:
                         primary_hits = bm25_hits
                         secondary_sources = []
                         secondary_weights = []
                         if bm25_strict_hits:
                             secondary_sources.append(bm25_strict_hits)
-                            secondary_weights.append(getattr(settings, "bm25_fuse_weight_strict", 1.2))
+                            secondary_weights.append(
+                                getattr(settings, "bm25_fuse_weight_strict", 1.2)
+                            )
                         if bm25_title_hits:
                             secondary_sources.append(bm25_title_hits)
-                            secondary_weights.append(getattr(settings, "bm25_fuse_weight_title", 0.9))
-                    secondary_hits = _combine_sources(
-                        secondary_sources,
-                        max_docs=bm25_limit,
-                        weights=secondary_weights,
-                    ) if secondary_sources else []
+                            secondary_weights.append(
+                                getattr(settings, "bm25_fuse_weight_title", 0.9)
+                            )
+                    secondary_hits = (
+                        _combine_sources(
+                            secondary_sources,
+                            max_docs=bm25_limit,
+                            weights=secondary_weights,
+                        )
+                        if secondary_sources
+                        else []
+                    )
                     bm25_hits = _merge_with_budget(primary_hits, secondary_hits, bm25_limit)
             chunk_candidates: list[dict[str, Any]] = []
             if "bm25" in lanes:
@@ -283,7 +303,9 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 return []
             if len(sources) == 1:
                 return _dedupe_docs(sources[0])
-            use_weights = weights if weights and len(weights) == len(sources) else [1.0] * len(sources)
+            use_weights = (
+                weights if weights and len(weights) == len(sources) else [1.0] * len(sources)
+            )
             return rrf_fuse(sources, max_docs=max_docs, weights=use_weights)
 
         def _run_all_facets(filters_to_use: RetrievalFilters):
@@ -298,8 +320,12 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 title_lexical_hits: list[dict[str, Any]] = []
                 title_hits: list[dict[str, Any]] = []
                 if "title" in lanes:
-                    title_hits_raw = title_vector_search(db, query_embedding, filters_to_use, limit=50)
-                    title_lexical_hits = title_bm25_search(db, bm25_query, filters_to_use, limit=bm25_limit)
+                    title_hits_raw = title_vector_search(
+                        db, query_embedding, filters_to_use, limit=50
+                    )
+                    title_lexical_hits = title_bm25_search(
+                        db, bm25_query, filters_to_use, limit=bm25_limit
+                    )
                     title_hits = _dedupe_docs(title_hits_raw)
 
             bm25_runs = [
@@ -319,7 +345,11 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                     prf_used = True
             bm25_primary = bm25_runs[0][0] if bm25_runs else []
             secondary_sources = [run[0] for run in bm25_runs[1:] if run[0]]
-            secondary_hits = _combine_sources(secondary_sources, max_docs=bm25_limit) if secondary_sources else []
+            secondary_hits = (
+                _combine_sources(secondary_sources, max_docs=bm25_limit)
+                if secondary_sources
+                else []
+            )
             bm25_hits = _merge_with_budget(bm25_primary, secondary_hits, bm25_limit)
 
             bm25_strict_hits = []
@@ -493,7 +523,9 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             except Exception:
                 hyde_embedding = None
             if hyde_embedding is not None:
-                fused, top_chunks, chunk_candidates, counts, rrf_expanded, soft_language = _compute(filters)
+                fused, top_chunks, chunk_candidates, counts, rrf_expanded, soft_language = _compute(
+                    filters
+                )
 
         fallbacks: list[str] = []
         if soft_language:
@@ -512,7 +544,9 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 if margin >= expand_ratio:
                     return
             filters = new_filters
-            fused, top_chunks, chunk_candidates, counts, rrf_expanded_inner, soft_language_inner = _compute(filters)
+            fused, top_chunks, chunk_candidates, counts, rrf_expanded_inner, soft_language_inner = (
+                _compute(filters)
+            )
             if soft_language_inner:
                 fallbacks.append("soft_language")
             fallbacks.append(reason)
@@ -588,13 +622,13 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             state,
             "retrieve",
             {
-            "candidate_docs": fused,
-            "top_chunks": top_chunks,
-            "chunk_candidates": chunk_candidates,
-            "query_embedding": query_embedding,
-            "query_embeddings": embeddings,
-            "hyde_embedding": hyde_embedding,
-            "filters": filters,
+                "candidate_docs": fused,
+                "top_chunks": top_chunks,
+                "chunk_candidates": chunk_candidates,
+                "query_embedding": query_embedding,
+                "query_embeddings": embeddings,
+                "hyde_embedding": hyde_embedding,
+                "filters": filters,
             },
             elapsed_seconds=round(elapsed, 3),
             candidate_docs=len(fused),
@@ -606,5 +640,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             hyde_gate_margin=(None if hyde_gate_margin is None else round(hyde_gate_margin, 3)),
         )
     except Exception:
-        logger.exception("retrieve.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
+        logger.exception(
+            "retrieve.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start
+        )
         raise

@@ -7,6 +7,7 @@ inputs needed to judge correctness AND faithfulness separately.
 
 Usage: python eval_v2/collect_answers.py [--base-url http://127.0.0.1:8088]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -63,10 +64,16 @@ def main() -> int:
             json.dump(meta, mf, ensure_ascii=False, indent=1)
         print(f"run stamp: build={meta['build']} settings={meta['eval_settings']}", flush=True)
         if (meta.get("build") or {}).get("git_dirty"):
-            print("WARNING: server reports git_dirty=True — uncommitted code is serving this run.", flush=True)
+            print(
+                "WARNING: server reports git_dirty=True — uncommitted code is serving this run.",
+                flush=True,
+            )
     except Exception as exc:
-        print(f"WARNING: could not stamp run from /health ({type(exc).__name__}: {exc}); "
-              f"server may predate build-info support.", flush=True)
+        print(
+            f"WARNING: could not stamp run from /health ({type(exc).__name__}: {exc}); "
+            f"server may predate build-info support.",
+            flush=True,
+        )
 
     items = json.load(open(args.in_path, encoding="utf-8"))
     skip = done_ids(out_path)
@@ -99,24 +106,33 @@ def main() -> int:
                     continue
         latency = round(time.perf_counter() - started, 1)
         rec = {
-            "id": it["id"], "category": it["category"], "language": it["language"],
-            "should_abstain": it["should_abstain"], "question": q,
+            "id": it["id"],
+            "category": it["category"],
+            "language": it["language"],
+            "should_abstain": it["should_abstain"],
+            "question": q,
             "expected_answer": it["expected_answer"],
-            "gold_refs": it.get("gold_refs", []), "gold_doc_ids": it.get("doc_ids", []),
+            "gold_refs": it.get("gold_refs", []),
+            "gold_doc_ids": it.get("doc_ids", []),
             "answer": answer,
             "cited_doc_ids": [c.get("document_id") for c in citations],
             "cited_refs": [c.get("ref") for c in citations],
             "n_citations": len(citations),
-            "evidence": [{"doc_id": e.get("doc_id"), "quote": (e.get("quote") or "")[:500]}
-                         for e in evidence][:10],
+            "evidence": [
+                {"doc_id": e.get("doc_id"), "quote": (e.get("quote") or "")[:500]} for e in evidence
+            ][:10],
             "cand_doc_ids": [c.get("document_id") for c in cand][:15],
             "fallback_reason": profile.get("fallback_reason"),
-            "latency_s": latency, "error": error,
+            "latency_s": latency,
+            "error": error,
         }
         fout.write(json.dumps(rec, ensure_ascii=False) + "\n")
         fout.flush()
-        print(f"[{idx}/{len(todo)}] {it['id']} cites={rec['n_citations']} "
-              f"lat={latency}s{' ERR' if error else ''}", flush=True)
+        print(
+            f"[{idx}/{len(todo)}] {it['id']} cites={rec['n_citations']} "
+            f"lat={latency}s{' ERR' if error else ''}",
+            flush=True,
+        )
     fout.close()
     return 0
 

@@ -33,9 +33,9 @@ def temporal_guard_node(state: QAState) -> QAState:
             state,
             "temporal_guard",
             {
-            "answer": _temporal_reject_message(language),
-            "citations": [],
-            "temporal_reject": True,
+                "answer": _temporal_reject_message(language),
+                "citations": [],
+                "temporal_reject": True,
             },
             elapsed_seconds=round(time.monotonic() - start, 3),
             policy=policy,

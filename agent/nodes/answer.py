@@ -169,9 +169,7 @@ def _norm_target_doc_id(state: QAState) -> int | None:
     ref = parse_reference(question)
     if ref is not None:
         matches = sorted(
-            (m["rank"], did)
-            for did, m in meta.items()
-            if reference_matches_title(ref, m["title"])
+            (m["rank"], did) for did, m in meta.items() if reference_matches_title(ref, m["title"])
         )
         if not matches:
             return None
@@ -197,9 +195,7 @@ def _norm_target_doc_id(state: QAState) -> int | None:
     top_matched = scored[0][0]
     # Distinct norms (different N/YYYY) tied at the top -> ambiguous, don't force.
     top_norms = {
-        title_num_year(meta[did]["title"])
-        for matched, _, did in scored
-        if matched == top_matched
+        title_num_year(meta[did]["title"]) for matched, _, did in scored if matched == top_matched
     }
     top_norms.discard(None)
     if len(top_norms) > 1:

@@ -83,9 +83,10 @@ def edition_sibling_pairs(
         return []
     from sqlalchemy import text as sa_text
 
-    rows = db.execute(
-        sa_text(
-            """
+    rows = (
+        db.execute(
+            sa_text(
+                """
             SELECT a.document_id AS a, b.document_id AS b,
                    1 - (a.embedding <=> b.embedding) AS cos
             FROM rag_doc a
@@ -95,9 +96,12 @@ def edition_sibling_pairs(
               AND a.embedding IS NOT NULL
               AND b.embedding IS NOT NULL
             """
-        ),
-        {"ids": doc_ids},
-    ).mappings().all()
+            ),
+            {"ids": doc_ids},
+        )
+        .mappings()
+        .all()
+    )
     pairs: list[tuple[int, int]] = []
     for row in rows:
         if float(row["cos"]) < sim_threshold:

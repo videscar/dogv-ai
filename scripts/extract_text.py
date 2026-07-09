@@ -195,11 +195,7 @@ def resolve_document_text(
 
 
 def _count_target_documents(db: Session, start_date=None, end_date=None) -> int:
-    q = (
-        db.query(DogvDocument.id)
-        .join(DogvIssue)
-        .filter(DogvDocument.text.is_(None))
-    )
+    q = db.query(DogvDocument.id).join(DogvIssue).filter(DogvDocument.text.is_(None))
     if start_date:
         q = q.filter(DogvIssue.date >= start_date)
     if end_date:
@@ -293,7 +289,9 @@ def main():
     parser.add_argument("end_date", nargs="?", help="YYYY-MM-DD")
     parser.add_argument("--batch-size", type=int, default=200)
     parser.add_argument("--commit-every", type=int, default=200)
-    parser.add_argument("--no-fetch-html", action="store_true", help="PDF only; skip the HTML body fetch")
+    parser.add_argument(
+        "--no-fetch-html", action="store_true", help="PDF only; skip the HTML body fetch"
+    )
     args = parser.parse_args()
 
     start_date = datetime.strptime(args.start_date, "%Y-%m-%d").date() if args.start_date else None

@@ -116,7 +116,9 @@ def _render_citations(citations: list[dict[str, Any]]) -> str:
         return ""
     lines = ["### Citas"]
     for idx, item in enumerate(citations, start=1):
-        title = (item.get("title") or item.get("ref") or f"Documento {item.get('document_id')}").strip()
+        title = (
+            item.get("title") or item.get("ref") or f"Documento {item.get('document_id')}"
+        ).strip()
         url = item.get("html_url") or item.get("pdf_url")
         metadata_parts = []
         if item.get("issue_date"):

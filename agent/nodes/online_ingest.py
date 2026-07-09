@@ -119,7 +119,11 @@ def online_ingest_node(state: QAState) -> QAState:
         else:
             today = local_today(settings.temporal_timezone)
             with SessionLocal() as db:
-                row = db.execute(sa_text("SELECT MAX(date) AS max_date FROM dogv_issues")).mappings().one()
+                row = (
+                    db.execute(sa_text("SELECT MAX(date) AS max_date FROM dogv_issues"))
+                    .mappings()
+                    .one()
+                )
                 max_date = row["max_date"]
             if not max_date or max_date < today:
                 ensure_recent_ingested(settings.auto_ingest_max_days, DEFAULT_LANGS)
@@ -133,5 +137,7 @@ def online_ingest_node(state: QAState) -> QAState:
             status="done",
         )
     except Exception:
-        logger.exception("ingest.error req=%s elapsed=%.2fs", request_id, time.monotonic() - started_at)
+        logger.exception(
+            "ingest.error req=%s elapsed=%.2fs", request_id, time.monotonic() - started_at
+        )
         raise

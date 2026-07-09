@@ -13,6 +13,7 @@ column. This is the regression harness we re-run before each new testing round.
 Usage:
     python scripts/run_tester_regression.py [--api http://localhost:8088] [--out PATH]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -59,8 +60,10 @@ def run(api: str) -> list[dict]:
             answer = d.get("answer") or ""
             cites = d.get("citations") or []
             row["answer"] = answer
-            row["cites"] = [{"document_id": c.get("document_id"), "ref": c.get("ref"),
-                             "title": c.get("title")} for c in cites]
+            row["cites"] = [
+                {"document_id": c.get("document_id"), "ref": c.get("ref"), "title": c.get("title")}
+                for c in cites
+            ]
             row["answered"] = not bool(_ABSTAIN.search(answer))
             if exp_ny:
                 row["cited_norm"] = any(exp_ny in (c.get("title") or "") for c in cites)
@@ -68,8 +71,9 @@ def run(api: str) -> list[dict]:
                 row["cited_norm"] = None  # no specific norm to check
             row["error"] = None
         except Exception as exc:  # noqa: BLE001
-            row.update(answer="", cites=[], answered=False, cited_norm=None,
-                       seconds=None, error=str(exc))
+            row.update(
+                answer="", cites=[], answered=False, cited_norm=None, seconds=None, error=str(exc)
+            )
         # A regression = abstained, OR named a norm it failed to cite, OR errored.
         # Exception: when the answer DID cite the expected norm, an abstain phrase is a
         # grounded premise-correction ("No consta que la Orden 5/2019 regule residuos:
@@ -84,8 +88,10 @@ def run(api: str) -> list[dict]:
         )
         results.append(row)
         flag = "REGRESSION" if row["regression"] else "ok"
-        print(f"#{it['id']:2} {flag:11} answered={row['answered']} "
-              f"cited_norm={row['cited_norm']} cites={[c['ref'] for c in row['cites']]}")
+        print(
+            f"#{it['id']:2} {flag:11} answered={row['answered']} "
+            f"cited_norm={row['cited_norm']} cites={[c['ref'] for c in row['cites']]}"
+        )
     return results
 
 
@@ -93,13 +99,19 @@ def write_report(results: list[dict], out: Path) -> None:
     regs = [r for r in results if r["regression"]]
     ts = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d %H:%M UTC")
     lines = [f"# Tester regression run — {ts}", ""]
-    lines.append(f"**{len(results) - len(regs)}/{len(results)} clean**, "
-                 f"{len(regs)} regression(s).\n")
+    lines.append(
+        f"**{len(results) - len(regs)}/{len(results)} clean**, " f"{len(regs)} regression(s).\n"
+    )
     if regs:
         lines.append("## Regressions")
         for r in regs:
-            why = ("error: " + r["error"]) if r["error"] else (
-                "abstained" if not r["answered"] else f"missing norm cite ({r['expected_ny']})")
+            why = (
+                ("error: " + r["error"])
+                if r["error"]
+                else (
+                    "abstained" if not r["answered"] else f"missing norm cite ({r['expected_ny']})"
+                )
+            )
             lines.append(f"- **#{r['id']} [{r['source']}]** ({why}) — {r['question']}")
         lines.append("")
     lines.append("## All results")
@@ -112,8 +124,10 @@ def write_report(results: list[dict], out: Path) -> None:
         # "~" = abstain phrase present but the expected norm IS cited (grounded
         # premise-correction), which is a correct answer, not a refusal.
         answered_mark = "✓" if r["answered"] else ("~" if r.get("grounded_refutation") else "✗")
-        lines.append(f"| {r['id']} | {r['source']} | {answered_mark} "
-                     f"| {cn} | {cites} | {r['seconds']} | {q} |")
+        lines.append(
+            f"| {r['id']} | {r['source']} | {answered_mark} "
+            f"| {cn} | {cites} | {r['seconds']} | {q} |"
+        )
     out.write_text("\n".join(lines) + "\n")
     print(f"\nReport: {out}  ({len(results) - len(regs)}/{len(results)} clean)")
 

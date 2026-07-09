@@ -64,9 +64,7 @@ def upsert_issue(db: Session, date_str: str, lang: str, data: dict[str, Any]) ->
     # Allow multiple issues per date (e.g., BIS editions). Prefer an exact numero match,
     # otherwise re-use a placeholder issue with numero=None for the same day.
     same_day_issues = (
-        db.query(DogvIssue)
-        .filter(DogvIssue.date == date, DogvIssue.language == lang)
-        .all()
+        db.query(DogvIssue).filter(DogvIssue.date == date, DogvIssue.language == lang).all()
     )
 
     issue = None

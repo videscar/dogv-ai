@@ -169,7 +169,9 @@ class Settings(BaseSettings):
     # server stays stateless. With empty history every path below is a no-op, so
     # single-turn behaviour is unchanged.
     ask_contextualize_enabled: bool = True  # rewrite follow-up turns into a standalone query using prior turns (one cheap LLM hop; skipped when history is empty)
-    ask_history_max_turns: int = 6  # max prior turns (user+assistant messages) carried into contextualize + synthesis
+    ask_history_max_turns: int = (
+        6  # max prior turns (user+assistant messages) carried into contextualize + synthesis
+    )
     bm25_fuse_weight_chunk: float = 1.0
     bm25_fuse_weight_strict: float = 1.2
     bm25_fuse_weight_title: float = 0.9
@@ -180,7 +182,9 @@ class Settings(BaseSettings):
     # Reading / reranking
     ask_read_max_docs: int = 3
     ask_chunks_per_doc: int = 10
-    ask_read_retrieval_chunks: int = 4  # retrieval/BM25 chunks preserved per doc (baseline behaviour)
+    ask_read_retrieval_chunks: int = (
+        4  # retrieval/BM25 chunks preserved per doc (baseline behaviour)
+    )
     # Citation floor: every rerank-selected doc that reached the reader payload must
     # be citable. extract_evidence (LLM + lexical coverage) silently drops docs with
     # no keyword overlap — for anchor-poor vague/colloquial queries and annex golds

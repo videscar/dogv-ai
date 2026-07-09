@@ -3,6 +3,7 @@ and per-language breakdowns. Primary stage = 'rerank' (the production final orde
 
 Usage: python eval_v2/retrieval_metrics.py <run_eval_report.json> <retrieval_input.json> [out.json]
 """
+
 from __future__ import annotations
 
 import json
@@ -82,8 +83,7 @@ def main() -> int:
         for bk in bucket_keys:
             groups.setdefault(bk, new_acc())
 
-        rec = {"id": qid, "category": cat, "language": lang, "text_source": src,
-               "gold_sets": gs}
+        rec = {"id": qid, "category": cat, "language": lang, "text_source": src, "gold_sets": gs}
         for stage in ("hybrid", PRIMARY_STAGE):
             ranked = ranked_ids(q, stage)
             sr = satisfying_rank(ranked, gs)
@@ -102,16 +102,20 @@ def main() -> int:
         per_query.append(rec)
 
     def summarize(acc):
-        return {st: {mk: round(sum(v) / len(v), 4) if v else 0.0 for mk, v in md.items()}
-                for st, md in acc.items()}
+        return {
+            st: {mk: round(sum(v) / len(v), 4) if v else 0.0 for mk, v in md.items()}
+            for st, md in acc.items()
+        }
 
     summary = {bk: {"n": len(g[PRIMARY_STAGE]["mrr"]), **summarize(g)} for bk, g in groups.items()}
 
     # pretty print
     def fmt(d):
-        return (f"R@1={d['recall@1']:.3f} R@5={d['recall@5']:.3f} R@10={d['recall@10']:.3f} "
-                f"R@20={d['recall@20']:.3f} MRR={d['mrr']:.3f} "
-                f"nDCG@5={d['ndcg@5']:.3f} nDCG@10={d['ndcg@10']:.3f}")
+        return (
+            f"R@1={d['recall@1']:.3f} R@5={d['recall@5']:.3f} R@10={d['recall@10']:.3f} "
+            f"R@20={d['recall@20']:.3f} MRR={d['mrr']:.3f} "
+            f"nDCG@5={d['ndcg@5']:.3f} nDCG@10={d['ndcg@10']:.3f}"
+        )
 
     print(f"\n=== RETRIEVAL METRICS (stage={PRIMARY_STAGE}, primary production k=10) ===")
     print(f"ALL (n={summary['ALL']['n']}): {fmt(summary['ALL'][PRIMARY_STAGE])}")
@@ -127,8 +131,12 @@ def main() -> int:
         print(f"  {bk[4:]:13s} (n={summary[bk]['n']:2d}): {fmt(summary[bk][PRIMARY_STAGE])}")
 
     if out_path:
-        json.dump({"summary": summary, "per_query": per_query},
-                  open(out_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+        json.dump(
+            {"summary": summary, "per_query": per_query},
+            open(out_path, "w", encoding="utf-8"),
+            ensure_ascii=False,
+            indent=1,
+        )
         print(f"\nwrote {out_path}")
     return 0
 

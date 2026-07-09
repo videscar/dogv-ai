@@ -68,7 +68,9 @@ def _parse_k_values(value: str) -> list[int]:
     return sorted(set(items))
 
 
-def _format_candidates(rows: list[dict[str, Any]], score_key: str, limit: int) -> list[dict[str, Any]]:
+def _format_candidates(
+    rows: list[dict[str, Any]], score_key: str, limit: int
+) -> list[dict[str, Any]]:
     formatted = []
     for rank, row in enumerate(rows[:limit], start=1):
         formatted.append(
@@ -96,7 +98,9 @@ def _dedupe_docs(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return deduped
 
 
-def _merge_docs(primary: list[dict[str, Any]], secondary: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _merge_docs(
+    primary: list[dict[str, Any]], secondary: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
     merged: list[dict[str, Any]] = []
     seen: set[int] = set()
     for item in primary + secondary:
@@ -204,9 +208,10 @@ def _find_ref_hits(
             params["until_date"] = filters.until_date
 
         where_sql = " AND ".join(clauses)
-        rows = db.execute(
-            sa_text(
-                f"""
+        rows = (
+            db.execute(
+                sa_text(
+                    f"""
                 SELECT
                     dd.id AS document_id,
                     dd.title,
@@ -230,9 +235,12 @@ def _find_ref_hits(
                     dd.id DESC
                 LIMIT :limit
                 """
-            ),
-            params,
-        ).mappings().all()
+                ),
+                params,
+            )
+            .mappings()
+            .all()
+        )
         return [dict(row) for row in rows]
 
     for token in tokens:
@@ -380,7 +388,9 @@ def _normalize_gold_sets(entry: dict[str, Any]) -> list[list[int]]:
     return []
 
 
-def _compute_hits(doc_ids: list[int], gold_sets: list[list[int]], k_values: list[int]) -> dict[str, bool]:
+def _compute_hits(
+    doc_ids: list[int], gold_sets: list[list[int]], k_values: list[int]
+) -> dict[str, bool]:
     hits: dict[str, bool] = {}
     if not gold_sets:
         for k in k_values:
@@ -437,7 +447,9 @@ def _normalize_intent_filters(
         timezone_name=settings.temporal_timezone,
         week_start=settings.temporal_week_start,
     )
-    if (relative_range or is_relative_time_query(question)) and (settings.ask_temporal_policy or "").lower() == "filter":
+    if (relative_range or is_relative_time_query(question)) and (
+        settings.ask_temporal_policy or ""
+    ).lower() == "filter":
         if relative_range:
             since_date, until_date = relative_range
         else:
@@ -471,14 +483,18 @@ def _run_sources(
     list[dict[str, Any]],
     list[dict[str, Any]],
 ]:
-    vector_hits = vector_search(db, query_embedding, filters, limit=limit) if "vector" in LANES else []
+    vector_hits = (
+        vector_search(db, query_embedding, filters, limit=limit) if "vector" in LANES else []
+    )
     bm25_limit = BM25_LIMIT
     bm25_hits = bm25_search(db, bm25_query, filters, limit=bm25_limit) if "bm25" in LANES else []
     if bm25_strict_query and "bm25" in LANES:
         bm25_strict_hits = bm25_search(db, bm25_strict_query, filters, limit=bm25_limit)
     else:
         bm25_strict_hits = []
-    title_hits_raw = title_vector_search(db, query_embedding, filters, limit=limit) if "title" in LANES else []
+    title_hits_raw = (
+        title_vector_search(db, query_embedding, filters, limit=limit) if "title" in LANES else []
+    )
     title_lexical_hits = (
         title_bm25_search(db, bm25_query, filters, limit=bm25_limit) if "title" in LANES else []
     )
@@ -506,13 +522,22 @@ def _run_sources(
         if title_lexical_hits:
             secondary_sources.append(title_lexical_hits)
             secondary_weights.append(getattr(settings, "bm25_fuse_weight_title", 0.9))
-    secondary_hits = _combine_sources(
-        secondary_sources,
-        max_docs=bm25_limit,
-        weights=secondary_weights,
-    ) if secondary_sources else []
+    secondary_hits = (
+        _combine_sources(
+            secondary_sources,
+            max_docs=bm25_limit,
+            weights=secondary_weights,
+        )
+        if secondary_sources
+        else []
+    )
     bm25_hits = _merge_with_budget(primary_hits, secondary_hits, bm25_limit)
-    return _dedupe_docs(vector_hits), _dedupe_docs(bm25_hits), _dedupe_docs(title_hits_raw), title_lexical_hits
+    return (
+        _dedupe_docs(vector_hits),
+        _dedupe_docs(bm25_hits),
+        _dedupe_docs(title_hits_raw),
+        title_lexical_hits,
+    )
 
 
 def _combine_sources(
@@ -562,7 +587,9 @@ def _run_sources_all_facets(
             prf_used = True
     bm25_primary = bm25_runs[0][1] if bm25_runs else []
     secondary_sources = [run[1] for run in bm25_runs[1:] if run[1]]
-    secondary_hits = _combine_sources(secondary_sources, max_docs=BM25_LIMIT) if secondary_sources else []
+    secondary_hits = (
+        _combine_sources(secondary_sources, max_docs=BM25_LIMIT) if secondary_sources else []
+    )
     bm25_hits = _merge_with_budget(bm25_primary, secondary_hits, BM25_LIMIT)
     ref_hits = _find_ref_hits(db, question, filters, per_token_limit=5)
     if ref_hits:
@@ -640,7 +667,9 @@ def _compute_hybrid(
                 relaxed_title,
                 relaxed_title_lexical,
                 relaxed_counts,
-            ) = _run_sources_all_facets(db, question, query_embedding, bm25_specs, relaxed_filters, limit)
+            ) = _run_sources_all_facets(
+                db, question, query_embedding, bm25_specs, relaxed_filters, limit
+            )
             if "vector" in LANES:
                 sources.append(relaxed_vector)
                 weights.append(getattr(settings, "ask_rrf_weight_vector", 1.0))
@@ -925,14 +954,18 @@ def main() -> int:
 
     with SessionLocal() as db:
         has_kind = bool(
-            db.execute(sa_text("SELECT 1 FROM dogv_documents WHERE doc_kind IS NOT NULL LIMIT 1")).scalar()
+            db.execute(
+                sa_text("SELECT 1 FROM dogv_documents WHERE doc_kind IS NOT NULL LIMIT 1")
+            ).scalar()
         )
         total = len(eval_set)
         for idx, entry in enumerate(eval_set, start=1):
             question = entry["question"]
             gold_sets = _normalize_gold_sets(entry)
             if not gold_sets:
-                raise SystemExit(f"Entry id={entry.get('id')} has no valid gold_sets/doc_ids/doc_id")
+                raise SystemExit(
+                    f"Entry id={entry.get('id')} has no valid gold_sets/doc_ids/doc_id"
+                )
             gold_doc_ids = sorted({doc_id for group in gold_sets for doc_id in group})
             doc_kind = entry.get("doc_kind")
             doc_subkind = entry.get("doc_subkind")
@@ -960,7 +993,9 @@ def main() -> int:
                     expansion = {"keywords": [], "phrases": []}
             filters = _normalize_intent_filters(question, intent, has_kind)
             embed_start = time.perf_counter()
-            embeddings, bm25_specs = _collect_facet_specs(question, intent, expansion, client, embed_cache)
+            embeddings, bm25_specs = _collect_facet_specs(
+                question, intent, expansion, client, embed_cache
+            )
             timings.embed = time.perf_counter() - embed_start
             bm25_query_main = bm25_specs[0][0] if bm25_specs else question
 
@@ -987,14 +1022,16 @@ def main() -> int:
             precomputed = (vector_hits, bm25_hits, title_hits, title_lexical_hits, counts_sources)
 
             hybrid_start = time.perf_counter()
-            hybrid_final, final_filters, fallbacks, counts_final, rrf_expanded = _compute_hybrid_with_fallbacks(
-                db,
-                question,
-                embeddings[0],
-                bm25_specs,
-                filters,
-                args.max_candidates,
-                precomputed=precomputed,
+            hybrid_final, final_filters, fallbacks, counts_final, rrf_expanded = (
+                _compute_hybrid_with_fallbacks(
+                    db,
+                    question,
+                    embeddings[0],
+                    bm25_specs,
+                    filters,
+                    args.max_candidates,
+                    precomputed=precomputed,
+                )
             )
             timings.hybrid = time.perf_counter() - hybrid_start
 
@@ -1059,7 +1096,10 @@ def main() -> int:
                     row["document_id"] for row in candidates["hybrid_nofilter"]
                 ]
 
-            hits = {stage: _compute_hits(doc_ids, gold_sets, k_values) for stage, doc_ids in stage_docs.items()}
+            hits = {
+                stage: _compute_hits(doc_ids, gold_sets, k_values)
+                for stage, doc_ids in stage_docs.items()
+            }
 
             for stage, stage_hits in hits.items():
                 summary_counts.setdefault(stage, {str(k): 0 for k in k_values})

@@ -275,7 +275,9 @@ def _numeric_evidence(
     docs: list[dict[str, Any]],
     full_docs: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    if not re.search(r"\b(quantia|cuant[ií]a|importe|cantidad|euros?|€)\b", question, re.IGNORECASE):
+    if not re.search(
+        r"\b(quantia|cuant[ií]a|importe|cantidad|euros?|€)\b", question, re.IGNORECASE
+    ):
         return []
 
     candidates: list[tuple[int, int, str]] = []
@@ -393,7 +395,9 @@ def _program_total_evidence(
                     continue
                 if not amount_re.search(chunk):
                     continue
-                cue = len(_TOTAL_CUE.findall(chunk)) + (1 if "€" in chunk or "euro" in chunk.lower() else 0)
+                cue = len(_TOTAL_CUE.findall(chunk)) + (
+                    1 if "€" in chunk or "euro" in chunk.lower() else 0
+                )
                 # Prefer the total from the best-RANKED doc — the reranker already
                 # decided which doc the question is about; cue density only breaks
                 # ties within a doc. Without this, a figure-dense sibling convocatoria

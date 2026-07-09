@@ -12,7 +12,10 @@ Q_REF = "¿En qué fecha se firmó el Decreto 185/2018?"
 Q_VAGUE = "¿Qué ayudas hay para agricultores?"
 
 CITS = [
-    {"document_id": 1, "title": "DECRETO 185/2018, de 19 de octubre, del Consell, de declaración..."},
+    {
+        "document_id": 1,
+        "title": "DECRETO 185/2018, de 19 de octubre, del Consell, de declaración...",
+    },
     {"document_id": 2, "title": "CORRECCIÓN de errores del Decreto 185/2025..."},
     {"document_id": 3, "title": "RESOLUCIÓN tangencial sin relación"},
 ]
@@ -88,7 +91,10 @@ def test_named_target_none_when_norm_not_in_read_set():
 def test_named_target_ambiguous_distinct_norms_bail():
     q = "¿Qué regula la ley de protección ambiental sostenible?"
     cands = [
-        {"document_id": 1, "title": "LEY 1/2020, de protección ambiental sostenible de la Comunitat"},
+        {
+            "document_id": 1,
+            "title": "LEY 1/2020, de protección ambiental sostenible de la Comunitat",
+        },
         {"document_id": 2, "title": "LEY 2/2021, de protección ambiental sostenible valenciana"},
     ]
     state = _state(q, cands, grounded_ids=[1, 2])
@@ -97,8 +103,14 @@ def test_named_target_ambiguous_distinct_norms_bail():
 
 def test_numbered_target_prefers_pinned_twin():
     cands = [
-        {"document_id": 10, "title": "DECRET 185/2018, de 19 d'octubre, del Consell, de declaració..."},
-        {"document_id": 11, "title": "DECRETO 185/2018, de 19 de octubre, del Consell, de declaración..."},
+        {
+            "document_id": 10,
+            "title": "DECRET 185/2018, de 19 d'octubre, del Consell, de declaració...",
+        },
+        {
+            "document_id": 11,
+            "title": "DECRETO 185/2018, de 19 de octubre, del Consell, de declaración...",
+        },
     ]
     state = _state(Q_REF, cands, grounded_ids=[10, 11], ondemand=11)
     assert _norm_target_doc_id(state) == 11

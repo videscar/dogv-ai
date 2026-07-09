@@ -118,7 +118,9 @@ def _collect_scope_ids(
     return scope_ids
 
 
-def _source_text(evidence: list[dict[str, Any]] | None, full_docs: list[dict[str, Any]] | None) -> str:
+def _source_text(
+    evidence: list[dict[str, Any]] | None, full_docs: list[dict[str, Any]] | None
+) -> str:
     parts: list[str] = []
     for item in evidence or []:
         quote = (item.get("quote") or "").strip()
@@ -280,11 +282,17 @@ def validate_answer_details(
         semantic_errors.append("no_consta_only_with_evidence")
 
     source_text = _source_text_for_citations(evidence, full_docs, citations)
-    claim_guard_mode = str(getattr(settings, "answer_claim_guard_mode", "unit_aware_strict") or "unit_aware_strict")
-    if source_text and answer_text and _detect_unsupported_claim(
-        answer_text=answer_text,
-        source_text=source_text,
-        mode=claim_guard_mode,
+    claim_guard_mode = str(
+        getattr(settings, "answer_claim_guard_mode", "unit_aware_strict") or "unit_aware_strict"
+    )
+    if (
+        source_text
+        and answer_text
+        and _detect_unsupported_claim(
+            answer_text=answer_text,
+            source_text=source_text,
+            mode=claim_guard_mode,
+        )
     ):
         semantic_errors.append("unsupported_numeric_or_ref_claim")
 
@@ -335,7 +343,9 @@ def chat_json_with_retry(
     last_error: Exception | None = None
     for attempt in range(1, attempts + 1):
         try:
-            return client.chat_json(messages, temperature=temperature, enable_thinking=enable_thinking)
+            return client.chat_json(
+                messages, temperature=temperature, enable_thinking=enable_thinking
+            )
         except Exception as exc:
             last_error = exc
             logger.warning(

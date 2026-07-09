@@ -285,9 +285,10 @@ def _find_docs_by_ref_tokens(tokens: list[str], max_per_token: int = 5) -> list[
     seen: set[int] = set()
     with SessionLocal() as db:
         for token in tokens:
-            rows = db.execute(
-                sa_text(
-                    """
+            rows = (
+                db.execute(
+                    sa_text(
+                        """
                     SELECT dd.id
                     FROM dogv_documents dd
                     JOIN dogv_issues di ON di.id = dd.issue_id
@@ -295,9 +296,12 @@ def _find_docs_by_ref_tokens(tokens: list[str], max_per_token: int = 5) -> list[
                     ORDER BY di.date DESC, dd.id DESC
                     LIMIT :limit
                     """
-                ),
-                {"token": f"%{token}%", "limit": max_per_token},
-            ).mappings().all()
+                    ),
+                    {"token": f"%{token}%", "limit": max_per_token},
+                )
+                .mappings()
+                .all()
+            )
             for row in rows:
                 doc_id = int(row["id"])
                 if doc_id in seen:
@@ -315,9 +319,10 @@ def _fetch_candidate_rows(
     if not doc_ids:
         return []
     with SessionLocal() as db:
-        rows = db.execute(
-            sa_text(
-                """
+        rows = (
+            db.execute(
+                sa_text(
+                    """
                 SELECT
                     dd.id AS document_id,
                     dd.title,
@@ -332,10 +337,15 @@ def _fetch_candidate_rows(
                 LEFT JOIN rag_doc rd ON rd.document_id = dd.id
                 WHERE dd.id = ANY(:doc_ids)
                 """
-            ),
-            {"doc_ids": doc_ids},
-        ).mappings().all()
-        chunk_map = top_chunks_for_docs(db, query_embedding, doc_ids, per_doc=1) if query_embedding else {}
+                ),
+                {"doc_ids": doc_ids},
+            )
+            .mappings()
+            .all()
+        )
+        chunk_map = (
+            top_chunks_for_docs(db, query_embedding, doc_ids, per_doc=1) if query_embedding else {}
+        )
 
     mapped = {int(row["document_id"]): dict(row) for row in rows}
     result: list[dict[str, Any]] = []
@@ -361,20 +371,21 @@ def _fetch_text_map(doc_ids: list[int], max_chars: int = 60000) -> dict[int, str
     if not doc_ids:
         return {}
     with SessionLocal() as db:
-        rows = db.execute(
-            sa_text(
-                """
+        rows = (
+            db.execute(
+                sa_text(
+                    """
                 SELECT id AS document_id, text
                 FROM dogv_documents
                 WHERE id = ANY(:doc_ids)
                 """
-            ),
-            {"doc_ids": doc_ids},
-        ).mappings().all()
-    return {
-        int(row["document_id"]): (row.get("text") or "")[:max_chars]
-        for row in rows
-    }
+                ),
+                {"doc_ids": doc_ids},
+            )
+            .mappings()
+            .all()
+        )
+    return {int(row["document_id"]): (row.get("text") or "")[:max_chars] for row in rows}
 
 
 def _format_candidates(rows: list[dict[str, Any]]) -> str:
@@ -492,12 +503,16 @@ def _audit_entry(
         seen.add(doc_id)
         candidate_ids.append(doc_id)
 
-    candidates = _fetch_candidate_rows(candidate_ids[:max_candidates], query_embedding, max_snippet_chars=max_snippet_chars)
+    candidates = _fetch_candidate_rows(
+        candidate_ids[:max_candidates], query_embedding, max_snippet_chars=max_snippet_chars
+    )
     candidate_id_set = {int(row["document_id"]) for row in candidates}
 
     if not candidates:
         fallback = [existing_doc_ids] if existing_doc_ids else []
-        result = AuditResult(gold_sets=fallback, status="uncertain", reason="no_candidates", changed=False)
+        result = AuditResult(
+            gold_sets=fallback, status="uncertain", reason="no_candidates", changed=False
+        )
     else:
         sets, status, reason = _llm_audit(question, existing_doc_ids, candidates)
         filtered_sets: list[list[int]] = []
@@ -513,7 +528,9 @@ def _audit_entry(
             reason = (reason + " | empty_after_prune").strip(" |")
         legacy_set = existing_doc_ids
         if legacy_set and normalized and normalized != [legacy_set]:
-            decision, verify_reason = _llm_verify_change(question, legacy_set, normalized, candidates)
+            decision, verify_reason = _llm_verify_change(
+                question, legacy_set, normalized, candidates
+            )
             if decision == "keep_legacy":
                 normalized = [legacy_set]
                 status = "uncertain"

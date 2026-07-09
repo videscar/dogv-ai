@@ -68,11 +68,43 @@ _TIPO_PREFIXES: dict[str, list[str]] = {
 
 # Words that carry no topical signal when disambiguating (Orden case).
 _STOP = {
-    "que", "dice", "sobre", "cual", "cuál", "como", "cómo", "para", "del", "las",
-    "los", "una", "uno", "qué", "regula", "establece", "dispone", "trata",
-    "contenido", "objeto", "principal", "menciona", "mencionan", "fecha", "firmó",
-    "ayudas", "medidas", "the", "and", "materia", "comunitat", "valenciana",
-    "generalitat", "consell", "conselleria", "articulo", "artículo",
+    "que",
+    "dice",
+    "sobre",
+    "cual",
+    "cuál",
+    "como",
+    "cómo",
+    "para",
+    "del",
+    "las",
+    "los",
+    "una",
+    "uno",
+    "qué",
+    "regula",
+    "establece",
+    "dispone",
+    "trata",
+    "contenido",
+    "objeto",
+    "principal",
+    "menciona",
+    "mencionan",
+    "fecha",
+    "firmó",
+    "ayudas",
+    "medidas",
+    "the",
+    "and",
+    "materia",
+    "comunitat",
+    "valenciana",
+    "generalitat",
+    "consell",
+    "conselleria",
+    "articulo",
+    "artículo",
 }
 
 
@@ -80,13 +112,13 @@ _STOP = {
 class Reference:
     """A disposition reference parsed out of a user question."""
 
-    tipo: str | None              # normalized tipo key, e.g. "decreto" (may be None)
+    tipo: str | None  # normalized tipo key, e.g. "decreto" (may be None)
     numero: int
-    anyo: int                     # 4-digit year
+    anyo: int  # 4-digit year
     topic_terms: list[str] = field(default_factory=list)
     raw: str = ""
-    date_day: int | None = None   # disposition day, when the question states one
-    date_month: str | None = None # disposition month token (lowercased, es or va)
+    date_day: int | None = None  # disposition day, when the question states one
+    date_month: str | None = None  # disposition month token (lowercased, es or va)
 
     @property
     def num_year(self) -> str:
@@ -138,7 +170,7 @@ def parse_reference(question: str) -> Reference | None:
 
     tipo: str | None = None
     # Prefer a tipo word that sits near the number; fall back to any in the text.
-    window = question[max(0, m.start() - 30): m.end() + 5]
+    window = question[max(0, m.start() - 30) : m.end() + 5]
     for rx, key in _TIPO_QUERY_MAP:
         if rx.search(window):
             tipo = key
@@ -151,9 +183,13 @@ def parse_reference(question: str) -> Reference | None:
 
     day, month = _parse_disposition_date(question)
     return Reference(
-        tipo=tipo, numero=numero, anyo=anyo,
-        topic_terms=_topic_terms_of(question), raw=m.group(0),
-        date_day=day, date_month=month,
+        tipo=tipo,
+        numero=numero,
+        anyo=anyo,
+        topic_terms=_topic_terms_of(question),
+        raw=m.group(0),
+        date_day=day,
+        date_month=month,
     )
 
 
@@ -215,7 +251,7 @@ class NamedNormTarget:
     principal citation when retrieval found the norm but synthesis cited a doc
     that only mentions it."""
 
-    tipo: str                       # normalized primary tipo (in _PRIMARY_TIPOS)
+    tipo: str  # normalized primary tipo (in _PRIMARY_TIPOS)
     topic_terms: list[str] = field(default_factory=list)
     raw: str = ""
 
@@ -256,9 +292,7 @@ def title_primary_tipo(title: str) -> str | None:
 
 
 def _strip_accents(text: str) -> str:
-    return "".join(
-        c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn"
-    )
+    return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn")
 
 
 def named_target_topic_overlap(target: NamedNormTarget, title: str) -> tuple[int, float]:
@@ -300,7 +334,9 @@ def _query_lang(text: str) -> str:
     return "es_es"
 
 
-def search_dogv(texto: str, lang: str, *, size: int = 50, timeout: int | None = None) -> list[dict[str, Any]]:
+def search_dogv(
+    texto: str, lang: str, *, size: int = 50, timeout: int | None = None
+) -> list[dict[str, Any]]:
     """POST the DOGV full-text search; return the `content` list (may be empty)."""
     base = settings.dogv_base_url.rstrip("/")
     url = f"{base}/dogv-portal/dogv/search"
@@ -458,9 +494,7 @@ _REF_IN_TITLE_RE = re.compile(r"\b\d{1,4}/\d{2,4}\b")
 _PRINCIPAL_NAME_WINDOW = 90
 
 
-def _infer_principal_ref(
-    titles: list[str], tipo: str, topic_terms: list[str]
-) -> Reference | None:
+def _infer_principal_ref(titles: list[str], tipo: str, topic_terms: list[str]) -> Reference | None:
     """Pick the principal N/YYYY of `tipo` that the corpus titles name with the
     query's topic.
 
@@ -476,9 +510,7 @@ def _infer_principal_ref(
     prefixes = _TIPO_PREFIXES.get(tipo or "")
     if not prefixes:
         return None
-    tipo_ref_re = re.compile(
-        rf"(?:{'|'.join(prefixes)})\s+(\d{{1,4}}/\d{{2,4}})", re.I
-    )
+    tipo_ref_re = re.compile(rf"(?:{'|'.join(prefixes)})\s+(\d{{1,4}}/\d{{2,4}})", re.I)
     topic_norm = sorted({_strip_accents(t) for t in topic_terms if len(t) >= 4})
     if not topic_norm:
         return None
@@ -496,7 +528,7 @@ def _infer_principal_ref(
     for title in titles:
         for m in tipo_ref_re.finditer(title):
             ref = m.group(1)
-            window = title[m.end(): m.end() + _PRINCIPAL_NAME_WINDOW]
+            window = title[m.end() : m.end() + _PRINCIPAL_NAME_WINDOW]
             nxt = _REF_IN_TITLE_RE.search(window)  # don't bleed into the next norm
             if nxt:
                 window = window[: nxt.start()]
@@ -521,9 +553,7 @@ def _infer_principal_ref(
     anyo = _normalize_year(bm.group(2))
     if anyo < 1980 or anyo > 2100:
         return None
-    return Reference(
-        tipo=tipo, numero=numero, anyo=anyo, topic_terms=topic_terms, raw=best
-    )
+    return Reference(tipo=tipo, numero=numero, anyo=anyo, topic_terms=topic_terms, raw=best)
 
 
 def infer_reference_from_corpus(db, question: str) -> Reference | None:
@@ -549,9 +579,7 @@ def infer_reference_from_corpus(db, question: str) -> Reference | None:
     from sqlalchemy import text as _sa_text  # local import: keep module import-light
 
     rows = db.execute(
-        _sa_text(
-            f"SELECT title FROM dogv_documents WHERE title ~* :tre AND ({like}) LIMIT 120"
-        ),
+        _sa_text(f"SELECT title FROM dogv_documents WHERE title ~* :tre AND ({like}) LIMIT 120"),
         params,
     ).all()
     return _infer_principal_ref([r[0] for r in rows], target.tipo, target.topic_terms)

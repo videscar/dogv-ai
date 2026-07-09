@@ -54,7 +54,9 @@ def _score_case(
     citations: Any,
 ) -> tuple[dict[str, Any], dict[str, float], bool]:
     must_include = [str(x).strip() for x in (case.get("must_include") or []) if str(x).strip()]
-    must_not_include = [str(x).strip() for x in (case.get("must_not_include") or []) if str(x).strip()]
+    must_not_include = [
+        str(x).strip() for x in (case.get("must_not_include") or []) if str(x).strip()
+    ]
 
     include_hits = [term for term in must_include if _contains_term(answer, term)]
     missing_include = [term for term in must_include if term not in include_hits]
@@ -136,7 +138,16 @@ def _percentile(values: list[float], pct: float) -> float:
 
 
 def _summarize_profiles(results: list[dict[str, Any]]) -> dict[str, Any]:
-    stages = ("intent", "temporal_guard", "ingest", "retrieve", "backfill", "rerank", "read", "answer")
+    stages = (
+        "intent",
+        "temporal_guard",
+        "ingest",
+        "retrieve",
+        "backfill",
+        "rerank",
+        "read",
+        "answer",
+    )
     summary: dict[str, Any] = {}
     for stage in stages:
         elapsed_values: list[float] = []
@@ -161,7 +172,8 @@ def _summarize_profiles(results: list[dict[str, Any]]) -> dict[str, Any]:
     answer_profiles = [
         (item.get("profile") or {}).get("answer")
         for item in results
-        if isinstance(item.get("profile"), dict) and isinstance((item.get("profile") or {}).get("answer"), dict)
+        if isinstance(item.get("profile"), dict)
+        and isinstance((item.get("profile") or {}).get("answer"), dict)
     ]
     if answer_profiles:
         fallback_counts: Counter[str] = Counter()
@@ -255,7 +267,9 @@ def main() -> int:
             profile: dict[str, Any] | None = None
             for attempt in range(args.retries + 1):
                 try:
-                    response = client.post("/ask", json={"question": question, "debug": args.debug_profile})
+                    response = client.post(
+                        "/ask", json={"question": question, "debug": args.debug_profile}
+                    )
                     response.raise_for_status()
                     payload = response.json()
                     answer = str(payload.get("answer") or "")
@@ -278,7 +292,9 @@ def main() -> int:
 
             if isinstance(last_exc, httpx.TimeoutException) and args.rescue_timeout > args.timeout:
                 try:
-                    with httpx.Client(base_url=args.base_url.rstrip("/"), timeout=args.rescue_timeout) as rescue_client:
+                    with httpx.Client(
+                        base_url=args.base_url.rstrip("/"), timeout=args.rescue_timeout
+                    ) as rescue_client:
                         response = rescue_client.post(
                             "/ask",
                             json={"question": question, "debug": args.debug_profile},
@@ -339,7 +355,9 @@ def main() -> int:
 
     total_cases = len(results)
     aggregate_hard_score = sum(item["scores"]["total"] for item in results) / max(1, total_cases)
-    lexical_recall_avg = sum(float(item["scores"].get("lexical_recall") or 0.0) for item in results) / max(1, total_cases)
+    lexical_recall_avg = sum(
+        float(item["scores"].get("lexical_recall") or 0.0) for item in results
+    ) / max(1, total_cases)
     passed_cases = sum(1 for item in results if item["passed"])
     critical_cases = [item for item in results if item["critical"]]
     critical_failed = [item["id"] for item in critical_cases if not item["passed"]]
@@ -412,7 +430,9 @@ def main() -> int:
     if args.debug_profile:
         answer_diag = (report.get("profile_summary") or {}).get("answer_diagnostics") or {}
         if profile_cases == 0:
-            print("profile.capture warning: 0 cases included debug profile (restart API with latest code?)")
+            print(
+                "profile.capture warning: 0 cases included debug profile (restart API with latest code?)"
+            )
         if answer_diag:
             print(
                 "profile.answer validator_triggered={} repair_attempts_total={} repair_success_cases={} fallbacks={}".format(

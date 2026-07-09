@@ -13,6 +13,7 @@ used both by the live ingest pipeline (`ingest_pipeline` calls
 `missing_sibling_disposicion_ids` per date so every ingest path captures both
 editions) and by the one-off backfill script (`scripts/oneoff/recover_bis_editions.py`).
 """
+
 from __future__ import annotations
 
 import io
@@ -77,7 +78,7 @@ def parse_pdf_titles(content: bytes) -> dict[str, str]:
         tipos = list(_TIPO_WORD.finditer(pre))
         if not tipos:
             continue
-        title = re.sub(r"\s+", " ", pre[tipos[-1].start():]).strip()
+        title = re.sub(r"\s+", " ", pre[tipos[-1].start() :]).strip()
         if len(title) > 20:
             pairs[sig] = title
     return pairs
@@ -138,7 +139,9 @@ def existing_refs(refs: set[str], lang: str) -> set[str]:
     return {r[0] for r in rows}
 
 
-def enumerate_edition_titles(date_iso: str, numero: str, lang: str, *, both: bool = True) -> dict[str, str]:
+def enumerate_edition_titles(
+    date_iso: str, numero: str, lang: str, *, both: bool = True
+) -> dict[str, str]:
     """signatura -> title across the issue's sumario PDF(s). `both` reads ordinary +
     bis (the backfill path); pass a single url via the sibling helper for the live path."""
     titles: dict[str, str] = {}
@@ -149,7 +152,9 @@ def enumerate_edition_titles(date_iso: str, numero: str, lang: str, *, both: boo
     return titles
 
 
-def missing_sibling_disposicion_ids(date_iso: str, numero: str, lang: str, is_bis: bool) -> dict[str, int]:
+def missing_sibling_disposicion_ids(
+    date_iso: str, numero: str, lang: str, is_bis: bool
+) -> dict[str, int]:
     """{signatura: disposition_id} for the SIBLING edition the date-sumario JSON did
     not return — i.e. the dropped edition's dispositions still absent from the corpus.
 
@@ -173,6 +178,12 @@ def missing_sibling_disposicion_ids(date_iso: str, numero: str, lang: str, is_bi
     if unresolved:
         logger.info(
             "bis.sibling %s/%s %s: sibling_pdf_sigs=%d missing=%d resolved=%d unresolved=%d",
-            date_iso, numero, lang, len(sigs), len(missing), len(resolved), len(unresolved),
+            date_iso,
+            numero,
+            lang,
+            len(sigs),
+            len(missing),
+            len(resolved),
+            len(unresolved),
         )
     return resolved

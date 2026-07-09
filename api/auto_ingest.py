@@ -81,9 +81,11 @@ def _month_bounds(target: date) -> tuple[date, date]:
 
 
 def get_issue_bounds(db: Session) -> tuple[date | None, date | None]:
-    row = db.execute(
-        sa_text("SELECT MIN(date) AS min_date, MAX(date) AS max_date FROM dogv_issues")
-    ).mappings().one()
+    row = (
+        db.execute(sa_text("SELECT MIN(date) AS min_date, MAX(date) AS max_date FROM dogv_issues"))
+        .mappings()
+        .one()
+    )
     return row["min_date"], row["max_date"]
 
 
@@ -398,9 +400,7 @@ def _source_has_publications(
                 time.sleep(retry_delay)
                 continue
             error_text = str(exc) or exc.__class__.__name__
-            next_retry_at = datetime.now(UTC) + timedelta(
-                seconds=max(30.0, backoff_seconds * 4)
-            )
+            next_retry_at = datetime.now(UTC) + timedelta(seconds=max(30.0, backoff_seconds * 4))
             _record_gap_source_failure(db, issue_date, language, error_text, next_retry_at)
             if is_transient:
                 logger.warning(
@@ -439,8 +439,7 @@ def record_gap_source_failure(
     next_retry_at: datetime | None = None,
 ) -> None:
     retry_at = next_retry_at or (
-        datetime.now(UTC)
-        + timedelta(seconds=max(30.0, _gap_retry_backoff_seconds() * 4))
+        datetime.now(UTC) + timedelta(seconds=max(30.0, _gap_retry_backoff_seconds() * 4))
     )
     _record_gap_source_failure(db, issue_date, language, error_text, retry_at)
 

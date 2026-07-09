@@ -95,9 +95,7 @@ def test_ask_stream_threads_history(monkeypatch):
 
     history = [{"role": "user", "content": "antes"}]
     with client:
-        resp = client.post(
-            "/ask/stream", json={"question": "ahora", "history": history}
-        )
+        resp = client.post("/ask/stream", json={"question": "ahora", "history": history})
 
     assert resp.status_code == 200
     assert captured["state"]["history"] == history

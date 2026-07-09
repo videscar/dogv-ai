@@ -26,20 +26,30 @@ logger = logging.getLogger("dogv.graph")
 # es<->va month forms, so a date stated in one language still matches the title's
 # other-language twin in the corpus (titles are stored per language).
 _MONTH_FORMS: dict[str, tuple[str, ...]] = {
-    "enero": ("enero", "gener"), "gener": ("enero", "gener"),
-    "febrero": ("febrero", "febrer"), "febrer": ("febrero", "febrer"),
-    "marzo": ("marzo", "març", "marc"), "març": ("marzo", "març", "marc"), "marc": ("marzo", "març", "marc"),
+    "enero": ("enero", "gener"),
+    "gener": ("enero", "gener"),
+    "febrero": ("febrero", "febrer"),
+    "febrer": ("febrero", "febrer"),
+    "marzo": ("marzo", "març", "marc"),
+    "març": ("marzo", "març", "marc"),
+    "marc": ("marzo", "març", "marc"),
     "abril": ("abril",),
-    "mayo": ("mayo", "maig"), "maig": ("mayo", "maig"),
-    "junio": ("junio", "juny"), "juny": ("junio", "juny"),
-    "julio": ("julio", "juliol"), "juliol": ("julio", "juliol"),
-    "agosto": ("agosto", "agost"), "agost": ("agosto", "agost"),
+    "mayo": ("mayo", "maig"),
+    "maig": ("mayo", "maig"),
+    "junio": ("junio", "juny"),
+    "juny": ("junio", "juny"),
+    "julio": ("julio", "juliol"),
+    "juliol": ("julio", "juliol"),
+    "agosto": ("agosto", "agost"),
+    "agost": ("agosto", "agost"),
     "septiembre": ("septiembre", "setiembre", "setembre"),
     "setiembre": ("septiembre", "setiembre", "setembre"),
     "setembre": ("septiembre", "setiembre", "setembre"),
     "octubre": ("octubre",),
-    "noviembre": ("noviembre", "novembre"), "novembre": ("noviembre", "novembre"),
-    "diciembre": ("diciembre", "desembre"), "desembre": ("diciembre", "desembre"),
+    "noviembre": ("noviembre", "novembre"),
+    "novembre": ("noviembre", "novembre"),
+    "diciembre": ("diciembre", "desembre"),
+    "desembre": ("diciembre", "desembre"),
 }
 
 
@@ -124,8 +134,12 @@ def backfill_node(state: QAState) -> QAState:
         elapsed = time.monotonic() - start
         logger.info("backfill.skip req=%s reason=%s elapsed=%.2fs", request_id, reason, elapsed)
         return return_with_profile(
-            state, "backfill", {"backfill_attempted": True},
-            elapsed_seconds=round(elapsed, 3), status="skipped", reason=reason,
+            state,
+            "backfill",
+            {"backfill_attempted": True},
+            elapsed_seconds=round(elapsed, 3),
+            status="skipped",
+            reason=reason,
         )
 
     try:
@@ -150,9 +164,7 @@ def backfill_node(state: QAState) -> QAState:
             corpus_ids = _reference_corpus_doc_ids(db, ref, limit=4)
         # An inferred principal carries no number in the question for the answer node
         # to match against; hand it the resolved ref so it can still force-cite it.
-        norm_target_ref = (
-            {"tipo": ref.tipo, "num_year": ref.num_year} if inferred else None
-        )
+        norm_target_ref = {"tipo": ref.tipo, "num_year": ref.num_year} if inferred else None
         if corpus_ids:
             # The norm is already in the corpus. Retrieval+rerank are LLM-driven and
             # non-deterministic, so the exact norm sometimes loses its candidate slot
@@ -166,17 +178,22 @@ def backfill_node(state: QAState) -> QAState:
             elapsed = time.monotonic() - start
             logger.info(
                 "backfill.skip req=%s reason=already_in_corpus pin=%s elapsed=%.2fs",
-                request_id, pin_ids, elapsed,
+                request_id,
+                pin_ids,
+                elapsed,
             )
             return return_with_profile(
-                state, "backfill",
+                state,
+                "backfill",
                 {
                     "backfill_attempted": True,
                     "norm_pin_doc_ids": pin_ids,
                     "norm_target_ref": norm_target_ref,
                 },
-                elapsed_seconds=round(elapsed, 3), status="skipped",
-                reason="already_in_corpus", pin=pin_ids,
+                elapsed_seconds=round(elapsed, 3),
+                status="skipped",
+                reason="already_in_corpus",
+                pin=pin_ids,
             )
 
         lang = _query_lang(question)
@@ -199,8 +216,12 @@ def backfill_node(state: QAState) -> QAState:
         elapsed = time.monotonic() - start
         logger.info(
             "backfill.fetched req=%s ref=%s disp_id=%s pub=%s doc_id=%s elapsed=%.2fs",
-            request_id, ref.num_year, resolved.disposicion_id,
-            resolved.fecha_publicacion, ondemand_doc_id, elapsed,
+            request_id,
+            ref.num_year,
+            resolved.disposicion_id,
+            resolved.fecha_publicacion,
+            ondemand_doc_id,
+            elapsed,
         )
         return return_with_profile(
             state,
@@ -223,6 +244,8 @@ def backfill_node(state: QAState) -> QAState:
             doc_id=ondemand_doc_id,
         )
     except Exception:
-        logger.exception("backfill.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start)
+        logger.exception(
+            "backfill.error req=%s elapsed=%.2fs", request_id, time.monotonic() - start
+        )
         # Never fail the whole answer because the on-demand fetch broke.
         return _skip("error")

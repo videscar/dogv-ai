@@ -39,9 +39,7 @@ def _maybe_augment_enumeration(
     if spec is None:
         return None
     language = state.get("language") or guess_language(question)
-    existing = {
-        int(c["document_id"]) for c in candidates if c.get("document_id") is not None
-    }
+    existing = {int(c["document_id"]) for c in candidates if c.get("document_id") is not None}
     cap = getattr(settings, "enumeration_augment_max", 20)
     with SessionLocal() as db:
         extra = augment_enumeration_candidates(db, spec, language, existing, cap)
@@ -49,7 +47,11 @@ def _maybe_augment_enumeration(
         return None
     logger.info(
         "rerank.enum_augment req=%s added=%s month=%s..%s groups=%s",
-        request_id, len(extra), spec.date_start, spec.date_end, spec.group_codes,
+        request_id,
+        len(extra),
+        spec.date_start,
+        spec.date_end,
+        spec.group_codes,
     )
     return candidates + extra
 
@@ -103,7 +105,10 @@ def _apply_edition_recency(
         return doc_ids, pool, set()
     logger.info(
         "rerank.edition_recency req=%s dropped=%s kept=%s stale_ids=%s",
-        request_id, len(dropped), len(kept), sorted(dropped),
+        request_id,
+        len(dropped),
+        len(kept),
+        sorted(dropped),
     )
     pruned = [c for c in pool if int(c.get("document_id")) not in dropped]
     return kept, pruned, dropped
@@ -176,8 +181,10 @@ def rerank_titles_node(state: QAState) -> QAState:
         # demoted here by the raw-query similarity that missed them in the first place.
         hyde_scores = _doc_similarity_scores(state.get("hyde_embedding"), doc_id_list)
         if doc_scores or hyde_scores:
+
             def _sim(doc_id: int) -> float:
                 return max(doc_scores.get(doc_id, -1.0), hyde_scores.get(doc_id, -1.0))
+
             candidates = sorted(
                 candidates,
                 key=lambda item: (
@@ -208,17 +215,21 @@ def rerank_titles_node(state: QAState) -> QAState:
             embeddings = [state["query_embedding"]]
         if fallback_doc_ids:
             with SessionLocal() as db:
-                rows = db.execute(
-                    sa_text(
-                        """
+                rows = (
+                    db.execute(
+                        sa_text(
+                            """
                         SELECT document_id, summary
                         FROM rag_doc
                         WHERE document_id = ANY(:doc_ids)
                         AND summary IS NOT NULL
                         """
-                    ),
-                    {"doc_ids": fallback_doc_ids},
-                ).mappings().all()
+                        ),
+                        {"doc_ids": fallback_doc_ids},
+                    )
+                    .mappings()
+                    .all()
+                )
                 fallback_summaries = {
                     int(row["document_id"]): (row["summary"] or "").strip() for row in rows
                 }
@@ -289,7 +300,9 @@ def rerank_titles_node(state: QAState) -> QAState:
             return return_with_profile(
                 state,
                 "rerank",
-                _rerank_updates(doc_ids, enumeration, all_candidates, persist_candidates=bool(dropped)),
+                _rerank_updates(
+                    doc_ids, enumeration, all_candidates, persist_candidates=bool(dropped)
+                ),
                 elapsed_seconds=round(elapsed, 3),
                 skipped=True,
                 selected_docs=len(doc_ids),

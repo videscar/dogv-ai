@@ -73,17 +73,29 @@ def main():
     print(f"compared {len(common)} questions  (normal={norm_total} reference={ref_total})")
     if missing:
         print(f"!! {len(missing)} baseline questions missing from new run: {missing}")
-    print(f"\n=== NORMAL bucket: {len(norm_changed)} changed (EXPECTED 0 — any is a regression) ===")
+    print(
+        f"\n=== NORMAL bucket: {len(norm_changed)} changed (EXPECTED 0 — any is a regression) ==="
+    )
     for r in norm_changed:
         print(f"  [{r['id']}] {r['q']}")
-        print(f"      cites {r['base_cites']} -> {r['new_cites']}  | abstain {r['base_abst']}->{r['new_abst']}")
-    print(f"\n=== REFERENCE bucket: {len(ref_changed)} changed (expected: collapse / new fetches) ===")
+        print(
+            f"      cites {r['base_cites']} -> {r['new_cites']}  | abstain {r['base_abst']}->{r['new_abst']}"
+        )
+    print(
+        f"\n=== REFERENCE bucket: {len(ref_changed)} changed (expected: collapse / new fetches) ==="
+    )
     for r in ref_changed:
         print(f"  [{r['id']}] {r['q']}")
-        print(f"      cites n {r['base_n']}->{r['new_n']} {r['base_cites']} -> {r['new_cites']}  | abstain {r['base_abst']}->{r['new_abst']}")
+        print(
+            f"      cites n {r['base_n']}->{r['new_n']} {r['base_cites']} -> {r['new_cites']}  | abstain {r['base_abst']}->{r['new_abst']}"
+        )
 
     print("\n=== VERDICT ===")
-    print("CLEAN" if not norm_changed and not missing else "REVIEW NEEDED (normal-bucket changes above)")
+    print(
+        "CLEAN"
+        if not norm_changed and not missing
+        else "REVIEW NEEDED (normal-bucket changes above)"
+    )
 
 
 if __name__ == "__main__":

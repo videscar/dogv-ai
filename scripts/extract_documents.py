@@ -61,11 +61,7 @@ def _extract_document_fields(doc: dict[str, Any]) -> dict[str, Any]:
         return str(value)
 
     # Section / area of the gazette
-    section_raw = (
-        doc.get("seccion")
-        or doc.get("section")
-        or doc.get("apartado")
-    )
+    section_raw = doc.get("seccion") or doc.get("section") or doc.get("apartado")
     section = _normalize(section_raw, ("descripcion", "description", "desc", "name"))
 
     # Reference / code
@@ -78,11 +74,7 @@ def _extract_document_fields(doc: dict[str, Any]) -> dict[str, Any]:
     )
     ref = _normalize(ref_raw)
 
-    conselleria_raw = (
-        doc.get("conselleria")
-        or doc.get("organismo")
-        or doc.get("organo")
-    )
+    conselleria_raw = doc.get("conselleria") or doc.get("organismo") or doc.get("organo")
     conselleria = _normalize(conselleria_raw, ("descripcion", "description", "name"))
 
     # Title & type
@@ -94,26 +86,14 @@ def _extract_document_fields(doc: dict[str, Any]) -> dict[str, Any]:
     )
     title = _normalize(title_raw)
 
-    doc_type_raw = (
-        doc.get("tipoDisposicion")
-        or doc.get("tipo")
-        or doc.get("tipus")
-    )
+    doc_type_raw = doc.get("tipoDisposicion") or doc.get("tipo") or doc.get("tipus")
     doc_type = _normalize(doc_type_raw)
 
     # URLs
-    pdf_url_raw = (
-        doc.get("urlPdfC")
-        or doc.get("urlPdf")
-        or doc.get("url_pdf")
-    )
+    pdf_url_raw = doc.get("urlPdfC") or doc.get("urlPdf") or doc.get("url_pdf")
     pdf_url = _normalize(pdf_url_raw)
 
-    html_url_raw = (
-        doc.get("urlHtmlC")
-        or doc.get("urlHtml")
-        or doc.get("url_html")
-    )
+    html_url_raw = doc.get("urlHtmlC") or doc.get("urlHtml") or doc.get("url_html")
     html_url = _normalize(html_url_raw)
 
     return {
@@ -280,7 +260,12 @@ def process_issue(db: Session, issue: DogvIssue) -> int:
     for bucket in existing_by_key.values():
         for stale_doc in bucket:
             tags = stale_doc.doc_tags or {}
-            if bis_sumario or tags.get("sibling_edition") or tags.get("ondemand") or tags.get("pinned"):
+            if (
+                bis_sumario
+                or tags.get("sibling_edition")
+                or tags.get("ondemand")
+                or tags.get("pinned")
+            ):
                 continue
             _delete_rag_rows(db, stale_doc.id)
             db.delete(stale_doc)

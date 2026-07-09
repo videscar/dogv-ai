@@ -361,7 +361,9 @@ def rrf_fuse(
     return results
 
 
-def group_top_chunks(chunks: list[dict[str, Any]], per_doc: int = 3) -> dict[int, list[dict[str, Any]]]:
+def group_top_chunks(
+    chunks: list[dict[str, Any]], per_doc: int = 3
+) -> dict[int, list[dict[str, Any]]]:
     grouped: dict[int, list[dict[str, Any]]] = {}
     for chunk in chunks:
         doc_id = chunk["document_id"]

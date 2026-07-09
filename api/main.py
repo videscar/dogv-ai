@@ -165,11 +165,7 @@ def ready():
 
 @app.get("/issues", response_model=list[IssueSummary])
 def list_issues(db: Session = Depends(get_db)):
-    issues = (
-        db.query(DogvIssue)
-        .order_by(DogvIssue.date.desc(), DogvIssue.language.asc())
-        .all()
-    )
+    issues = db.query(DogvIssue).order_by(DogvIssue.date.desc(), DogvIssue.language.asc()).all()
     return issues
 
 

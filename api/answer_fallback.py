@@ -22,7 +22,11 @@ def no_evidence_fallback(language: str) -> str:
 def fallback_from_evidence(language: str, evidence: list[dict[str, Any]] | None) -> str:
     if not evidence:
         return no_evidence_fallback(language)
-    header = "Evidencies disponibles:" if language.startswith(("va", "ca")) else "Evidencias disponibles:"
+    header = (
+        "Evidencies disponibles:"
+        if language.startswith(("va", "ca"))
+        else "Evidencias disponibles:"
+    )
     lines: list[str] = []
     for item in evidence:
         doc_id = item.get("doc_id") or item.get("document_id")
@@ -73,7 +77,9 @@ def _fallback_summary_from_sources(
                 current[key] = value
 
     if language.startswith(("va", "ca")):
-        intro = "No puc confirmar una resposta unica amb seguretat. Publicacions rellevants trobades:"
+        intro = (
+            "No puc confirmar una resposta unica amb seguretat. Publicacions rellevants trobades:"
+        )
         unknown_title = "Titol no disponible"
         date_label = "data"
     else:

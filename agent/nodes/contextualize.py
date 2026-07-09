@@ -76,9 +76,12 @@ def contextualize_query_node(state: QAState) -> QAState:
 
     if not getattr(settings, "ask_contextualize_enabled", True) or not history:
         return return_with_profile(
-            state, "contextualize", payload,
+            state,
+            "contextualize",
+            payload,
             elapsed_seconds=round(time.monotonic() - start, 3),
-            applied=False, reason="no_history" if not history else "disabled",
+            applied=False,
+            reason="no_history" if not history else "disabled",
         )
 
     rewritten = question
@@ -118,12 +121,20 @@ def contextualize_query_node(state: QAState) -> QAState:
     elapsed = time.monotonic() - start
     logger.info(
         "contextualize.done req=%s applied=%s is_followup=%s turns=%s elapsed=%.2fs",
-        request_id, applied, is_followup, len(history), elapsed,
+        request_id,
+        applied,
+        is_followup,
+        len(history),
+        elapsed,
     )
     return return_with_profile(
-        state, "contextualize", payload,
+        state,
+        "contextualize",
+        payload,
         elapsed_seconds=round(elapsed, 3),
-        applied=applied, is_followup=is_followup, reason=reason,
+        applied=applied,
+        is_followup=is_followup,
+        reason=reason,
         raw_question=question,
         rewritten_question=(rewritten if applied else None),
     )
