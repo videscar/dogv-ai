@@ -155,6 +155,42 @@ chainlit run ui/chainlit_app.py --host 0.0.0.0 --port 8501
 bash scripts/demo_ctl.sh start
 ```
 
+## Run without local GPUs
+
+The only service you must host yourself is **PostgreSQL + pgvector**; a
+`docker-compose.yml` is provided for it (it also enables `unaccent` and defines
+the `catalan` text-search config the Valencian lane needs):
+
+```bash
+docker compose up -d db
+.venv/bin/python scripts/init_db.py                       # create tables
+DB="postgresql://dogv_ai:dogv_ai@localhost:5432/dogv_ai"
+for f in sql/*.sql; do psql "$DB" -f "$f"; done            # indexes + pgvector DDL
+```
+
+The chat and embedding models are reached over plain **OpenAI-compatible HTTP**,
+so you can point them at any endpoint instead of the local 2×GPU stack — a hosted
+API, another machine, or a small local runtime. Set the host root (the client
+appends `/v1/chat/completions` and `/v1/embeddings`):
+
+```bash
+export LLM_BASE_URL=https://your-chat-host          # -> /v1/chat/completions
+export LLM_MODEL=your-chat-model
+export EMBED_BASE_URL=https://your-embed-host        # -> /v1/embeddings
+export EMBED_MODEL=bge-m3
+```
+
+Honest caveats about this mode:
+- The corpus vectors are **bge-m3, 1024-dim** (`EMBEDDING_DIM=1024`, baked into the
+  `rag_chunk`/`rag_doc` schema). For a like-for-like run the embedding endpoint must
+  also be bge-m3; a different embedder means re-embedding the corpus and changing the
+  vector dimension in `sql/`.
+- The published answer-quality numbers were measured with **Qwen3.6-27B** as the chat
+  model — a weaker endpoint will score lower.
+- You still need to ingest a corpus (`scripts/maintain_indices.py --bootstrap`), which
+  calls the embedding endpoint for every chunk, so a remote embedder makes the initial
+  bootstrap slower.
+
 ## Endpoints
 
 - `GET /health` — status + index freshness + the exact commit/config being served.

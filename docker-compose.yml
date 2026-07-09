@@ -1,0 +1,35 @@
+# PostgreSQL + pgvector — the one hard external dependency of DOGV AI.
+# The chat/embedding servers are NOT containerized here: they need GPUs (or you
+# point LLM_BASE_URL / EMBED_BASE_URL at any OpenAI-compatible endpoint — see the
+# "Run without local GPUs" section in the README).
+#
+#   docker compose up -d db
+#   .venv/bin/python scripts/init_db.py           # create tables (SQLAlchemy models)
+#   for f in sql/*.sql; do psql "$DATABASE_URL" -f "$f"; done   # indexes / pgvector DDL
+#
+# Credentials match the default DATABASE_URL in api/config.py
+# (postgresql+psycopg2://dogv_ai:dogv_ai@localhost:5432/dogv_ai).
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: dogv-postgres
+    environment:
+      POSTGRES_USER: dogv_ai
+      POSTGRES_PASSWORD: dogv_ai
+      POSTGRES_DB: dogv_ai
+    ports:
+      - "5432:5432"
+    volumes:
+      - dogv_pgdata:/var/lib/postgresql/data
+      # Runs once on first init: enables vector + unaccent and defines the
+      # `catalan` text-search config the Valencian BM25 lane expects.
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dogv_ai -d dogv_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  dogv_pgdata:

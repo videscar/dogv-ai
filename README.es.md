@@ -151,6 +151,42 @@ chainlit run ui/chainlit_app.py --host 0.0.0.0 --port 8501
 bash scripts/demo_ctl.sh start
 ```
 
+## Ejecutar sin GPUs locales
+
+El único servicio que debes alojar tú es **PostgreSQL + pgvector**; se incluye un
+`docker-compose.yml` para ello (también habilita `unaccent` y define la
+configuración de búsqueda de texto `catalan` que necesita la vía valenciana):
+
+```bash
+docker compose up -d db
+.venv/bin/python scripts/init_db.py                       # crear tablas
+DB="postgresql://dogv_ai:dogv_ai@localhost:5432/dogv_ai"
+for f in sql/*.sql; do psql "$DB" -f "$f"; done            # índices + DDL de pgvector
+```
+
+Los modelos de chat y de embeddings se consumen por **HTTP compatible con OpenAI**,
+así que puedes apuntarlos a cualquier endpoint en lugar del stack local de 2×GPU: una
+API alojada, otra máquina o un runtime local pequeño. Indica la raíz del host (el
+cliente añade `/v1/chat/completions` y `/v1/embeddings`):
+
+```bash
+export LLM_BASE_URL=https://tu-host-chat           # -> /v1/chat/completions
+export LLM_MODEL=tu-modelo-chat
+export EMBED_BASE_URL=https://tu-host-embed         # -> /v1/embeddings
+export EMBED_MODEL=bge-m3
+```
+
+Advertencias honestas sobre este modo:
+- Los vectores del corpus son **bge-m3, 1024 dim** (`EMBEDDING_DIM=1024`, fijado en el
+  esquema de `rag_chunk`/`rag_doc`). Para una ejecución equivalente el endpoint de
+  embeddings debe ser también bge-m3; otro embedder implica reindexar el corpus y
+  cambiar la dimensión del vector en `sql/`.
+- Las métricas publicadas de calidad de respuesta se midieron con **Qwen3.6-27B** como
+  modelo de chat — un endpoint más débil puntuará por debajo.
+- Aún necesitas ingerir un corpus (`scripts/maintain_indices.py --bootstrap`), que llama
+  al endpoint de embeddings por cada fragmento, así que un embedder remoto hace el
+  arranque inicial más lento.
+
 ## Endpoints
 
 - `GET /health` — estado + frescura del índice + commit/config que está sirviendo.
