@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from datetime import date, datetime, timedelta
 import re
 import unicodedata
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
-
 
 _EXPLICIT_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 _LAST_N_DAYS_RE = re.compile(

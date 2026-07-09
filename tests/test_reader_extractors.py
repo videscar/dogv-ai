@@ -5,7 +5,6 @@ from api.reader_extractors import (
     _program_total_evidence,
 )
 
-
 _CONV = {
     "document_id": 85222,
     "doc_subkind": "Convocatoria",

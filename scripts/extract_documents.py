@@ -7,11 +7,12 @@ Usage:
 If no args: process ALL issues in the DB.
 """
 
-import sys
-from datetime import datetime
 import hashlib
 import json
-from typing import Any, Dict, Iterable
+import sys
+from collections.abc import Iterable
+from datetime import datetime
+from typing import Any
 
 from sqlalchemy.orm import Session
 
@@ -20,8 +21,9 @@ try:
 except ImportError:
     import _path  # type: ignore  # noqa: F401
 from sqlalchemy import text as sa_text
+
 from api.db import SessionLocal
-from api.models import DogvIssue, DogvDocument
+from api.models import DogvDocument, DogvIssue
 
 
 def _iter_target_issues(db: Session, date_str: str | None, lang: str | None) -> Iterable[DogvIssue]:
@@ -34,7 +36,7 @@ def _iter_target_issues(db: Session, date_str: str | None, lang: str | None) -> 
     return q.all()
 
 
-def _extract_document_fields(doc: Dict[str, Any]) -> Dict[str, Any]:
+def _extract_document_fields(doc: dict[str, Any]) -> dict[str, Any]:
     """
     Map one raw 'disposicion' JSON object to DogvDocument fields.
     Adjust keys if you see different names in debug_issue_json.

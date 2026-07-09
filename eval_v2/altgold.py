@@ -13,7 +13,8 @@ Pure functions, no I/O, so they can back both the multi-turn runner and unit tes
 """
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 
 def _ints(values: Iterable[Any]) -> set[int]:

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import logging
+from datetime import UTC, datetime
 
 from sqlalchemy import text as sa_text
 
@@ -47,7 +47,7 @@ def _load_due_rows(db, limit: int, languages: list[str]) -> list[dict]:
       AND (next_retry_at IS NULL OR next_retry_at <= :now)
     """
     params: dict[str, object] = {
-        "now": datetime.now(timezone.utc),
+        "now": datetime.now(UTC),
         "limit": int(limit),
     }
     if languages:

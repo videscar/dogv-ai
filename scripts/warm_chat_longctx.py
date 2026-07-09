@@ -10,7 +10,14 @@ Stdlib only, so it can run as a systemd ExecStartPost with any python3.
 Idempotent and best-effort: never fails the unit (always exits 0).
 """
 from __future__ import annotations
-import argparse, json, os, sys, time, urllib.request
+
+import argparse
+import json
+import os
+import sys
+import time
+import urllib.request
+
 
 def build_prompt(approx_tokens: int) -> str:
     # ~1.6 tokens/word for this Spanish legal filler; size to the target.
@@ -22,7 +29,9 @@ def build_prompt(approx_tokens: int) -> str:
     out, n, words = [], 1, 0
     while words < words_target:
         s = unit.format(n=n)
-        out.append(s); words += len(s.split()); n += 1
+        out.append(s)
+        words += len(s.split())
+        n += 1
     out.append("\nPregunta: resume en una frase las obligaciones de los beneficiarios.")
     return "".join(out)
 

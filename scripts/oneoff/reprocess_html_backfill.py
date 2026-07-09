@@ -28,11 +28,9 @@ Usage:
 import argparse
 import json
 from concurrent.futures import ThreadPoolExecutor
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from pathlib import Path
-from typing import Optional
 
-from sqlalchemy import text as sa_text
 from sqlalchemy.orm import Session, load_only
 
 try:
@@ -71,7 +69,7 @@ _DOC_COLUMNS = (
 )
 
 
-def load_checkpoint() -> Optional[date]:
+def load_checkpoint() -> date | None:
     if not CHECKPOINT.exists():
         return None
     try:
@@ -86,7 +84,7 @@ def save_checkpoint(d: date) -> None:
     CHECKPOINT.write_text(json.dumps({"last_done": d.isoformat()}))
 
 
-def target_dates(db: Session, start: Optional[date], end: Optional[date]) -> list[date]:
+def target_dates(db: Session, start: date | None, end: date | None) -> list[date]:
     q = db.query(DogvIssue.date).distinct()
     if start:
         q = q.filter(DogvIssue.date >= start)
@@ -135,7 +133,7 @@ def reprocess_date(
             prefetched[doc_id] = (html_text, has_annex)
 
     html_n = pdf_n = none_n = 0
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     for doc, lang in rows:
         pre = prefetched.get(doc.id, (None, False))
         text, source = resolve_document_text(doc, lang, prefetched=pre)

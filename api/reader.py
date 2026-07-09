@@ -19,7 +19,6 @@ from .reader_extractors import (
     _score_text,
 )
 
-
 READER_SYSTEM = (
     "Eres un analista legal del DOGV. "
     "Extrae evidencia primero: cita fragmentos textuales (quote) y luego resume en detail. "

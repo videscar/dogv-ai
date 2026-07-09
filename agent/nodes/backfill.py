@@ -11,12 +11,12 @@ from api.config import get_settings
 from api.db import SessionLocal
 from api.dogv_resolver import (
     Reference,
+    _query_lang,
+    _strip_accents,
     corpus_like_patterns,
     infer_reference_from_corpus,
     parse_reference,
     resolve,
-    _query_lang,
-    _strip_accents,
 )
 
 settings = get_settings()

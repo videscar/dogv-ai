@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import re
 
-
 STOPWORDS = {
     "que",
     "qui",
@@ -93,12 +92,6 @@ STOPWORDS = {
     "cualesquiera",
     "sera",
     "serà",
-    "esta",
-    "aquesta",
-    "nou",
-    "nova",
-    "nous",
-    "noves",
 }
 
 SHORT_TOKEN_ALLOWLIST = {
@@ -127,7 +120,6 @@ GENERIC_TERMS = {
     "base",
     "lista",
     "listado",
-    "listes",
     "listes",
     "admitidos",
     "admitidas",

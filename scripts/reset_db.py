@@ -6,8 +6,8 @@ Usage:
 """
 
 import shutil
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from sqlalchemy import text as sa_text
 

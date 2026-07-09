@@ -7,7 +7,6 @@ from typing import Any
 from .config import get_settings
 from .llm import LlmClient
 
-
 ANSWER_REPAIR_SYSTEM = (
     "Eres un asistente del DOGV en modo reparacion de respuesta. "
     "Corrige solo con evidencia disponible. "

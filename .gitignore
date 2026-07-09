@@ -4,6 +4,9 @@ __pycache__/
 *.pyo
 *.pyd
 *.sqlite3
+*.egg-info/
+build/
+dist/
 
 # Envs
 .venv/

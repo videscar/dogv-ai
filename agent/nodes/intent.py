@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 import time
+from datetime import timedelta
 
 from agent.shared import QAState, return_with_profile
 from api.config import get_settings

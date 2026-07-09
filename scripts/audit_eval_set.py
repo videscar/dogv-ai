@@ -28,7 +28,6 @@ from api.retrieval import (
     vector_search,
 )
 
-
 AUDIT_SYSTEM = (
     "Eres un auditor de ground truth para evaluacion de recuperacion documental del DOGV. "
     "Tu objetivo es proponer conjuntos minimos y completos de documentos necesarios para responder la pregunta. "
@@ -607,7 +606,7 @@ def main() -> int:
     parser.add_argument("--limit", type=int, default=0)
     args = parser.parse_args()
 
-    with open(args.input, "r", encoding="utf-8") as fh:
+    with open(args.input, encoding="utf-8") as fh:
         raw = json.load(fh)
 
     if not isinstance(raw, list) or not raw:

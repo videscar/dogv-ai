@@ -3,8 +3,9 @@ try:
 except ImportError:
     import _path  # type: ignore  # noqa: F401
 
-from api.db import Base, engine
 from api import models  # noqa: F401  # ensure models are imported
+from api.db import Base, engine
+
 
 def init_db():
     Base.metadata.create_all(bind=engine)

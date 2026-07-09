@@ -22,7 +22,8 @@ except ImportError:
 from api.db import SessionLocal
 from api.dogv_urls import build_html_url, build_pdf_url
 from api.models import DogvDocument, DogvIssue
-from scripts.download_utils import build_dest_path as _build_dest_path, download_to_path
+from scripts.download_utils import build_dest_path as _build_dest_path
+from scripts.download_utils import download_to_path
 
 CACHE_HTML_ROOT = Path("data/html_cache")
 CACHE_PDF_ROOT = Path("data/pdf_cache")

@@ -13,10 +13,9 @@ series instead of whichever sibling retrieval happened to surface.
 from __future__ import annotations
 
 import calendar
+import re
 from dataclasses import dataclass, field
 from datetime import date
-import re
-import unicodedata
 
 from sqlalchemy import text as sa_text
 

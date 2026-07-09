@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import re
+
 from bs4 import BeautifulSoup
 from bs4.element import Tag
-
 
 _DROP_TAGS = {
     "script",

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from fastapi.testclient import TestClient
 
-
 NOT_READY_PAYLOAD = {
     "ready": False,
     "status": "warming",

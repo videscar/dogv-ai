@@ -17,12 +17,12 @@ Notes:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import date, datetime
 import logging
 import math
 import re
 import unicodedata
+from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import Any
 
 import requests
@@ -69,7 +69,7 @@ _TIPO_PREFIXES: dict[str, list[str]] = {
 # Words that carry no topical signal when disambiguating (Orden case).
 _STOP = {
     "que", "dice", "sobre", "cual", "cuál", "como", "cómo", "para", "del", "las",
-    "los", "una", "uno", "qué", "que", "regula", "establece", "dispone", "trata",
+    "los", "una", "uno", "qué", "regula", "establece", "dispone", "trata",
     "contenido", "objeto", "principal", "menciona", "mencionan", "fecha", "firmó",
     "ayudas", "medidas", "the", "and", "materia", "comunitat", "valenciana",
     "generalitat", "consell", "conselleria", "articulo", "artículo",

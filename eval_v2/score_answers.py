@@ -22,7 +22,7 @@ from collections import defaultdict
 
 
 def load_jsonl(p):
-    return [json.loads(l) for l in open(p, encoding="utf-8") if l.strip()]
+    return [json.loads(ln) for ln in open(p, encoding="utf-8") if ln.strip()]
 
 
 def main() -> int:

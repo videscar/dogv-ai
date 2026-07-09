@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import date, datetime
 import re
+from datetime import date, datetime
 from typing import Any
 
 from agent.shared import coverage_score
+
 from .config import get_settings
 from .llm import LlmClient
-
 
 RERANK_SYSTEM = (
     "Eres un reranker para documentos del DOGV. "

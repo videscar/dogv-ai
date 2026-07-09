@@ -14,12 +14,11 @@ If dates are provided, filter documents by issue date range (inclusive).
 
 import argparse
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
-from sqlalchemy.orm import Session, load_only
 from pypdf import PdfReader
+from sqlalchemy.orm import Session, load_only
 
 try:
     from . import _path  # type: ignore  # ensures project root is on sys.path
@@ -34,7 +33,7 @@ from scripts.download_assets import build_pdf_path, download_pdf
 from scripts.sumario_ingest import fetch_disposicion_json
 
 
-def extract_text_from_pdf(path: Path) -> Optional[str]:
+def extract_text_from_pdf(path: Path) -> str | None:
     try:
         reader = PdfReader(path)
         parts = []
@@ -48,7 +47,7 @@ def extract_text_from_pdf(path: Path) -> Optional[str]:
         return None
 
 
-def fetch_disposicion_body(disp_id, lang: str) -> tuple[Optional[str], bool]:
+def fetch_disposicion_body(disp_id, lang: str) -> tuple[str | None, bool]:
     """Fetch the portal detail JSON and return (cleaned HTML body, has_annex).
 
     `texto` is the body; `contieneAnexo` tells us whether an annex exists that
@@ -67,7 +66,7 @@ def fetch_disposicion_body(disp_id, lang: str) -> tuple[Optional[str], bool]:
     return (cleaned or None), has_annex
 
 
-def _norm_len(text: Optional[str]) -> int:
+def _norm_len(text: str | None) -> int:
     """Whitespace-normalized character count — fair content comparison across
     HTML (compact) and PDF (whitespace-heavy table layouts) extraction."""
     if not text:
@@ -84,11 +83,11 @@ def _norm_len(text: Optional[str]) -> int:
 HTML_MIN_RATIO = 0.6
 
 
-def _html_usable(html_text: Optional[str]) -> bool:
+def _html_usable(html_text: str | None) -> bool:
     return bool(html_text) and _norm_len(html_text) > 200
 
 
-def _needs_pdf(html_text: Optional[str], has_annex: bool) -> bool:
+def _needs_pdf(html_text: str | None, has_annex: bool) -> bool:
     """Whether we must fetch/parse the PDF for this document.
 
     Only annex documents (annex published only as PDF) or documents whose HTML
@@ -98,7 +97,7 @@ def _needs_pdf(html_text: Optional[str], has_annex: bool) -> bool:
     return bool(has_annex) or not _html_usable(html_text)
 
 
-def _choose_source(html_text: Optional[str], pdf_text: Optional[str]) -> Optional[str]:
+def _choose_source(html_text: str | None, pdf_text: str | None) -> str | None:
     """Decide which source to keep: 'html', 'pdf', or None when neither is usable."""
     html_usable = _html_usable(html_text)
     pdf_usable = bool(pdf_text)
@@ -121,12 +120,12 @@ def _build_text_header(title, conselleria, section) -> str:
 
 def select_document_text(
     *,
-    html_text: Optional[str],
-    pdf_text: Optional[str],
+    html_text: str | None,
+    pdf_text: str | None,
     title=None,
     conselleria=None,
     section=None,
-) -> tuple[Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None]:
     """Pick the better of an already-fetched HTML body vs PDF text.
 
     Returns (text, source) where source is 'html' or 'pdf', or (None, None) when
@@ -144,12 +143,12 @@ def select_document_text(
 
 
 def resolve_pdf_text(
-    pdf_url: Optional[str],
-    html_text: Optional[str],
+    pdf_url: str | None,
+    html_text: str | None,
     has_annex: bool,
     *,
     download_missing: bool = True,
-) -> Optional[str]:
+) -> str | None:
     """Extract PDF text, but only when the HTML can't stand alone (annex /
     unusable HTML). Downloads the PDF on demand when not cached."""
     if not (pdf_url and _needs_pdf(html_text, has_annex)):
@@ -166,11 +165,11 @@ def resolve_pdf_text(
 
 def resolve_document_text(
     doc: DogvDocument,
-    lang: Optional[str],
+    lang: str | None,
     *,
-    prefetched: Optional[tuple[Optional[str], bool]] = None,
+    prefetched: tuple[str | None, bool] | None = None,
     fetch_html: bool = True,
-) -> tuple[Optional[str], Optional[str]]:
+) -> tuple[str | None, str | None]:
     """Resolve final (text, source) for one document.
 
     `prefetched` lets a caller (e.g. the concurrent backfill) supply an
@@ -272,7 +271,7 @@ def extract_range(
 
             doc.text = text
             doc.text_source = source
-            doc.text_updated_at = datetime.now(timezone.utc)
+            doc.text_updated_at = datetime.now(UTC)
             updated += 1
             if source == "html":
                 html_count += 1

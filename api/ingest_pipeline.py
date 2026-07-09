@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 
 from api.config import get_settings
 from api.db import SessionLocal
-from scripts.sumario_ingest import fetch_sumario_json, upsert_issue
+from scripts.build_chunks import build_chunks_for_range
+from scripts.classify_documents import classify_range
 from scripts.extract_documents import process_issue
 from scripts.extract_text import extract_range
-from scripts.classify_documents import classify_range
-from scripts.build_chunks import build_chunks_for_range
+from scripts.sumario_ingest import fetch_sumario_json, upsert_issue
 
 logger = logging.getLogger("dogv.ingest")
 

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import copy
-from datetime import date, datetime, timedelta, timezone
 import logging
 import random
 import threading
 import time
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 import requests
@@ -22,7 +22,7 @@ logger = logging.getLogger("dogv.auto_ingest")
 
 
 def _utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return datetime.now(UTC).isoformat(timespec="seconds")
 
 
 def _parse_languages(raw: str | None) -> list[str]:
@@ -225,7 +225,7 @@ def _gap_scan_window(start: date, end: date) -> tuple[date, date]:
 
 
 def _is_transient_source_exception(exc: Exception) -> bool:
-    if isinstance(exc, (requests.Timeout, requests.ConnectionError)):
+    if isinstance(exc, requests.Timeout | requests.ConnectionError):
         return True
     if isinstance(exc, requests.HTTPError):
         response = getattr(exc, "response", None)
@@ -244,7 +244,7 @@ def _record_gap_source_failure(
     if db is None:
         return
     try:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         db.execute(
             sa_text(
                 """
@@ -300,7 +300,7 @@ def _mark_gap_source_resolved(
     if db is None:
         return
     try:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         db.execute(
             sa_text(
                 """
@@ -398,7 +398,7 @@ def _source_has_publications(
                 time.sleep(retry_delay)
                 continue
             error_text = str(exc) or exc.__class__.__name__
-            next_retry_at = datetime.now(timezone.utc) + timedelta(
+            next_retry_at = datetime.now(UTC) + timedelta(
                 seconds=max(30.0, backoff_seconds * 4)
             )
             _record_gap_source_failure(db, issue_date, language, error_text, next_retry_at)
@@ -439,7 +439,7 @@ def record_gap_source_failure(
     next_retry_at: datetime | None = None,
 ) -> None:
     retry_at = next_retry_at or (
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         + timedelta(seconds=max(30.0, _gap_retry_backoff_seconds() * 4))
     )
     _record_gap_source_failure(db, issue_date, language, error_text, retry_at)
@@ -717,6 +717,7 @@ def upsert_disposicion_row(
     both the per-doc on-demand path (ingest_one_disposicion) and the per-range ingest
     pipeline (sibling-edition completeness), where the batch steps process it."""
     from scripts.sumario_ingest import fetch_disposicion_json
+
     from .models import DogvDocument, DogvIssue
 
     detail = fetch_disposicion_json(disposicion_id, lang)
@@ -779,9 +780,9 @@ def ingest_one_disposicion(disposicion_id: int, lang: str) -> int | None:
     normal extract -> classify -> chunk/embed steps scoped to that one document.
     Returns the new dogv_documents.id, or None on failure.
     """
-    from scripts.extract_text import extract_range
-    from scripts.classify_documents import classify_range
     from scripts.build_chunks import build_chunks_for_range
+    from scripts.classify_documents import classify_range
+    from scripts.extract_text import extract_range
 
     with SessionLocal() as db:
         result = upsert_disposicion_row(db, disposicion_id, lang)

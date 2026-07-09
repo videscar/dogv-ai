@@ -1,14 +1,14 @@
 from sqlalchemy import (
+    JSON,
     Column,
-    Integer,
-    String,
     Date,
     DateTime,
-    Text,
-    JSON,
-    ForeignKey,
-    UniqueConstraint,
     Float,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 

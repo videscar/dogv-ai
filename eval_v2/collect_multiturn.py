@@ -77,7 +77,7 @@ def main() -> int:
     args = ap.parse_args()
     base = args.base_url.rstrip("/")
 
-    scenarios = [json.loads(l) for l in open(args.set, encoding="utf-8") if l.strip()]
+    scenarios = [json.loads(ln) for ln in open(args.set, encoding="utf-8") if ln.strip()]
     if args.ids:
         want = set(args.ids.split(","))
         scenarios = [s for s in scenarios if s["id"] in want]
@@ -90,9 +90,12 @@ def main() -> int:
             except Exception as exc:
                 res = {"id": sc["id"], "error": f"{type(exc).__name__}: {exc}"}
                 print(f"[{sc['id']}] ERROR {res['error']}", flush=True)
-                fout.write(json.dumps(res, ensure_ascii=False) + "\n"); fout.flush()
-                results.append(res); continue
-            fout.write(json.dumps(res, ensure_ascii=False) + "\n"); fout.flush()
+                fout.write(json.dumps(res, ensure_ascii=False) + "\n")
+                fout.flush()
+                results.append(res)
+                continue
+            fout.write(json.dumps(res, ensure_ascii=False) + "\n")
+            fout.flush()
             results.append(res)
             print(f"[{res['id']}] {res['language']} turn1={'HIT' if res['turn1_any_hit'] else 'miss'} "
                   f"-> final={'HIT' if res['final_any_hit'] else 'MISS'} "

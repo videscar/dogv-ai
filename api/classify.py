@@ -5,7 +5,6 @@ from typing import Any
 
 from .llm import LlmClient
 
-
 # Canonical labels the rest of the pipeline (retrieval filters, metadata) relies
 # on. The LLM occasionally returns accented, singular, or invented variants, so
 # we normalize its output back onto these instead of storing it verbatim.

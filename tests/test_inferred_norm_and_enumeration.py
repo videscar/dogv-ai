@@ -8,10 +8,10 @@ mayo 2026" is detected as an enumeration so the SQL augment can fire.
 
 from __future__ import annotations
 
-from api.dogv_resolver import _infer_principal_ref, infer_reference_from_corpus
-from api.enumeration import parse_enumeration, is_enumeration_query
 from datetime import date
 
+from api.dogv_resolver import _infer_principal_ref, infer_reference_from_corpus
+from api.enumeration import is_enumeration_query, parse_enumeration
 
 # Real DOGV title shapes: the principal a doc modifies/develops is named right
 # after its number, while the doc's own leading number is not. The generic term

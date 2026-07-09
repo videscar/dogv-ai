@@ -18,7 +18,6 @@ from .answer_validator import (
 from .config import get_settings
 from .llm import LlmClient
 
-
 ANSWER_SYSTEM = (
     "Eres un asistente del DOGV. Responde solo con evidencia. "
     "Usa solo las citas textuales (quote) para responder. "

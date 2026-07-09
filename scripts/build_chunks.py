@@ -500,7 +500,7 @@ def build_chunks_for_range(
             }
             ts_config = ts_config_for_language(issue.language)
 
-            for idx, (chunk, embedding) in enumerate(zip(chunks, embeddings)):
+            for idx, (chunk, embedding) in enumerate(zip(chunks, embeddings, strict=False)):
                 db.execute(
                     sa_text(
                         """

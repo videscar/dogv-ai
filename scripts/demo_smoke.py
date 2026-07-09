@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 import argparse
-from datetime import datetime, timezone
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
 
 
 def _now_ts() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _log_line(lines: list[str], message: str) -> None:
-    timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    timestamp = datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
     line = f"[{timestamp}] {message}"
     lines.append(line)
     print(line)

@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ALLOWED_LANES = {"vector", "bm25", "title"}
@@ -426,7 +427,7 @@ class Settings(BaseSettings):
         )
 
 
-@lru_cache()
+@lru_cache
 def get_settings() -> Settings:
     return Settings()
 

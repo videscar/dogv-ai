@@ -17,17 +17,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import sys
 from collections import defaultdict
 
 import agent.nodes.read as readmod
 from agent.nodes import (
     analyze_intent_node,
-    temporal_guard_node,
     online_ingest_node,
-    retrieve_candidates_node,
-    rerank_titles_node,
     read_docs_node,
+    rerank_titles_node,
+    retrieve_candidates_node,
+    temporal_guard_node,
 )
 
 DEFAULT_SET = "data/eval_v2/eval_set_v2.jsonl"
@@ -71,7 +70,7 @@ def main() -> int:
     ap.add_argument("--out", default="")
     args = ap.parse_args()
 
-    rows = [json.loads(l) for l in open(args.set, encoding="utf-8") if l.strip()]
+    rows = [json.loads(ln) for ln in open(args.set, encoding="utf-8") if ln.strip()]
     if args.ids:
         want = set(args.ids.split(","))
         rows = [r for r in rows if r["id"] in want]
@@ -86,8 +85,10 @@ def main() -> int:
             continue
         cand, read = _probe_one(r["question"])
         cand_s, read_s = set(cand), set(read)
-        pa = bool(gold & cand_s); pf = gold <= cand_s
-        ra = bool(gold & read_s); rf = gold <= read_s
+        pa = bool(gold & cand_s)
+        pf = gold <= cand_s
+        ra = bool(gold & read_s)
+        rf = gold <= read_s
         # 1-indexed rank(s) of gold doc(s) within the ordered (reranked) candidate
         # pool and the read payload — None when absent. This is the near-miss vs
         # deep-miss signal: a high pool_rank means "retrieved but ranked below the
@@ -97,8 +98,10 @@ def main() -> int:
         for key in ("ALL", f"cat:{r['category']}", f"lang:{r['language']}"):
             a = agg[key]
             a["n"] += 1
-            a["pool_any"] += pa; a["pool_full"] += pf
-            a["read_any"] += ra; a["read_full"] += rf
+            a["pool_any"] += pa
+            a["pool_full"] += pf
+            a["read_any"] += ra
+            a["read_full"] += rf
         per_q.append({"id": r["id"], "category": r["category"], "language": r["language"],
                       "gold": sorted(gold), "pool_any": pa, "pool_full": pf,
                       "read_any": ra, "read_full": rf,
@@ -111,7 +114,8 @@ def main() -> int:
               f"read={'F' if rf else ('A' if ra else '-')}{rank_s}{miss}", flush=True)
 
     def line(key):
-        a = agg[key]; n = a["n"] or 1
+        a = agg[key]
+        n = a["n"] or 1
         return (f"{key:16} n={a['n']:3}  pool_any={a['pool_any']/n:.2f} pool_full={a['pool_full']/n:.2f}"
                 f"  read_any={a['read_any']/n:.2f} read_full={a['read_full']/n:.2f}")
     print("\n=== PIPELINE RECALL (answerable) ===")

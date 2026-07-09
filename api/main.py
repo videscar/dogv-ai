@@ -1,15 +1,19 @@
 from __future__ import annotations
 
-from datetime import date
 import json
 import logging
 import time
 import uuid
-from typing import Any, Iterator, Literal
+from collections.abc import Iterator
+from datetime import date
+from typing import Any, Literal
+
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
+
+from agent.graph import build_graph
 
 from .auto_ingest import start_startup_sync
 from .build_info import build_info
@@ -18,7 +22,6 @@ from .db import SessionLocal
 from .models import DogvDocument, DogvIssue
 from .readiness import build_readiness_payload
 from .traces import store_trace
-from agent.graph import build_graph
 
 # Langchain-core expects langchain.debug to exist in some versions.
 try:

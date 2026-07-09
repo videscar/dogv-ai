@@ -198,7 +198,7 @@ def rerank_titles_node(state: QAState) -> QAState:
                 if doc_id is None:
                     continue
                 chunk_candidates_by_doc.setdefault(int(doc_id), []).append(item)
-            for doc_id, items in chunk_candidates_by_doc.items():
+            for items in chunk_candidates_by_doc.values():
                 items.sort(key=lambda row: float(row.get("score") or 0.0), reverse=True)
         fallback_doc_ids = [int(item["document_id"]) for item in candidates]
         fallback_summaries: dict[int, str] = {}

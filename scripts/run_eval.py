@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import argparse
 import csv
-from dataclasses import asdict, dataclass
-from datetime import date, datetime, timedelta, timezone
 import json
 import os
 import re
 import time
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 try:
@@ -20,8 +20,8 @@ from sqlalchemy.orm import Session
 
 from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
-from api.intent import analyze_intent, analyze_intent_and_expand
 from api.embed import EmbedClient
+from api.intent import analyze_intent, analyze_intent_and_expand
 from api.query_expansion import (
     build_bm25_queries,
     build_prf_query,
@@ -34,9 +34,9 @@ from api.retrieval import (
     RetrievalFilters,
     bm25_search,
     rrf_fuse,
-    top_chunks_for_docs,
     title_bm25_search,
     title_vector_search,
+    top_chunks_for_docs,
     vector_search,
 )
 from api.taxonomy import canonical_doc_kind
@@ -889,7 +889,7 @@ def main() -> int:
     parser.add_argument("--skip-rerank-llm", action="store_true")
     args = parser.parse_args()
 
-    with open(args.input, "r", encoding="utf-8") as fh:
+    with open(args.input, encoding="utf-8") as fh:
         eval_set = json.load(fh)
 
     if not eval_set:
@@ -899,7 +899,7 @@ def main() -> int:
     if not k_values:
         raise SystemExit("No k values provided")
 
-    run_id = args.run_id or datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_id = args.run_id or datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     os.makedirs(args.output_dir, exist_ok=True)
 
     client = EmbedClient()
@@ -1155,7 +1155,7 @@ def main() -> int:
 
     report = {
         "run_id": run_id,
-        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "eval_set": args.input,
         "size": len(eval_set),
         "k_values": k_values,

@@ -8,9 +8,9 @@ Usage:
 """
 
 import argparse
+import os
 from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from datetime import datetime
-import os
 from typing import Any
 
 from sqlalchemy.orm import Session, load_only

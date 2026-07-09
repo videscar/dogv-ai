@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
@@ -339,7 +339,7 @@ def rrf_fuse(
 
     if weights is None:
         weights = [1.0] * len(sources)
-    for source, weight in zip(sources, weights):
+    for source, weight in zip(sources, weights, strict=False):
         if not source or weight <= 0:
             continue
         for rank, row in enumerate(source, start=1):

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import argparse
-from collections import Counter
-from datetime import datetime, timezone
 import json
-from pathlib import Path
 import time
-from typing import Any
 import unicodedata
+from collections import Counter
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 import httpx
 
@@ -18,7 +18,7 @@ except ImportError:
 
 
 def _now_run_id() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
 def _load_cases(path: Path) -> list[dict[str, Any]]:
@@ -146,7 +146,7 @@ def _summarize_profiles(results: list[dict[str, Any]]) -> dict[str, Any]:
             if not isinstance(stage_data, dict):
                 continue
             elapsed = stage_data.get("elapsed_seconds")
-            if isinstance(elapsed, (int, float)):
+            if isinstance(elapsed, int | float):
                 elapsed_values.append(float(elapsed))
         if not elapsed_values:
             continue
@@ -363,7 +363,7 @@ def main() -> int:
     profile_cases = sum(1 for item in results if item.get("profile"))
     report = {
         "run_id": run_id,
-        "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "input": str(input_path),
         "base_url": args.base_url,
         "size": total_cases,

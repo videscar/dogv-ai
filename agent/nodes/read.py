@@ -413,7 +413,6 @@ def read_docs_node(state: QAState) -> QAState:
 
     try:
         top_chunks = state.get("top_chunks") or {}
-        chunk_candidates = state.get("chunk_candidates") or []
         query_embedding = state.get("query_embedding")
 
         with SessionLocal() as db:

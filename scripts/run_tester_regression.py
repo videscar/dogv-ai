@@ -91,7 +91,7 @@ def run(api: str) -> list[dict]:
 
 def write_report(results: list[dict], out: Path) -> None:
     regs = [r for r in results if r["regression"]]
-    ts = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    ts = dt.datetime.now(dt.UTC).strftime("%Y-%m-%d %H:%M UTC")
     lines = [f"# Tester regression run — {ts}", ""]
     lines.append(f"**{len(results) - len(regs)}/{len(results)} clean**, "
                  f"{len(regs)} regression(s).\n")
@@ -124,7 +124,7 @@ def main() -> int:
     ap.add_argument("--out", default=None)
     args = ap.parse_args()
     results = run(args.api)
-    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d")
+    stamp = dt.datetime.now(dt.UTC).strftime("%Y%m%d")
     out = Path(args.out) if args.out else QFILE.parent / f"run_{stamp}.md"
     write_report(results, out)
     return 1 if any(r["regression"] for r in results) else 0

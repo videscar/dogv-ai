@@ -15,8 +15,9 @@ title boilerplate are protected by the different-date rule.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import date
-from typing import Any, Iterable
+from typing import Any
 
 from .rerank import parse_issue_date
 

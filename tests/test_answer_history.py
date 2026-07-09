@@ -69,7 +69,7 @@ def test_build_answer_no_history_block_when_absent(monkeypatch):
 def test_history_does_not_leak_into_citations(monkeypatch):
     # Citations come from the model result, not from history; ensure a history that
     # mentions a different doc id never becomes a citation.
-    captured = _capture(monkeypatch)
+    _capture(monkeypatch)
     result = ans.build_answer(
         "y los plazos?",
         "es_es",

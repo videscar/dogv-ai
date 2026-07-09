@@ -10,7 +10,7 @@ Example:
 
 import sys
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
 
 import requests
 from sqlalchemy.orm import Session
@@ -36,7 +36,7 @@ def _pick_first(source: dict, keys: list[str]) -> tuple[Any | None, str | None]:
     return None, None
 
 
-def upsert_issue(db: Session, date_str: str, lang: str, data: Dict[str, Any]) -> DogvIssue:
+def upsert_issue(db: Session, date_str: str, lang: str, data: dict[str, Any]) -> DogvIssue:
     """
     Insert or update one DOGV issue. Tries multiple key names for numero/title and logs what it finds.
     """
@@ -103,7 +103,7 @@ def upsert_issue(db: Session, date_str: str, lang: str, data: Dict[str, Any]) ->
     return issue
 
 
-def fetch_sumario_json(date: str, lang: str = "es_es") -> Dict[str, Any]:
+def fetch_sumario_json(date: str, lang: str = "es_es") -> dict[str, Any]:
     base = settings.dogv_base_url.rstrip("/")
     url = f"{base}/dogv-portal/dogv"
     params = {"date": date, "lang": lang}
@@ -112,7 +112,7 @@ def fetch_sumario_json(date: str, lang: str = "es_es") -> Dict[str, Any]:
     return resp.json()
 
 
-def fetch_disposicion_json(disp_id: Any, lang: str, timeout: int = 20) -> Dict[str, Any]:
+def fetch_disposicion_json(disp_id: Any, lang: str, timeout: int = 20) -> dict[str, Any]:
     """Fetch one document's detail JSON (incl. the `texto` HTML body).
 
     Same backend as the sumario fetch. `lang` is required by the API (issue
