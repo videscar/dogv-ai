@@ -2,6 +2,10 @@
 
 **English** · [Español](README.es.md)
 
+[![CI](https://github.com/videscar/dogv-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/videscar/dogv-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
+
 Self-hosted RAG assistant for the DOGV (*Diari Oficial de la Generalitat
 Valenciana*, the official gazette of the Valencian regional government): public
 employment, grants/subsidies/awards and scholarships. Automated daily ingestion,

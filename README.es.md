@@ -2,6 +2,10 @@
 
 [English](README.md) · **Español**
 
+[![CI](https://github.com/videscar/dogv-ai/actions/workflows/ci.yml/badge.svg)](https://github.com/videscar/dogv-ai/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
+
 Asistente RAG local para consultas sobre el DOGV (Diari Oficial de la Generalitat
 Valenciana): empleo público, ayudas/subvenciones/premios y becas. Ingesta diaria
 automatizada, búsqueda híbrida multi-carril sobre PostgreSQL, y respuestas con citas

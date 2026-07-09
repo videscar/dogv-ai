@@ -49,7 +49,7 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/vdescals/dogv-ai"
+Repository = "https://github.com/videscar/dogv-ai"
 
 [tool.setuptools.packages.find]
 where = ["."]
