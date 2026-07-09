@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agent.nodes.read import _fold_preserving_length, _salient_keywords, _window_chunk_text
+from agent.nodes.read_chunks import _fold_preserving_length, _salient_keywords, _window_chunk_text
 
 
 def test_short_chunk_untouched():
