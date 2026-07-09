@@ -328,6 +328,90 @@ def title_vector_search(
     return [dict(row) for row in rows]
 
 
+def dedupe_docs(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep the first row per document_id, preserving order."""
+    seen: set[int] = set()
+    deduped: list[dict[str, Any]] = []
+    for item in items:
+        doc_id = item.get("document_id")
+        if doc_id is None:
+            continue
+        doc_id = int(doc_id)
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
+        deduped.append(item)
+    return deduped
+
+
+def merge_with_budget(
+    primary: list[dict[str, Any]],
+    secondary: list[dict[str, Any]],
+    limit: int,
+    secondary_ratio: float = 0.3,
+) -> list[dict[str, Any]]:
+    """Merge two doc lists under `limit`, reserving a share for the secondary.
+
+    The primary keeps `limit - budget` slots up front, the secondary gets at
+    most `budget` (= max(5, limit*ratio)) slots, and any remaining room is
+    backfilled from the primary's overflow. Deduped by document_id throughout.
+    """
+    if not primary:
+        return secondary[:limit]
+    if not secondary:
+        return primary[:limit]
+    budget = max(5, int(limit * secondary_ratio))
+    keep_primary = max(1, limit - budget)
+    result: list[dict[str, Any]] = []
+    seen: set[int] = set()
+
+    def _add(items: list[dict[str, Any]]) -> None:
+        for item in items:
+            if len(result) >= limit:
+                return
+            doc_id = item.get("document_id")
+            if doc_id is None:
+                continue
+            doc_id = int(doc_id)
+            if doc_id in seen:
+                continue
+            seen.add(doc_id)
+            result.append(item)
+
+    _add(primary[:keep_primary])
+    added_secondary = 0
+    for item in secondary:
+        if len(result) >= limit or added_secondary >= budget:
+            break
+        doc_id = item.get("document_id")
+        if doc_id is None:
+            continue
+        doc_id = int(doc_id)
+        if doc_id in seen:
+            continue
+        seen.add(doc_id)
+        result.append(item)
+        added_secondary += 1
+
+    if len(result) < limit:
+        _add(primary[keep_primary:])
+    return result
+
+
+def fuse_sources(
+    sources: list[list[dict[str, Any]]],
+    max_docs: int,
+    weights: list[float] | None = None,
+) -> list[dict[str, Any]]:
+    """RRF-fuse multiple sources; a single source just gets deduped."""
+    if not sources:
+        return []
+    if len(sources) == 1:
+        return dedupe_docs(sources[0])
+    use_weights = weights if weights and len(weights) == len(sources) else [1.0] * len(sources)
+    return rrf_fuse(sources, max_docs=max_docs, weights=use_weights)
+
+
 def rrf_fuse(
     sources: list[list[dict[str, Any]]],
     k: int = 60,

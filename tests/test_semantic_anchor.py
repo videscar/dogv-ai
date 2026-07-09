@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from agent.nodes.retrieve import inject_semantic_anchors
+from agent.nodes.retrieve_pool import inject_semantic_anchors
 from api.retrieval import rrf_fuse
 
 
