@@ -5,7 +5,8 @@ vLLM, embeddings on llama.cpp — see ops/README.md).
 This file guides coding agents working in this repo.
 
 ## Environment
-- Python deps: `pip install -r requirements.txt` (prefer existing `.venv`).
+- Python deps: `pip install -e '.[dev]'` (or `pip install -r requirements.txt`); prefer the existing `.venv`.
+- Lint/format: `ruff check .` and `ruff format --check .` (config in `pyproject.toml`). Tests: `pytest` (mocked, ~1s).
 - Copy `.env.example` to `.env` and set `DOGV_DB_DSN`, `DATABASE_URL`, `LLM_BASE_URL`, `EMBED_BASE_URL`, model names, etc.
 - PostgreSQL must have `pgvector` available.
 

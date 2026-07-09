@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dogv-ai"
+version = "0.1.0"
+description = "Self-hosted RAG assistant for the DOGV (Diari Oficial de la Generalitat Valenciana) with verifiable citations."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Vicent Descals Carbonell", email = "vdescalscarbonell@gmail.com" }]
+keywords = ["rag", "llm", "retrieval", "pgvector", "langgraph", "legal", "valencian", "spanish"]
+classifiers = [
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Private :: Do Not Upload",
+]
+
+# Runtime dependencies. Pinned for reproducibility; mirrored in requirements.txt
+# (which is kept for the `pip install -r requirements.txt` path).
+dependencies = [
+    "fastapi==0.116.1",
+    "uvicorn[standard]==0.30.6",
+    "requests==2.32.3",
+    "httpx==0.28.1",
+    "chainlit==2.9.6",
+    "asyncpg==0.30.0",
+    "python-dotenv==1.0.1",
+    "sqlalchemy==2.0.32",
+    "pydantic==2.7.4",
+    "pydantic-settings==2.3.4",
+    "pypdf==4.2.0",
+    "beautifulsoup4==4.12.3",
+    "langchain-core==0.2.40",
+    "langgraph==0.2.32",
+    "pgvector==0.2.5",
+    "psycopg2-binary==2.9.9",
+    "transformers==4.45.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.3",
+    "pytest-cov==5.0.0",
+    "ruff==0.6.9",
+]
+
+[project.urls]
+Repository = "https://github.com/vdescals/dogv-ai"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["api*", "agent*", "scripts*", "ui*", "eval_v2*"]
+namespaces = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv", "data", "logs", "public", "gv-logo", "assets", ".chainlit", ".files"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+# E501 (line length) is owned by the formatter; B008 is the FastAPI Depends() default pattern.
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+# Scripts bootstrap sys.path before importing project modules.
+"scripts/**" = ["E402"]
+# Chainlit reads its data-layer config on import, so it must be configured first.
+"ui/chainlit_app.py" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
