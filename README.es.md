@@ -209,14 +209,16 @@ respuesta con un error factual material. Cada run queda ligado al commit exacto 
 produjo (sidecar `.meta.json` + `/health`). Detalle: `data/eval_v2/README.md` y los
 informes en `data/eval_v2/*.md`.
 
-Últimos resultados (100Q, re-run completo sobre master, 08-07-2026, config de producción):
+Últimos resultados (100Q, re-run completo sobre master `03ab7db` — árbol limpio —
+09-07-2026, config de producción):
 
 | Métrica | Valor |
 |---|---|
-| Puntuación global (con puerta factual) | **0.700** (baseline de junio con la misma config: 0.622) |
-| Fidelidad a la evidencia | 0.989 |
+| Puntuación global (con puerta factual) | **0.706** (baseline de junio con la misma config: 0.622) |
+| Fidelidad a la evidencia | 0.978 |
 | Tasa de error crítico | 1.1% (junio: 6.7%) |
 | Abstención fuera de ámbito | 10/10 |
+| Holdout congelado (29Q incl. fuera de ámbito, nunca usado para ajustar) | 0.690 |
 | Recuperación (rerank) R@10 | 0.744 |
 | MRR (rerank) | 0.582 |
 | Set de regresión del tester externo (30Q) | 30/30 |

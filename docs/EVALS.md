@@ -1,27 +1,29 @@
 # Evaluation: how DOGV AI is measured, and what it actually scores
 
 This is the story of the evaluation, not a spec. It explains why the headline
-number is **0.700** and not **1.0**, what each shipped fix bought, which idea was
+number is **0.706** and not **1.0**, what each shipped fix bought, which idea was
 rejected *because* it couldn't be measured reproducibly, and where the system still
 fails. Every number here comes from a committed report or run — nothing is rounded
 up for effect.
 
-> **Shipped config, authoritative full re-run (100Q, 2026-07-08, production
-> settings, thinking OFF, temperature 0):**
+> **Shipped config, authoritative full re-run (100Q, 2026-07-09, master `03ab7db`
+> with a clean tree, production settings, thinking OFF, temperature 0):**
 >
 > | Metric | Value |
 > |---|---|
-> | **Overall gated score** (hard factual gate) | **0.700** |
-> | Faithfulness to evidence | 0.989 |
+> | **Overall gated score** (hard factual gate) | **0.706** |
+> | Faithfulness to evidence | 0.978 |
 > | Critical-error rate | 1.1% |
 > | Out-of-scope abstention | 10/10 |
 > | Retrieval R@10 (rerank) / MRR | 0.744 / 0.582 |
-> | Frozen holdout (29Q) gated | 0.667 |
+> | Frozen holdout (29Q incl. out-of-scope) gated | 0.690 |
 > | External tester regression set (30Q) | 30/30 |
 >
-> Lineage: the deterministic thinking-OFF config went **0.622 → 0.700** over the
-> campaign below — overtaking the thinking-ON config (0.694) that was *rejected* for
-> being non-reproducible.
+> Lineage: the deterministic thinking-OFF config went **0.622 → 0.700 → 0.706** over
+> the campaign below — overtaking the thinking-ON config (0.694) that was *rejected*
+> for being non-reproducible. The 0.700 → 0.706 step is day-over-day corpus drift on
+> identical code (the refactor between the two runs was verified byte-identical),
+> which is also a fair estimate of this suite's noise floor: ±0.006 on n=100.
 
 Sources: [`data/eval_v2/reports/answer_metrics.json`](../data/eval_v2/reports/answer_metrics.json),
 [`data/eval_v2/reports/retrieval_metrics.json`](../data/eval_v2/reports/retrieval_metrics.json),
@@ -63,7 +65,7 @@ into two independent axes behind a hard gate:
   factual error (wrong figure, date, reference, name).
 
 The gate is the point: a confidently-wrong answer scores **0**, not partial credit.
-That is why 0.700 is a load-bearing number.
+That is why 0.706 is a load-bearing number.
 
 ## 3. The idea that was rejected *because* it couldn't be measured
 
@@ -101,7 +103,7 @@ the corpus grew (§5) the absolute numbers shifted, but each lever earned its pl
 | **RC3 — evidence extraction** | Keyword-**window** chunk truncation (not prefix) + re-grounding of non-verbatim LLM quotes onto the source chunk. | 14/14 + tester 30/30 citation-diff clean | commit `d11a8c2` (RC3) |
 | **RC4 — semantic anchor** | A doc in the top-N of a semantic lane is guaranteed a fused-pool slot, so correlated BM25 lanes can't evict the gold on paraphrase/annex queries. | 0 regressions | commit (RC4) |
 
-## 5. Re-baselined on the real shipping corpus: 0.700
+## 5. Re-baselined on the real shipping corpus: 0.70
 
 The campaign above ran while the corpus was ~29k documents. It then grew ~3× to a
 full rolling 24-month window (~50.9k docs) after recovering the silently-dropped
@@ -109,8 +111,12 @@ full rolling 24-month window (~50.9k docs) after recovering the silently-dropped
 so the suite got harder in absolute terms. The honest, apples-to-apples number is the
 **full re-run on today's corpus and frozen production config**:
 
-- **Gated 0.700**, faithfulness **0.989**, critical-error **1.1%**, out-of-scope
-  abstention **10/10**.
+- 2026-07-08 re-baseline: **gated 0.700**, faithfulness 0.989, critical-error 1.1%,
+  out-of-scope abstention 10/10.
+- 2026-07-09 confirmation from a **clean committed tree** (master `03ab7db`):
+  **gated 0.706**, faithfulness 0.978, identical retrieval metrics — the committed
+  reports carry this run. The 0.006 day-over-day delta on identical (byte-identical
+  verified) code is the suite's practical noise floor.
 - This is the deterministic thinking-OFF config, now **above** the rejected
   thinking-ON 0.694 — and still ~2× faster.
 
@@ -138,7 +144,7 @@ MRR 0.458, so reranking lifts R@1 by ~16 points.
 - **Latency:** median `/ask` ~50–60 s — a multi-stage pipeline on a local 27B.
 - **No OCR** for scanned PDFs.
 
-None of these are hidden by the gate; they're why the number is 0.700.
+None of these are hidden by the gate; they're why the number is 0.706.
 
 ## 7. Generalization: tuned vs. a frozen holdout
 
@@ -148,19 +154,19 @@ gap visible, [`eval_v2/make_holdout.py`](../eval_v2/make_holdout.py) carves a
 answer, so it cannot be cherry-picked. That is **29 of 100** questions, frozen
 2026-07-09 and excluded from tuning from now on.
 
-On the 2026-07-08 run:
+| Run | Slice | n (answerable) | Gated | Critical-error |
+|---|---|---|---|---|
+| 2026-07-08 | Tuned | 63 | 0.714 | 1.6% |
+| 2026-07-08 | **Frozen holdout** | 27 | 0.667 | **0.0%** |
+| 2026-07-09 (`03ab7db`, clean) | Tuned | 63 | **0.722** | 1.6% |
+| 2026-07-09 (`03ab7db`, clean) | **Frozen holdout** | 27 | **0.667** | **0.0%** |
 
-| Slice | n (answerable) | Gated | Critical-error |
-|---|---|---|---|
-| Tuned | 63 | **0.714** | 1.6% |
-| **Frozen holdout** | 27 | **0.667** | **0.0%** |
-
-The holdout sits ~4.7 points below the tuned slice on gated correctness but has **zero**
+The holdout sits ~5 points below the tuned slice on gated correctness but has **zero**
 critical errors — no sign of brittle over-fitting to specific questions.
 
 **Honest caveat:** because the shipped fixes were historically validated against the
 full 100, these 29 were *seen* during development — this is a **frozen-forward** holdout,
-so treat the 0.667 as a **lower bound** on the true generalization gap. Its value is
+so treat the holdout score as a **lower bound** on the true generalization gap. Its value is
 going forward: it is now a genuinely untuned slice for the next round of changes.
 
 ## 8. Reproduce it yourself

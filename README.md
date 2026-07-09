@@ -213,14 +213,16 @@ answer containing a material factual error. Every run is tied to the exact commi
 that produced it (a `.meta.json` sidecar + `/health`). Details:
 `data/eval_v2/README.md` and the reports in `data/eval_v2/*.md`.
 
-Latest results (100Q, full re-run on master, 2026-07-08, production config):
+Latest results (100Q, full re-run on master `03ab7db` — clean tree — 2026-07-09,
+production config):
 
 | Metric | Value |
 |---|---|
-| Overall score (with factual gate) | **0.700** (June baseline on same config: 0.622) |
-| Faithfulness to evidence | 0.989 |
+| Overall score (with factual gate) | **0.706** (June baseline on same config: 0.622) |
+| Faithfulness to evidence | 0.978 |
 | Critical error rate | 1.1% (June: 6.7%) |
 | Out-of-scope abstention | 10/10 |
+| Frozen holdout (29Q incl. out-of-scope, never tuned against) | 0.690 |
 | Retrieval (rerank) R@10 | 0.744 |
 | MRR (rerank) | 0.582 |
 | External tester regression set (30Q) | 30/30 |

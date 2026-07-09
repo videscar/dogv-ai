@@ -4,10 +4,10 @@
    "n": 100,
    "n_answerable": 90,
    "n_oos": 10,
-   "correctness_avg": 0.7,
-   "faithfulness_rate": 0.989,
+   "correctness_avg": 0.706,
+   "faithfulness_rate": 0.978,
    "critical_error_rate": 0.011,
-   "gated_score": 0.7,
+   "gated_score": 0.706,
    "abstention_rate": 1.0
   },
   "cat:clean": {
@@ -33,10 +33,10 @@
    "n": 50,
    "n_answerable": 45,
    "n_oos": 5,
-   "correctness_avg": 0.656,
-   "faithfulness_rate": 1.0,
+   "correctness_avg": 0.667,
+   "faithfulness_rate": 0.978,
    "critical_error_rate": 0.022,
-   "gated_score": 0.656,
+   "gated_score": 0.667,
    "abstention_rate": 1.0
   },
   "cat:annex": {
@@ -44,7 +44,7 @@
    "n_answerable": 14,
    "n_oos": 0,
    "correctness_avg": 0.857,
-   "faithfulness_rate": 1.0,
+   "faithfulness_rate": 0.929,
    "critical_error_rate": 0.0,
    "gated_score": 0.857
   },
@@ -52,10 +52,10 @@
    "n": 16,
    "n_answerable": 16,
    "n_oos": 0,
-   "correctness_avg": 0.688,
+   "correctness_avg": 0.719,
    "faithfulness_rate": 1.0,
    "critical_error_rate": 0.0,
-   "gated_score": 0.688
+   "gated_score": 0.719
   },
   "cat:colloquial": {
    "n": 16,
@@ -89,26 +89,6 @@
    "n_answerable": 0,
    "n_oos": 10,
    "abstention_rate": 1.0
-  },
-  "split:tuned": {
-   "n": 71,
-   "n_answerable": 63,
-   "n_oos": 8,
-   "correctness_avg": 0.714,
-   "faithfulness_rate": 1.0,
-   "critical_error_rate": 0.016,
-   "gated_score": 0.714,
-   "abstention_rate": 1.0
-  },
-  "split:holdout": {
-   "n": 29,
-   "n_answerable": 27,
-   "n_oos": 2,
-   "correctness_avg": 0.667,
-   "faithfulness_rate": 0.963,
-   "critical_error_rate": 0.0,
-   "gated_score": 0.667,
-   "abstention_rate": 1.0
   }
  },
  "per_query": [
@@ -134,7 +114,7 @@
    "critical_error": false,
    "abstained": true,
    "gated": 0.0,
-   "n_citations": 3
+   "n_citations": 1
   },
   {
    "id": "v2-003",
@@ -346,7 +326,7 @@
    "language": "va",
    "out_of_scope": false,
    "correctness": 2,
-   "faithful": 1,
+   "faithful": 0,
    "critical_error": false,
    "abstained": false,
    "gated": 1.0,
@@ -362,7 +342,7 @@
    "critical_error": false,
    "abstained": false,
    "gated": 0.5,
-   "n_citations": 5
+   "n_citations": 7
   },
   {
    "id": "v2-022",
@@ -374,7 +354,7 @@
    "critical_error": false,
    "abstained": false,
    "gated": 0.5,
-   "n_citations": 5
+   "n_citations": 4
   },
   {
    "id": "v2-023",
@@ -393,12 +373,12 @@
    "category": "vague",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 0,
+   "correctness": 2,
    "faithful": 1,
    "critical_error": false,
-   "abstained": true,
-   "gated": 0.0,
-   "n_citations": 3
+   "abstained": false,
+   "gated": 1.0,
+   "n_citations": 5
   },
   {
    "id": "v2-025",
@@ -434,18 +414,18 @@
    "critical_error": false,
    "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-028",
    "category": "vague",
    "language": "va",
    "out_of_scope": false,
-   "correctness": 1,
+   "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": false,
-   "gated": 0.5,
+   "abstained": true,
+   "gated": 0.0,
    "n_citations": 3
   },
   {
@@ -494,7 +474,7 @@
    "critical_error": false,
    "abstained": false,
    "gated": 1.0,
-   "n_citations": 1
+   "n_citations": 2
   },
   {
    "id": "v2-033",
@@ -564,9 +544,9 @@
    "correctness": 0,
    "faithful": 1,
    "critical_error": false,
-   "abstained": true,
+   "abstained": false,
    "gated": 0.0,
-   "n_citations": 3
+   "n_citations": 1
   },
   {
    "id": "v2-039",
@@ -638,7 +618,7 @@
    "critical_error": false,
    "abstained": false,
    "gated": 0.5,
-   "n_citations": 2
+   "n_citations": 1
   },
   {
    "id": "v2-045",
@@ -914,7 +894,7 @@
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
-   "n_citations": 11
+   "n_citations": 3
   },
   {
    "id": "v2-068",
@@ -938,7 +918,7 @@
    "critical_error": false,
    "abstained": true,
    "gated": 1.0,
-   "n_citations": 3
+   "n_citations": 1
   },
   {
    "id": "v2-070",
@@ -1046,7 +1026,7 @@
    "critical_error": false,
    "abstained": false,
    "gated": 1.0,
-   "n_citations": 2
+   "n_citations": 3
   },
   {
    "id": "v2-079",
@@ -1082,7 +1062,7 @@
    "critical_error": false,
    "abstained": true,
    "gated": 0.0,
-   "n_citations": 3
+   "n_citations": 2
   },
   {
    "id": "v2-082",
@@ -1274,7 +1254,7 @@
    "critical_error": false,
    "abstained": false,
    "gated": 0.5,
-   "n_citations": 4
+   "n_citations": 3
   },
   {
    "id": "v2-098",
@@ -1286,7 +1266,7 @@
    "critical_error": false,
    "abstained": false,
    "gated": 1.0,
-   "n_citations": 4
+   "n_citations": 3
   },
   {
    "id": "v2-099",
