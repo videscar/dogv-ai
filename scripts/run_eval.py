@@ -33,6 +33,9 @@ from api.rerank import rerank_titles
 from api.retrieval import (
     RetrievalFilters,
     bm25_search,
+    dedupe_docs,
+    fuse_sources,
+    merge_with_budget,
     rrf_fuse,
     title_bm25_search,
     title_vector_search,
@@ -83,21 +86,6 @@ def _format_candidates(
     return formatted
 
 
-def _dedupe_docs(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    seen: set[int] = set()
-    deduped: list[dict[str, Any]] = []
-    for item in items:
-        doc_id = item.get("document_id")
-        if doc_id is None:
-            continue
-        doc_id = int(doc_id)
-        if doc_id in seen:
-            continue
-        seen.add(doc_id)
-        deduped.append(item)
-    return deduped
-
-
 def _merge_docs(
     primary: list[dict[str, Any]], secondary: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -113,54 +101,6 @@ def _merge_docs(
         seen.add(doc_id)
         merged.append(item)
     return merged
-
-
-def _merge_with_budget(
-    primary: list[dict[str, Any]],
-    secondary: list[dict[str, Any]],
-    limit: int,
-    secondary_ratio: float = 0.3,
-) -> list[dict[str, Any]]:
-    if not primary:
-        return secondary[:limit]
-    if not secondary:
-        return primary[:limit]
-    budget = max(5, int(limit * secondary_ratio))
-    keep_primary = max(1, limit - budget)
-    result: list[dict[str, Any]] = []
-    seen: set[int] = set()
-
-    def _add(items: list[dict[str, Any]]) -> None:
-        for item in items:
-            if len(result) >= limit:
-                return
-            doc_id = item.get("document_id")
-            if doc_id is None:
-                continue
-            doc_id = int(doc_id)
-            if doc_id in seen:
-                continue
-            seen.add(doc_id)
-            result.append(item)
-
-    _add(primary[:keep_primary])
-    added_secondary = 0
-    for item in secondary:
-        if len(result) >= limit or added_secondary >= budget:
-            break
-        doc_id = item.get("document_id")
-        if doc_id is None:
-            continue
-        doc_id = int(doc_id)
-        if doc_id in seen:
-            continue
-        seen.add(doc_id)
-        result.append(item)
-        added_secondary += 1
-
-    if len(result) < limit:
-        _add(primary[keep_primary:])
-    return result
 
 
 def _extract_ref_tokens(text: str) -> list[str]:
@@ -498,9 +438,9 @@ def _run_sources(
     title_lexical_hits = (
         title_bm25_search(db, bm25_query, filters, limit=bm25_limit) if "title" in LANES else []
     )
-    bm25_hits = _dedupe_docs(bm25_hits)
-    bm25_strict_hits = _dedupe_docs(bm25_strict_hits)
-    title_lexical_hits = _dedupe_docs(title_lexical_hits)
+    bm25_hits = dedupe_docs(bm25_hits)
+    bm25_strict_hits = dedupe_docs(bm25_strict_hits)
+    title_lexical_hits = dedupe_docs(title_lexical_hits)
     strict_min = getattr(settings, "bm25_strict_primary_min", 10)
     if bm25_strict_hits and len(bm25_strict_hits) >= strict_min:
         primary_hits = bm25_strict_hits
@@ -523,7 +463,7 @@ def _run_sources(
             secondary_sources.append(title_lexical_hits)
             secondary_weights.append(getattr(settings, "bm25_fuse_weight_title", 0.9))
     secondary_hits = (
-        _combine_sources(
+        fuse_sources(
             secondary_sources,
             max_docs=bm25_limit,
             weights=secondary_weights,
@@ -531,26 +471,13 @@ def _run_sources(
         if secondary_sources
         else []
     )
-    bm25_hits = _merge_with_budget(primary_hits, secondary_hits, bm25_limit)
+    bm25_hits = merge_with_budget(primary_hits, secondary_hits, bm25_limit)
     return (
-        _dedupe_docs(vector_hits),
-        _dedupe_docs(bm25_hits),
-        _dedupe_docs(title_hits_raw),
+        dedupe_docs(vector_hits),
+        dedupe_docs(bm25_hits),
+        dedupe_docs(title_hits_raw),
         title_lexical_hits,
     )
-
-
-def _combine_sources(
-    sources: list[list[dict[str, Any]]],
-    max_docs: int,
-    weights: list[float] | None = None,
-) -> list[dict[str, Any]]:
-    if not sources:
-        return []
-    if len(sources) == 1:
-        return _dedupe_docs(sources[0])
-    use_weights = weights if weights and len(weights) == len(sources) else [1.0] * len(sources)
-    return rrf_fuse(sources, max_docs=max_docs, weights=use_weights)
 
 
 def _run_sources_all_facets(
@@ -588,9 +515,9 @@ def _run_sources_all_facets(
     bm25_primary = bm25_runs[0][1] if bm25_runs else []
     secondary_sources = [run[1] for run in bm25_runs[1:] if run[1]]
     secondary_hits = (
-        _combine_sources(secondary_sources, max_docs=BM25_LIMIT) if secondary_sources else []
+        fuse_sources(secondary_sources, max_docs=BM25_LIMIT) if secondary_sources else []
     )
-    bm25_hits = _merge_with_budget(bm25_primary, secondary_hits, BM25_LIMIT)
+    bm25_hits = merge_with_budget(bm25_primary, secondary_hits, BM25_LIMIT)
     ref_hits = _find_ref_hits(db, question, filters, per_token_limit=5)
     if ref_hits:
         # Inject deterministic ref matches as high-confidence anchors.
@@ -644,7 +571,7 @@ def _compute_hybrid(
         sources.append(title_hits)
         weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
         if title_lexical_hits and len(title_hits) < min_docs:
-            sources.append(_dedupe_docs(title_lexical_hits))
+            sources.append(dedupe_docs(title_lexical_hits))
             weights.append(getattr(settings, "ask_rrf_weight_title_lexical", 0.8))
     fused = rrf_fuse(sources, max_docs=settings.ask_max_docs, weights=weights)
     soft_language = False
@@ -680,7 +607,7 @@ def _compute_hybrid(
                 sources.append(relaxed_title)
                 weights.append(getattr(settings, "ask_rrf_weight_title", 1.0))
                 if relaxed_title_lexical and len(relaxed_title) < min_docs:
-                    sources.append(_dedupe_docs(relaxed_title_lexical))
+                    sources.append(dedupe_docs(relaxed_title_lexical))
                     weights.append(getattr(settings, "ask_rrf_weight_title_lexical", 0.8))
             counts.update(
                 {
@@ -904,7 +831,7 @@ def _safe_analyze_intent_and_expand(question: str) -> tuple[dict[str, Any], dict
         )
 
 
-def main() -> int:
+def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default="data/eval_set.json")
     parser.add_argument("--output-dir", default="data/eval_reports")
@@ -916,284 +843,253 @@ def main() -> int:
     parser.add_argument("--write-csv", action="store_true")
     parser.add_argument("--fast-intent", action="store_true")
     parser.add_argument("--skip-rerank-llm", action="store_true")
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    with open(args.input, encoding="utf-8") as fh:
-        eval_set = json.load(fh)
 
-    if not eval_set:
-        raise SystemExit("Eval set is empty")
-
-    k_values = _parse_k_values(args.k_values)
-    if not k_values:
-        raise SystemExit("No k values provided")
-
-    run_id = args.run_id or datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    os.makedirs(args.output_dir, exist_ok=True)
-
-    client = EmbedClient()
-    embed_cache: dict[str, list[float]] = {}
-
-    summary_counts: dict[str, dict[str, int]] = {}
-    summary_totals: dict[str, int] = {}
-    by_kind_counts: dict[str, dict[str, dict[str, int]]] = {}
-    by_kind_totals: dict[str, int] = {}
-    miss_samples: dict[str, list[dict[str, Any]]] = {}
-    latency_totals: dict[str, float] = {
-        "embed": 0.0,
-        "vector": 0.0,
-        "bm25": 0.0,
-        "title": 0.0,
-        "hybrid": 0.0,
-        "hybrid_nofilter": 0.0,
-        "rerank": 0.0,
-    }
-
-    rows_for_csv: list[dict[str, Any]] = []
-    query_results: list[dict[str, Any]] = []
-
-    with SessionLocal() as db:
-        has_kind = bool(
-            db.execute(
-                sa_text("SELECT 1 FROM dogv_documents WHERE doc_kind IS NOT NULL LIMIT 1")
-            ).scalar()
+def _resolve_intent(
+    question: str, fast_intent: bool
+) -> tuple[dict[str, Any], dict[str, list[str]]]:
+    """Intent + query expansion for one eval question (LLM unless --fast-intent)."""
+    if fast_intent:
+        return (
+            {
+                "language": None,
+                "doc_kind": None,
+                "doc_subkind": None,
+                "keywords": [],
+                "since_date": None,
+                "until_date": None,
+                "needs_online": False,
+                "entities": {},
+            },
+            {"keywords": [], "phrases": []},
         )
-        total = len(eval_set)
-        for idx, entry in enumerate(eval_set, start=1):
-            question = entry["question"]
-            gold_sets = _normalize_gold_sets(entry)
-            if not gold_sets:
-                raise SystemExit(
-                    f"Entry id={entry.get('id')} has no valid gold_sets/doc_ids/doc_id"
-                )
-            gold_doc_ids = sorted({doc_id for group in gold_sets for doc_id in group})
-            doc_kind = entry.get("doc_kind")
-            doc_subkind = entry.get("doc_subkind")
-            language = entry.get("language")
+    if settings.ask_llm_expand:
+        return _safe_analyze_intent_and_expand(question)
+    return _safe_analyze_intent(question), {"keywords": [], "phrases": []}
 
-            timings = StageTimings()
 
-            if args.fast_intent:
-                intent = {
-                    "language": None,
-                    "doc_kind": None,
-                    "doc_subkind": None,
-                    "keywords": [],
-                    "since_date": None,
-                    "until_date": None,
-                    "needs_online": False,
-                    "entities": {},
-                }
-                expansion = {"keywords": [], "phrases": []}
-            else:
-                if settings.ask_llm_expand:
-                    intent, expansion = _safe_analyze_intent_and_expand(question)
-                else:
-                    intent = _safe_analyze_intent(question)
-                    expansion = {"keywords": [], "phrases": []}
-            filters = _normalize_intent_filters(question, intent, has_kind)
-            embed_start = time.perf_counter()
-            embeddings, bm25_specs = _collect_facet_specs(
-                question, intent, expansion, client, embed_cache
-            )
-            timings.embed = time.perf_counter() - embed_start
-            bm25_query_main = bm25_specs[0][0] if bm25_specs else question
+def _run_entry_stages(
+    db: Session,
+    question: str,
+    embeddings: list[list[float]],
+    bm25_specs: list[tuple[str, str | None]],
+    filters: RetrievalFilters,
+    args: argparse.Namespace,
+) -> tuple[dict[str, list[dict[str, Any]]], StageTimings, dict[str, Any]]:
+    """Run every retrieval stage for one entry.
 
-            sources_start = time.perf_counter()
-            (
-                vector_hits,
-                bm25_hits,
-                title_hits,
-                title_lexical_hits,
-                counts_sources,
-            ) = _run_sources_all_facets(
-                db,
-                question,
-                embeddings[0],
-                bm25_specs,
-                filters,
-                args.max_candidates,
-            )
-            sources_elapsed = time.perf_counter() - sources_start
-            timings.vector = sources_elapsed
-            timings.bm25 = sources_elapsed
-            timings.title = sources_elapsed
+    Returns (candidates-by-stage, timings, hybrid diagnostics for the report row).
+    """
+    timings = StageTimings()
+    sources_start = time.perf_counter()
+    (
+        vector_hits,
+        bm25_hits,
+        title_hits,
+        title_lexical_hits,
+        counts_sources,
+    ) = _run_sources_all_facets(
+        db, question, embeddings[0], bm25_specs, filters, args.max_candidates
+    )
+    sources_elapsed = time.perf_counter() - sources_start
+    timings.vector = sources_elapsed
+    timings.bm25 = sources_elapsed
+    timings.title = sources_elapsed
 
-            precomputed = (vector_hits, bm25_hits, title_hits, title_lexical_hits, counts_sources)
+    precomputed = (vector_hits, bm25_hits, title_hits, title_lexical_hits, counts_sources)
 
-            hybrid_start = time.perf_counter()
-            hybrid_final, final_filters, fallbacks, counts_final, rrf_expanded = (
-                _compute_hybrid_with_fallbacks(
-                    db,
-                    question,
-                    embeddings[0],
-                    bm25_specs,
-                    filters,
-                    args.max_candidates,
-                    precomputed=precomputed,
-                )
-            )
-            timings.hybrid = time.perf_counter() - hybrid_start
+    hybrid_start = time.perf_counter()
+    hybrid_final, final_filters, fallbacks, counts_final, rrf_expanded = (
+        _compute_hybrid_with_fallbacks(
+            db,
+            question,
+            embeddings[0],
+            bm25_specs,
+            filters,
+            args.max_candidates,
+            precomputed=precomputed,
+        )
+    )
+    timings.hybrid = time.perf_counter() - hybrid_start
 
-            hybrid_filtered, counts_filtered, rrf_expanded_initial, _ = _compute_hybrid(
-                db,
-                question,
-                embeddings[0],
-                bm25_specs,
-                filters,
-                args.max_candidates,
-                precomputed=precomputed,
-            )
+    hybrid_filtered, counts_filtered, rrf_expanded_initial, _ = _compute_hybrid(
+        db,
+        question,
+        embeddings[0],
+        bm25_specs,
+        filters,
+        args.max_candidates,
+        precomputed=precomputed,
+    )
 
-            hybrid_nofilter = []
-            if args.include_nofilter:
-                nofilter_start = time.perf_counter()
-                hybrid_nofilter, _, _, _ = _compute_hybrid(
-                    db,
-                    question,
-                    embeddings[0],
-                    bm25_specs,
-                    RetrievalFilters(),
-                    args.max_candidates,
-                )
-                timings.hybrid_nofilter = time.perf_counter() - nofilter_start
+    hybrid_nofilter = []
+    if args.include_nofilter:
+        nofilter_start = time.perf_counter()
+        hybrid_nofilter, _, _, _ = _compute_hybrid(
+            db,
+            question,
+            embeddings[0],
+            bm25_specs,
+            RetrievalFilters(),
+            args.max_candidates,
+        )
+        timings.hybrid_nofilter = time.perf_counter() - nofilter_start
 
-            rerank_start = time.perf_counter()
-            rerank_base_candidates = getattr(settings, "ask_rerank_max_candidates", 10)
-            reranked_ids = _rerank(
-                db,
-                embeddings,
-                question,
-                hybrid_final,
-                top_n=args.rerank_top_n,
-                max_candidates=rerank_base_candidates,
-                skip_llm=args.skip_rerank_llm,
-            )
-            timings.rerank = time.perf_counter() - rerank_start
+    rerank_start = time.perf_counter()
+    rerank_base_candidates = getattr(settings, "ask_rerank_max_candidates", 10)
+    reranked_ids = _rerank(
+        db,
+        embeddings,
+        question,
+        hybrid_final,
+        top_n=args.rerank_top_n,
+        max_candidates=rerank_base_candidates,
+        skip_llm=args.skip_rerank_llm,
+    )
+    timings.rerank = time.perf_counter() - rerank_start
 
-            candidates = {
-                "vector": _format_candidates(vector_hits, "score", args.max_candidates),
-                "bm25": _format_candidates(bm25_hits, "score", args.max_candidates),
-                "title": _format_candidates(title_hits, "score", args.max_candidates),
-                "hybrid": _format_candidates(hybrid_filtered, "rrf_score", args.max_candidates),
-                "hybrid_final": _format_candidates(hybrid_final, "rrf_score", args.max_candidates),
-            }
-            if args.include_nofilter:
-                candidates["hybrid_nofilter"] = _format_candidates(
-                    hybrid_nofilter, "rrf_score", args.max_candidates
-                )
-            candidates["rerank"] = _format_rerank(reranked_ids, args.max_candidates)
+    candidates = {
+        "vector": _format_candidates(vector_hits, "score", args.max_candidates),
+        "bm25": _format_candidates(bm25_hits, "score", args.max_candidates),
+        "title": _format_candidates(title_hits, "score", args.max_candidates),
+        "hybrid": _format_candidates(hybrid_filtered, "rrf_score", args.max_candidates),
+        "hybrid_final": _format_candidates(hybrid_final, "rrf_score", args.max_candidates),
+    }
+    if args.include_nofilter:
+        candidates["hybrid_nofilter"] = _format_candidates(
+            hybrid_nofilter, "rrf_score", args.max_candidates
+        )
+    candidates["rerank"] = _format_rerank(reranked_ids, args.max_candidates)
 
-            stage_docs = {
-                "vector": [row["document_id"] for row in candidates["vector"]],
-                "bm25": [row["document_id"] for row in candidates["bm25"]],
-                "title": [row["document_id"] for row in candidates["title"]],
-                "hybrid": [row["document_id"] for row in candidates["hybrid_final"]],
-                "rerank": [row["document_id"] for row in candidates["rerank"]],
-            }
-            if args.include_nofilter:
-                stage_docs["hybrid_nofilter"] = [
-                    row["document_id"] for row in candidates["hybrid_nofilter"]
-                ]
+    extras = {
+        "filters_final": _filters_to_dict(final_filters),
+        "fallbacks": fallbacks,
+        "counts": counts_final,
+        "counts_initial": counts_filtered,
+        "rrf_expanded": rrf_expanded,
+        "rrf_expanded_initial": rrf_expanded_initial,
+    }
+    return candidates, timings, extras
 
-            hits = {
-                stage: _compute_hits(doc_ids, gold_sets, k_values)
-                for stage, doc_ids in stage_docs.items()
-            }
 
-            for stage, stage_hits in hits.items():
-                summary_counts.setdefault(stage, {str(k): 0 for k in k_values})
-                summary_totals.setdefault(stage, 0)
-                summary_totals[stage] += 1
-                for k, hit in stage_hits.items():
-                    if hit:
-                        summary_counts[stage][k] += 1
+def _stage_docs_for(
+    candidates: dict[str, list[dict[str, Any]]], include_nofilter: bool
+) -> dict[str, list[int]]:
+    stage_docs = {
+        "vector": [row["document_id"] for row in candidates["vector"]],
+        "bm25": [row["document_id"] for row in candidates["bm25"]],
+        "title": [row["document_id"] for row in candidates["title"]],
+        "hybrid": [row["document_id"] for row in candidates["hybrid_final"]],
+        "rerank": [row["document_id"] for row in candidates["rerank"]],
+    }
+    if include_nofilter:
+        stage_docs["hybrid_nofilter"] = [
+            row["document_id"] for row in candidates["hybrid_nofilter"]
+        ]
+    return stage_docs
 
-                if not stage_hits.get(str(k_values[-1]), False):
-                    miss_samples.setdefault(stage, [])
-                    if len(miss_samples[stage]) < 20:
-                        miss_samples[stage].append(
-                            {
-                                "id": entry.get("id"),
-                                "gold_sets": gold_sets,
-                                "question": question,
-                                "doc_kind": doc_kind,
-                                "doc_subkind": doc_subkind,
-                            }
-                        )
 
-            if doc_kind:
-                kind_key = canonical_doc_kind(doc_kind) or doc_kind
-                by_kind_totals[kind_key] = by_kind_totals.get(kind_key, 0) + 1
-                by_kind_counts.setdefault(kind_key, {})
-                for stage, stage_hits in hits.items():
-                    by_kind_counts[kind_key].setdefault(stage, {str(k): 0 for k in k_values})
-                    for k, hit in stage_hits.items():
-                        if hit:
-                            by_kind_counts[kind_key][stage][k] += 1
+class _Aggregates:
+    """Per-stage hit counts, per-kind splits, miss samples, latency and CSV rows."""
 
-            latency_totals["embed"] += timings.embed
-            latency_totals["vector"] += timings.vector
-            latency_totals["bm25"] += timings.bm25
-            latency_totals["title"] += timings.title
-            latency_totals["hybrid"] += timings.hybrid
-            latency_totals["hybrid_nofilter"] += timings.hybrid_nofilter
-            latency_totals["rerank"] += timings.rerank
+    def __init__(self, k_values: list[int]) -> None:
+        self.k_values = k_values
+        self.summary_counts: dict[str, dict[str, int]] = {}
+        self.summary_totals: dict[str, int] = {}
+        self.by_kind_counts: dict[str, dict[str, dict[str, int]]] = {}
+        self.by_kind_totals: dict[str, int] = {}
+        self.miss_samples: dict[str, list[dict[str, Any]]] = {}
+        self.latency_totals: dict[str, float] = {
+            "embed": 0.0,
+            "vector": 0.0,
+            "bm25": 0.0,
+            "title": 0.0,
+            "hybrid": 0.0,
+            "hybrid_nofilter": 0.0,
+            "rerank": 0.0,
+        }
+        self.rows_for_csv: list[dict[str, Any]] = []
 
-            query_results.append(
-                {
-                    "id": entry.get("id"),
-                    "question": question,
-                    "gold_sets": gold_sets,
-                    "gold_doc_ids": gold_doc_ids,
-                    "doc_kind": doc_kind,
-                    "doc_subkind": doc_subkind,
-                    "language": language,
-                    "bm25_query": bm25_query_main,
-                    "filters": _filters_to_dict(filters),
-                    "filters_final": _filters_to_dict(final_filters),
-                    "fallbacks": fallbacks,
-                    "counts": counts_final,
-                    "counts_initial": counts_filtered,
-                    "rrf_expanded": rrf_expanded,
-                    "rrf_expanded_initial": rrf_expanded_initial,
-                    "candidates": candidates,
-                    "hits": hits,
-                    "timings": asdict(timings),
-                }
-            )
-
-            for stage, rows in candidates.items():
-                for row in rows:
-                    rows_for_csv.append(
+    def add(
+        self,
+        entry: dict[str, Any],
+        gold_sets: list[list[int]],
+        gold_doc_ids: list[int],
+        hits: dict[str, dict[str, bool]],
+        candidates: dict[str, list[dict[str, Any]]],
+        timings: StageTimings,
+    ) -> None:
+        for stage, stage_hits in hits.items():
+            self.summary_counts.setdefault(stage, {str(k): 0 for k in self.k_values})
+            self.summary_totals.setdefault(stage, 0)
+            self.summary_totals[stage] += 1
+            for k, hit in stage_hits.items():
+                if hit:
+                    self.summary_counts[stage][k] += 1
+            if not stage_hits.get(str(self.k_values[-1]), False):
+                self.miss_samples.setdefault(stage, [])
+                if len(self.miss_samples[stage]) < 20:
+                    self.miss_samples[stage].append(
                         {
-                            "query_id": entry.get("id"),
-                            "stage": stage,
-                            "rank": row.get("rank"),
-                            "document_id": row.get("document_id"),
-                            "score": row.get("score"),
-                            "in_gold": row.get("document_id") in gold_doc_ids,
+                            "id": entry.get("id"),
+                            "gold_sets": gold_sets,
+                            "question": entry["question"],
+                            "doc_kind": entry.get("doc_kind"),
+                            "doc_subkind": entry.get("doc_subkind"),
                         }
                     )
+        doc_kind = entry.get("doc_kind")
+        if doc_kind:
+            kind_key = canonical_doc_kind(doc_kind) or doc_kind
+            self.by_kind_totals[kind_key] = self.by_kind_totals.get(kind_key, 0) + 1
+            self.by_kind_counts.setdefault(kind_key, {})
+            for stage, stage_hits in hits.items():
+                self.by_kind_counts[kind_key].setdefault(stage, {str(k): 0 for k in self.k_values})
+                for k, hit in stage_hits.items():
+                    if hit:
+                        self.by_kind_counts[kind_key][stage][k] += 1
+        for key in self.latency_totals:
+            self.latency_totals[key] += getattr(timings, key)
+        for stage, rows in candidates.items():
+            for row in rows:
+                self.rows_for_csv.append(
+                    {
+                        "query_id": entry.get("id"),
+                        "stage": stage,
+                        "rank": row.get("rank"),
+                        "document_id": row.get("document_id"),
+                        "score": row.get("score"),
+                        "in_gold": row.get("document_id") in gold_doc_ids,
+                    }
+                )
 
-            if idx == total or idx % 10 == 0:
-                print(f"[progress] {idx}/{total} queries processed", flush=True)
+    def recall_summary(self) -> dict[str, dict[str, float]]:
+        summary: dict[str, dict[str, float]] = {}
+        for stage, counts in self.summary_counts.items():
+            total = self.summary_totals.get(stage, 0) or 1
+            summary[stage] = {f"recall@{k}": counts[str(k)] / total for k in self.k_values}
+        return summary
 
-    summary = {}
-    for stage, counts in summary_counts.items():
-        total = summary_totals.get(stage, 0) or 1
-        summary[stage] = {f"recall@{k}": counts[str(k)] / total for k in k_values}
+    def by_kind_summary(self) -> dict[str, dict[str, dict[str, float]]]:
+        out: dict[str, dict[str, dict[str, float]]] = {}
+        for kind, stage_counts in self.by_kind_counts.items():
+            total = self.by_kind_totals.get(kind, 0) or 1
+            out[kind] = {}
+            for stage, counts in stage_counts.items():
+                out[kind][stage] = {f"recall@{k}": counts[str(k)] / total for k in self.k_values}
+        return out
 
-    by_kind_summary: dict[str, dict[str, dict[str, float]]] = {}
-    for kind, stage_counts in by_kind_counts.items():
-        total = by_kind_totals.get(kind, 0) or 1
-        by_kind_summary[kind] = {}
-        for stage, counts in stage_counts.items():
-            by_kind_summary[kind][stage] = {f"recall@{k}": counts[str(k)] / total for k in k_values}
 
-    avg_latency = {key: value / len(eval_set) for key, value in latency_totals.items()}
-
-    report = {
+def _build_report(
+    args: argparse.Namespace,
+    run_id: str,
+    k_values: list[int],
+    eval_set: list[dict[str, Any]],
+    aggregates: _Aggregates,
+    query_results: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
         "run_id": run_id,
         "timestamp": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "eval_set": args.input,
@@ -1226,29 +1122,111 @@ def main() -> int:
             "skip_rerank_llm": args.skip_rerank_llm,
         },
         "summary": {
-            "recall": summary,
-            "recall_by_doc_kind": by_kind_summary,
-            "misses": miss_samples,
-            "avg_latency": avg_latency,
+            "recall": aggregates.recall_summary(),
+            "recall_by_doc_kind": aggregates.by_kind_summary(),
+            "misses": aggregates.miss_samples,
+            "avg_latency": {
+                key: value / len(eval_set) for key, value in aggregates.latency_totals.items()
+            },
         },
         "queries": query_results,
     }
 
+
+def _write_csv(rows: list[dict[str, Any]], csv_path: str) -> None:
+    with open(csv_path, "w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(
+            fh,
+            fieldnames=["query_id", "stage", "rank", "document_id", "score", "in_gold"],
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+    print(f"Wrote candidates to {csv_path}")
+
+
+def main() -> int:
+    args = _parse_args()
+
+    with open(args.input, encoding="utf-8") as fh:
+        eval_set = json.load(fh)
+    if not eval_set:
+        raise SystemExit("Eval set is empty")
+
+    k_values = _parse_k_values(args.k_values)
+    if not k_values:
+        raise SystemExit("No k values provided")
+
+    run_id = args.run_id or datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    client = EmbedClient()
+    embed_cache: dict[str, list[float]] = {}
+    aggregates = _Aggregates(k_values)
+    query_results: list[dict[str, Any]] = []
+
+    with SessionLocal() as db:
+        has_kind = bool(
+            db.execute(
+                sa_text("SELECT 1 FROM dogv_documents WHERE doc_kind IS NOT NULL LIMIT 1")
+            ).scalar()
+        )
+        total = len(eval_set)
+        for idx, entry in enumerate(eval_set, start=1):
+            question = entry["question"]
+            gold_sets = _normalize_gold_sets(entry)
+            if not gold_sets:
+                raise SystemExit(
+                    f"Entry id={entry.get('id')} has no valid gold_sets/doc_ids/doc_id"
+                )
+            gold_doc_ids = sorted({doc_id for group in gold_sets for doc_id in group})
+
+            intent, expansion = _resolve_intent(question, args.fast_intent)
+            filters = _normalize_intent_filters(question, intent, has_kind)
+            embed_start = time.perf_counter()
+            embeddings, bm25_specs = _collect_facet_specs(
+                question, intent, expansion, client, embed_cache
+            )
+            embed_elapsed = time.perf_counter() - embed_start
+
+            candidates, timings, extras = _run_entry_stages(
+                db, question, embeddings, bm25_specs, filters, args
+            )
+            timings.embed = embed_elapsed
+            stage_docs = _stage_docs_for(candidates, args.include_nofilter)
+            hits = {
+                stage: _compute_hits(doc_ids, gold_sets, k_values)
+                for stage, doc_ids in stage_docs.items()
+            }
+
+            aggregates.add(entry, gold_sets, gold_doc_ids, hits, candidates, timings)
+            query_results.append(
+                {
+                    "id": entry.get("id"),
+                    "question": question,
+                    "gold_sets": gold_sets,
+                    "gold_doc_ids": gold_doc_ids,
+                    "doc_kind": entry.get("doc_kind"),
+                    "doc_subkind": entry.get("doc_subkind"),
+                    "language": entry.get("language"),
+                    "bm25_query": bm25_specs[0][0] if bm25_specs else question,
+                    "filters": _filters_to_dict(filters),
+                    **extras,
+                    "candidates": candidates,
+                    "hits": hits,
+                    "timings": asdict(timings),
+                }
+            )
+
+            if idx == total or idx % 10 == 0:
+                print(f"[progress] {idx}/{total} queries processed", flush=True)
+
+    report = _build_report(args, run_id, k_values, eval_set, aggregates, query_results)
     report_path = os.path.join(args.output_dir, f"{run_id}.json")
     with open(report_path, "w", encoding="utf-8") as fh:
         json.dump(report, fh, ensure_ascii=False, indent=2, sort_keys=True)
-
     print(f"Wrote report to {report_path}")
     if args.write_csv:
-        csv_path = os.path.join(args.output_dir, f"{run_id}.csv")
-        with open(csv_path, "w", encoding="utf-8", newline="") as fh:
-            writer = csv.DictWriter(
-                fh,
-                fieldnames=["query_id", "stage", "rank", "document_id", "score", "in_gold"],
-            )
-            writer.writeheader()
-            writer.writerows(rows_for_csv)
-        print(f"Wrote candidates to {csv_path}")
+        _write_csv(aggregates.rows_for_csv, os.path.join(args.output_dir, f"{run_id}.csv"))
     return 0
 
 
