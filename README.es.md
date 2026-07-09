@@ -197,6 +197,11 @@ Advertencias honestas sobre este modo:
 
 ## Evaluación
 
+> 📊 **La historia completa de la evaluación** — cada mejora con números gated
+> antes/después, el experimento de *thinking-ON* que se **descartó por
+> reproducibilidad**, el techo de recuperación y la brecha de generalización
+> tuned-vs-holdout — está en **[docs/EVALS.md](docs/EVALS.md)** (en inglés).
+
 La suite dura (`data/eval_v2/`, 100 preguntas 50/50 va/es: claras, vagas, coloquiales,
 con referencia errónea, multi-salto, de anexo y fuera de ámbito) puntúa **recuperación**
 y **calidad de respuesta** por separado, con una puerta dura que anula cualquier

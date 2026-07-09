@@ -201,6 +201,11 @@ Honest caveats about this mode:
 
 ## Evaluation
 
+> 📊 **The full evaluation story** — every shipped fix with before/after gated
+> numbers, the thinking-ON experiment that was *rejected for reproducibility*, the
+> retrieval ceiling, and the tuned-vs-holdout generalization gap — is in
+> **[docs/EVALS.md](docs/EVALS.md)**.
+
 The hard suite (`data/eval_v2/`, 100 questions, 50/50 Valencian/Spanish: clean,
 vague, colloquial, wrong-reference, multi-hop, annex and out-of-scope) scores
 **retrieval** and **answer quality** separately, with a hard gate that zeroes any
