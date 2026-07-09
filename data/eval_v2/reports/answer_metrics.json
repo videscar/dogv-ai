@@ -89,6 +89,26 @@
    "n_answerable": 0,
    "n_oos": 10,
    "abstention_rate": 1.0
+  },
+  "split:tuned": {
+   "n": 71,
+   "n_answerable": 63,
+   "n_oos": 8,
+   "correctness_avg": 0.714,
+   "faithfulness_rate": 1.0,
+   "critical_error_rate": 0.016,
+   "gated_score": 0.714,
+   "abstention_rate": 1.0
+  },
+  "split:holdout": {
+   "n": 29,
+   "n_answerable": 27,
+   "n_oos": 2,
+   "correctness_avg": 0.667,
+   "faithfulness_rate": 0.963,
+   "critical_error_rate": 0.0,
+   "gated_score": 0.667,
+   "abstention_rate": 1.0
   }
  },
  "per_query": [

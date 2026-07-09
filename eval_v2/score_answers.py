@@ -18,7 +18,6 @@ Usage: python eval_v2/score_answers.py judgments.jsonl answers_raw.jsonl [out.js
 from __future__ import annotations
 
 import json
-import sys
 from collections import defaultdict
 
 
@@ -27,9 +26,25 @@ def load_jsonl(p):
 
 
 def main() -> int:
-    judg = {j["id"]: j for j in load_jsonl(sys.argv[1])}
-    raw = {r["id"]: r for r in load_jsonl(sys.argv[2])}
-    out_path = sys.argv[3] if len(sys.argv) > 3 else None
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Aggregate answer-quality metrics.")
+    ap.add_argument("judgments")
+    ap.add_argument("answers")
+    ap.add_argument("out", nargs="?", default=None)
+    ap.add_argument(
+        "--holdout",
+        default=None,
+        help="holdout_ids.json — also report the tuned slice vs the frozen holdout separately",
+    )
+    args = ap.parse_args()
+
+    judg = {j["id"]: j for j in load_jsonl(args.judgments)}
+    raw = {r["id"]: r for r in load_jsonl(args.answers)}
+    out_path = args.out
+    holdout_ids: set[str] = set()
+    if args.holdout:
+        holdout_ids = set(json.load(open(args.holdout, encoding="utf-8")).get("holdout_ids") or [])
 
     rows = []
     for qid, r in raw.items():
@@ -95,7 +110,22 @@ def main() -> int:
     for g in sorted(k for k in summary if k.startswith("lang:")):
         print(f"  {g[5:]:13s}: {line(summary[g])}")
 
+    split_summary = None
+    if holdout_ids:
+        tuned_rows = [x for x in rows if x["id"] not in holdout_ids]
+        hold_rows = [x for x in rows if x["id"] in holdout_ids]
+        split_summary = {"tuned": agg(tuned_rows), "holdout": agg(hold_rows)}
+        print("\n-- tuned vs frozen holdout --")
+        print(f"  tuned   : {line(split_summary['tuned'])}")
+        print(f"  holdout : {line(split_summary['holdout'])}")
+
     if out_path:
+        if split_summary:
+            summary = {
+                **summary,
+                "split:tuned": split_summary["tuned"],
+                "split:holdout": split_summary["holdout"],
+            }
         json.dump(
             {"summary": summary, "per_query": rows},
             open(out_path, "w", encoding="utf-8"),
