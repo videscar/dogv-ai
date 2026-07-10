@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from .answer_fallback import (
@@ -56,6 +57,42 @@ Responde con el nivel de detalle que permita la evidencia y cubre cada parte de 
 settings = get_settings()
 logger = logging.getLogger("dogv.answer")
 ANSWER_TIMEOUT = settings.llm_timeout
+
+
+# Evidence/full-doc blocks fed to the synthesis LLM label each source with a
+# `doc_id: {N}` line so the model can cite by id. The model sometimes echoes that
+# label back into its prose, e.g. "RESOLUCIÓN de 12 de marzo de 2026 (doc_id: 85222)".
+# These are an internal artifact and must never surface in the returned answer text.
+# Citations are a SEPARATE structured field (built from result["citations"], not parsed
+# from prose), so stripping the label from the text cannot affect them.
+_DOC_ID_ARTIFACT_RE = re.compile(
+    r"[\(\[]?\s*doc[_ ]?ids?\s*[:#]?\s*\d+(?:\s*,\s*\d+)*\s*[\)\]]?",
+    re.IGNORECASE,
+)
+
+
+def _strip_doc_id_artifacts(text: str) -> str:
+    """Remove `doc_id`/`doc_ids` reference artifacts from answer prose and tidy fallout.
+
+    Handles (case-insensitively) forms with or without surrounding parentheses/brackets,
+    singular/plural, an optional `:`/`#` separator, and comma-separated id lists, e.g.
+    "(doc_id: 85222)", "doc_id:85222", "(doc_ids: 85222, 87141)", "[doc_id 85222]".
+    After removal it collapses doubled spaces, drops a space left before `,`/`.`/`;`/`:`,
+    removes emptied `()`/`[]`, and strips trailing whitespace. No other content is altered.
+    """
+    if not text:
+        return text
+    cleaned = _DOC_ID_ARTIFACT_RE.sub("", text)
+    # Drop parens/brackets emptied out by the removal above.
+    cleaned = re.sub(r"\(\s*\)", "", cleaned)
+    cleaned = re.sub(r"\[\s*\]", "", cleaned)
+    # Collapse doubled spaces/tabs left where the artifact sat between words.
+    cleaned = re.sub(r"[ \t]{2,}", " ", cleaned)
+    # Remove a space left dangling before punctuation ("2026 , y" -> "2026, y").
+    cleaned = re.sub(r"[ \t]+([,.;:])", r"\1", cleaned)
+    # Strip trailing spaces at line ends / end of string.
+    cleaned = re.sub(r"[ \t]+(\n|$)", r"\1", cleaned)
+    return cleaned.strip()
 
 
 _HISTORY_MAX_TURN_CHARS = 600
@@ -224,7 +261,9 @@ def build_answer(
                 # away (vs. only knowing that it dumped). Truncated; debug-only.
                 diagnostics["rejected_answer"] = (answer_text or "")[:600]
                 return {
-                    "answer": validation_fallback_answer(language, evidence, full_docs),
+                    "answer": _strip_doc_id_artifacts(
+                        validation_fallback_answer(language, evidence, full_docs)
+                    ),
                     "citations": fallback_citations,
                     "diagnostics": diagnostics,
                 }
@@ -238,7 +277,11 @@ def build_answer(
                     len(evidence),
                 )
                 answer_text = fallback_from_evidence(language, evidence)
-        return {"answer": answer_text, "citations": citations, "diagnostics": diagnostics}
+        return {
+            "answer": _strip_doc_id_artifacts(answer_text),
+            "citations": citations,
+            "diagnostics": diagnostics,
+        }
     except Exception as exc:
         diagnostics["fallback_reason"] = "chat_json_failed"
         logger.warning(
@@ -246,7 +289,7 @@ def build_answer(
             type(exc).__name__,
         )
         return {
-            "answer": fallback_from_evidence(language, evidence),
+            "answer": _strip_doc_id_artifacts(fallback_from_evidence(language, evidence)),
             "citations": collect_citation_ids(evidence),
             "diagnostics": diagnostics,
         }

@@ -108,9 +108,8 @@ el corpus al día. `scripts/demo_ctl.sh` reproduce el mismo stack a mano para de
 
 ## Demo
 
-![UI de Chainlit con progreso por etapa en streaming](assets/demo.gif)
-
-*La UI de Chainlit mostrando en streaming el progreso por etapa de una consulta `/ask/stream`.*
+<!-- To restore the demo: add assets/demo.gif and replace the line below with: ![Chainlit UI streaming per-stage progress](assets/demo.gif) -->
+_Próximamente: una grabación de la UI de Chainlit mostrando en streaming el progreso por etapa de una consulta `/ask/stream`._
 
 ## Configuración
 

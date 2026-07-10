@@ -112,9 +112,8 @@ for development.
 
 ## Demo
 
-![Chainlit UI streaming per-stage progress](assets/demo.gif)
-
-*Chainlit UI streaming per-stage progress for a single `/ask/stream` query.*
+<!-- To restore the demo: add assets/demo.gif and replace the line below with: ![Chainlit UI streaming per-stage progress](assets/demo.gif) -->
+_A screen recording of the Chainlit UI streaming per-stage `/ask/stream` progress is coming soon._
 
 ## Configuration
 
