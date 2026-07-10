@@ -26,6 +26,28 @@ def test_strip_doc_id_artifacts_removes_all_forms_and_tidies_spacing():
     assert "()" not in cleaned and "[]" not in cleaned  # no emptied brackets
 
 
+def test_strip_doc_id_artifacts_preserves_word_boundaries_and_leaves_prose_intact():
+    # Bare (non-parenthesized) inline reference: the space between the surrounding
+    # words must be preserved, not eaten (regression: "ver ... aqui" -> "veraqui").
+    assert answer._strip_doc_id_artifacts("ver doc_ids: 85222, 87141 aqui") == "ver aqui"
+    # Parenthetical form: no double space, no space before comma/period.
+    assert (
+        answer._strip_doc_id_artifacts(
+            "RESOLUCIÓN de 12 de marzo de 2026 (doc_id: 85222), "
+            "y la de concesión (doc_id: 87141)."
+        )
+        == "RESOLUCIÓN de 12 de marzo de 2026, y la de concesión."
+    )
+    # Bracket form mid-sentence.
+    assert (
+        answer._strip_doc_id_artifacts("marco normativo [doc_id 999] vigente")
+        == "marco normativo vigente"
+    )
+    # Prose with a plain number and the substring "doc" must be left untouched.
+    unchanged = "El documento identifica 3 casos importantes."
+    assert answer._strip_doc_id_artifacts(unchanged) == unchanged
+
+
 class _InlineDocIdClient:
     """Synthesis LLM that echoes an internal doc_id label into its prose."""
 

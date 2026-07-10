@@ -82,7 +82,11 @@ def _strip_doc_id_artifacts(text: str) -> str:
     """
     if not text:
         return text
-    cleaned = _DOC_ID_ARTIFACT_RE.sub("", text)
+    # Substitute a single space (not ""): the regex's outer `\s*` can consume the
+    # spaces on BOTH sides of a bare (non-parenthesized) artifact, so removing it
+    # outright would join the neighbouring words ("ver ... aqui" -> "veraqui"). The
+    # space is normalised away below (doubled-space collapse / space-before-punct).
+    cleaned = _DOC_ID_ARTIFACT_RE.sub(" ", text)
     # Drop parens/brackets emptied out by the removal above.
     cleaned = re.sub(r"\(\s*\)", "", cleaned)
     cleaned = re.sub(r"\[\s*\]", "", cleaned)
