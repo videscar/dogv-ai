@@ -198,6 +198,7 @@ def _companion_extras(question: str, doc_ids: list[int], keywords: list[str]) ->
         return doc_ids
 
     anchors = doc_ids[:_COMPANION_TOP_CANDIDATES]
+    max_degree = getattr(settings, "doc_reference_max_target_degree", 25)
     with SessionLocal() as db:
         rows = db.execute(
             sa_text(
@@ -209,9 +210,14 @@ def _companion_extras(question: str, doc_ids: list[int], keywords: list[str]) ->
                                   THEN r.target_document_id ELSE r.source_document_id END
                 WHERE (source_document_id = ANY(:anchors) OR target_document_id = ANY(:anchors))
                   AND target_document_id IS NOT NULL
+                  -- Hub norms (e.g. Ley 4/2021 de Función Pública, cited by ~6k
+                  -- docs) are companions of everything and information of nothing:
+                  -- pulling their full text into the read set is pure noise.
+                  AND (SELECT count(*) FROM doc_reference r2
+                       WHERE r2.target_document_id = d.id) <= :max_degree
                 """
             ),
-            {"anchors": anchors},
+            {"anchors": anchors, "max_degree": max_degree},
         ).all()
 
     candidates: dict[int, tuple[int, int]] = {}  # companion_id -> (priority, topic_overlap)

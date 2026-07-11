@@ -223,6 +223,10 @@ class Settings(BaseSettings):
     # ingest time; at read time we pull companions of the top-ranked candidates in.
     doc_reference_expansion_enabled: bool = True
     doc_reference_max_companions: int = 2
+    # Skip companions referenced by more than this many docs: such hub norms
+    # (e.g. Ley 4/2021 de Función Pública, cited by ~6k docs) are companions of
+    # everything and answer nothing.
+    doc_reference_max_target_degree: int = 25
     # Enumeration queries ("cítame todas las disposiciones ... de mayo de 2026")
     # need exhaustive recall, not top-k semantic retrieval. When detected, pull the
     # month+category matches from SQL into the candidate pool and widen the rerank /
