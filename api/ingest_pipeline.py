@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from api.config import get_settings
 from api.db import SessionLocal
 from scripts.build_chunks import build_chunks_for_range
+from scripts.build_doc_references import build_references_for_range
 from scripts.classify_documents import classify_range
 from scripts.extract_documents import process_issue
 from scripts.extract_text import extract_range
@@ -89,5 +90,11 @@ def run_pipeline(
         extract_range(db, start_date, end_date)
         classify_range(db, start_date, end_date)
         build_chunks_for_range(db, start_date, end_date, force=force_chunks)
+
+        # Cross-reference extraction is best-effort: never let it fail ingest.
+        try:
+            build_references_for_range(db, start_date, end_date)
+        except Exception:
+            logger.exception("doc_reference.range_failed start=%s end=%s", start_date, end_date)
     finally:
         db.close()
