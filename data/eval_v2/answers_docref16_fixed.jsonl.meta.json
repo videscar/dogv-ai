@@ -1,0 +1,18 @@
+{
+ "started_at": "2026-07-11T11:06:52+0000",
+ "base_url": "http://127.0.0.1:8090",
+ "in_path": "data/eval_v2/answer_input_changed16.json",
+ "out_path": "data/eval_v2/answers_docref16_fixed.jsonl",
+ "build": {
+  "git_sha": "ccc9b3bc638239956c1f6edb0914ef6130dd7743",
+  "git_branch": "feature/doc-references",
+  "git_dirty": false
+ },
+ "eval_settings": {
+  "answer_claim_guard_mode": "unit_aware_strict",
+  "ask_synthesis_thinking": false,
+  "ask_synthesis_temperature": 0.0,
+  "answer_repair_mode": "conditional",
+  "answer_validator_enabled": true
+ }
+}

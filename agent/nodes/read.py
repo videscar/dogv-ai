@@ -182,6 +182,21 @@ _COMPANION_TOP_CANDIDATES = 3
 # almost always the second half of a multi-doc answer.
 _COMPANION_PRIORITY_KINDS = ("resuelve", "modifica", "corrige", "deroga", "convoca")
 
+# A plain 'cita' link is only worth following when the companion is the other
+# half of a convocatòria↔concessió pair (kind classification can miss these:
+# the citing sentence often carries no verb near the N/YYYY). Procedural
+# parents — bases reguladoras, plazo extensions — are read-set noise: they
+# displaced gold evidence quotes on v2-050/v2-078 in the 2026-07 eval.
+_COMPANION_CITA_TITLE_RE = re.compile(
+    r"es\s+convoquen|se\s+convocan|es\s+convoca\b|se\s+convoca\b"
+    r"|de\s+concessi[oó]\s+de|de\s+concesi[oó]n\s+de"
+    r"|es\s+resol\s+la\s+convocat|se\s+resuelve\s+la\s+convocat",
+    re.I,
+)
+_COMPANION_CITA_EXCLUDE_RE = re.compile(
+    r"bases\s+regulad|ampliaci[oó][n]?\s+de\s+(?:termini|plazo)", re.I
+)
+
 
 def _companion_extras(question: str, doc_ids: list[int], keywords: list[str]) -> list[int]:
     """Pull in doc_reference companions of the top-ranked candidates (e.g. the
@@ -226,6 +241,12 @@ def _companion_extras(question: str, doc_ids: list[int], keywords: list[str]) ->
         if companion_id in doc_ids or companion_id in anchors:
             continue
         priority = 1 if ref_kind in _COMPANION_PRIORITY_KINDS else 0
+        if priority == 0:
+            title = companion_title or ""
+            if not _COMPANION_CITA_TITLE_RE.search(title) or _COMPANION_CITA_EXCLUDE_RE.search(
+                title
+            ):
+                continue
         overlap = coverage_score(companion_title or "", keywords) if keywords else 0
         best = candidates.get(companion_id)
         if best is None or (priority, overlap) > best:
