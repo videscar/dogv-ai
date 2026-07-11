@@ -193,6 +193,57 @@ def parse_reference(question: str) -> Reference | None:
     )
 
 
+def parse_references(question: str) -> list[Reference]:
+    """Every distinct explicit N/YYYY reference in `question`, in order.
+
+    Used by the second-hop gate (multi-entity "compare X and Y" questions): where
+    `parse_reference` returns only the first hit, this walks every N/YYYY token,
+    inferring each one's tipo from the same near-then-anywhere window used above.
+    Duplicate (tipo, numero, anyo) tokens are folded into one Reference; shared
+    topic terms (the whole question, minus tipo words/numbers) are attached to
+    every reference since a comparison question's topic words apply to both.
+    """
+    if not question:
+        return []
+    topic_terms = _topic_terms_of(question)
+    seen: set[tuple[str | None, int, int]] = set()
+    refs: list[Reference] = []
+    for m in _NUMBER_YEAR_RE.finditer(question):
+        numero = int(m.group(1))
+        anyo = _normalize_year(m.group(2))
+        if anyo < 1980 or anyo > 2100:
+            continue
+        # Nearest tipo word wins (not first-in-priority-list): a wide 30-char
+        # window can catch an earlier reference's tipo word ("Decreto 3/2021 con
+        # la Orden 3/2021" — window for the 2nd "3/2021" still contains "Decreto").
+        window_start = max(0, m.start() - 30)
+        window = question[window_start : m.end() + 5]
+        tipo: str | None = None
+        best_pos = -1
+        for rx, key in _TIPO_QUERY_MAP:
+            for wm in rx.finditer(window):
+                if wm.start() > best_pos:
+                    best_pos = wm.start()
+                    tipo = key
+        key = (tipo, numero, anyo)
+        if key in seen:
+            continue
+        seen.add(key)
+        day, month = _parse_disposition_date(question)
+        refs.append(
+            Reference(
+                tipo=tipo,
+                numero=numero,
+                anyo=anyo,
+                topic_terms=topic_terms,
+                raw=m.group(0),
+                date_day=day,
+                date_month=month,
+            )
+        )
+    return refs
+
+
 # "de 30 de octubre" / "de 9 de gener" — the disposition date that disambiguates
 # norms whose N/YYYY repeats across consellerias (each numbers independently).
 _DISP_DATE_RE = re.compile(
