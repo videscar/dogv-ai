@@ -42,15 +42,13 @@ _BODY_SCAN_CHARS = 3000
 _KIND_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("modifica", re.compile(r"modificaci[oó]|modifica[nr]?\b", re.I)),
     ("deroga", re.compile(r"derog[ao]|derogaci[oó]n", re.I)),
-    ("resuelve", re.compile(r"\bresuel[vt]e|\bresoluci[oó]n de\b.*\bconvocatoria\b", re.I)),
+    ("resuelve", re.compile(r"\bresuel\w*|\bresol\b|\bresolt[ao]?\b", re.I)),
     ("convoca", re.compile(r"convoca(?:toria|n|ron|do)?\b|aprobada por|aprovada per", re.I)),
     (
         "corrige",
-        re.compile(r"correcci[oó]n de errores|correcci[oó] d'?errades|correcci[oó]|corrige", re.I),
+        re.compile(r"correcci[oó]n de errores|correcci[oó] d'?errades|corrige|corregeix", re.I),
     ),
 ]
-
-_VA_TITLE_TIPO_RE = re.compile(r"^\s*(?:DECRET\b|LLEI\b|ORDRE\b|RESOLUCI[OÓ]\b|ACORD\b)", re.I)
 
 
 @dataclass(frozen=True)
@@ -97,6 +95,7 @@ def _find_tipo_before(text: str, pos: int) -> str | None:
 
 @dataclass(frozen=True)
 class _SelfIdentity:
+    tipo: str | None
     numero: int | None
     anyo: int | None
     disp_day: int | None
@@ -111,14 +110,13 @@ def _self_identity(title: str) -> _SelfIdentity:
     identifier reappearing anywhere in its title/body (very common: titles
     are echoed verbatim at the top of the body) must never be emitted as a
     reference to another document."""
-    numero = anyo = None
-    m = re.match(
-        r"^\s*(?:" + "|".join(p for _, p in _TIPO_TITLE_PATTERNS) + r")\s+(\d{1,4})/(\d{2,4})",
-        title,
-        re.I,
-    )
-    if m:
-        numero, anyo = int(m.group(1)), _normalize_year(m.group(2))
+    tipo = numero = anyo = None
+    for tipo_key, pat in _TIPO_TITLE_PATTERNS:
+        m = re.match(r"^\s*(?:" + pat + r")\s+(\d{1,4})/(\d{2,4})", title, re.I)
+        if m:
+            tipo = tipo_key
+            numero, anyo = int(m.group(1)), _normalize_year(m.group(2))
+            break
 
     day = month = disp_year = None
     dm = re.match(
@@ -130,7 +128,7 @@ def _self_identity(title: str) -> _SelfIdentity:
         day, month, disp_year = int(dm.group(1)), dm.group(2).lower(), int(dm.group(3))
 
     return _SelfIdentity(
-        numero=numero, anyo=anyo, disp_day=day, disp_month=month, disp_year=disp_year
+        tipo=tipo, numero=numero, anyo=anyo, disp_day=day, disp_month=month, disp_year=disp_year
     )
 
 
@@ -144,7 +142,13 @@ def _extract_num_year_refs(text: str, self_id: _SelfIdentity) -> list[ExtractedR
         anyo = _normalize_year(m.group(2))
         if anyo < 1980 or anyo > 2100:
             continue
-        if numero == self_id.numero and anyo == self_id.anyo:
+        # Self-reference only when the tipo matches too: "ORDEN 12/2026" citing
+        # "Decreto 12/2026" is a real cross-reference, not an echo of itself.
+        if (
+            numero == self_id.numero
+            and anyo == self_id.anyo
+            and (self_id.tipo is None or tipo == self_id.tipo)
+        ):
             continue
         kind = _classify_kind(text, m.start(), m.end())
         raw = text[max(0, m.start() - _TIPO_WINDOW) : m.end()].strip()
