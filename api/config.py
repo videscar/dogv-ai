@@ -216,6 +216,13 @@ class Settings(BaseSettings):
     ask_synthesis_temperature: float = 0.0
     ask_rerank_top_n: int = 5
     ask_rerank_max_candidates: int = 10
+    # Doc-reference companion expansion: multi-doc questions often need a second
+    # document that never enters the retrieval pool on its own merits (e.g. the
+    # resolución that resolves a convocatoria). doc_reference (see
+    # sql/2026-07-doc-references.sql) links explicitly cross-referenced norms at
+    # ingest time; at read time we pull companions of the top-ranked candidates in.
+    doc_reference_expansion_enabled: bool = True
+    doc_reference_max_companions: int = 2
     # Enumeration queries ("cítame todas las disposiciones ... de mayo de 2026")
     # need exhaustive recall, not top-k semantic retrieval. When detected, pull the
     # month+category matches from SQL into the candidate pool and widen the rerank /

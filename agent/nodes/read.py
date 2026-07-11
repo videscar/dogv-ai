@@ -176,6 +176,67 @@ def _amount_extras(
     return _merge_unique_ids(doc_ids, extras)
 
 
+_COMPANION_TOP_CANDIDATES = 3
+# Companion kinds worth pulling in even without topic overlap: the source doc
+# explicitly resolves/amends/corrects/repeals/convokes the target, so it is
+# almost always the second half of a multi-doc answer.
+_COMPANION_PRIORITY_KINDS = ("resuelve", "modifica", "corrige", "deroga", "convoca")
+
+
+def _companion_extras(question: str, doc_ids: list[int], keywords: list[str]) -> list[int]:
+    """Pull in doc_reference companions of the top-ranked candidates (e.g. the
+    resolución that resolves a convocatoria the rerank alone never surfaces).
+
+    Looks both directions (source->target and target->source) for the top
+    `_COMPANION_TOP_CANDIDATES` doc_ids, since a companion may be the document
+    that references the candidate or the one the candidate itself references.
+    """
+    if not getattr(settings, "doc_reference_expansion_enabled", True):
+        return doc_ids
+    max_companions = getattr(settings, "doc_reference_max_companions", 2)
+    if max_companions <= 0 or not doc_ids:
+        return doc_ids
+
+    anchors = doc_ids[:_COMPANION_TOP_CANDIDATES]
+    with SessionLocal() as db:
+        rows = db.execute(
+            sa_text(
+                """
+                SELECT source_document_id, target_document_id, ref_kind, d.title
+                FROM doc_reference r
+                JOIN dogv_documents d
+                  ON d.id = CASE WHEN r.source_document_id = ANY(:anchors)
+                                  THEN r.target_document_id ELSE r.source_document_id END
+                WHERE (source_document_id = ANY(:anchors) OR target_document_id = ANY(:anchors))
+                  AND target_document_id IS NOT NULL
+                """
+            ),
+            {"anchors": anchors},
+        ).all()
+
+    candidates: dict[int, tuple[int, int]] = {}  # companion_id -> (priority, topic_overlap)
+    for source_id, target_id, ref_kind, companion_title in rows:
+        companion_id = target_id if source_id in anchors else source_id
+        if companion_id in doc_ids or companion_id in anchors:
+            continue
+        priority = 1 if ref_kind in _COMPANION_PRIORITY_KINDS else 0
+        overlap = coverage_score(companion_title or "", keywords) if keywords else 0
+        best = candidates.get(companion_id)
+        if best is None or (priority, overlap) > best:
+            candidates[companion_id] = (priority, overlap)
+
+    if not candidates:
+        return doc_ids
+    ranked = sorted(candidates.items(), key=lambda kv: kv[1], reverse=True)
+    extras = [companion_id for companion_id, _ in ranked[:max_companions]]
+    logger.info(
+        "read.companion_expansion anchors=%s added=%s",
+        anchors,
+        extras,
+    )
+    return _merge_unique_ids(doc_ids, extras)
+
+
 def _fetch_reader_inputs(
     doc_ids: list[int], question: str, query_embedding: list[float] | None
 ) -> tuple[
@@ -445,6 +506,7 @@ def read_docs_node(state: QAState) -> QAState:
     )
     doc_ids = _eligibility_extras(question, keywords, doc_ids, candidate_docs, top_chunks)
     doc_ids = _amount_extras(question, doc_ids, candidate_docs, top_chunks)
+    doc_ids = _companion_extras(question, doc_ids, keywords)
 
     try:
         query_embedding = state.get("query_embedding")
