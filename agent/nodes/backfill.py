@@ -104,6 +104,16 @@ def _reference_in_corpus(db, ref: Reference) -> bool:
     return bool(_reference_corpus_doc_ids(db, ref, limit=1))
 
 
+def _merge_pin_ids(existing: list[int] | None, new: list[int]) -> list[int]:
+    """Union, preserving order, existing-first: never lets a later pin-setter
+    (this node fires after retrieve_candidates_node) drop an earlier one."""
+    merged = [int(d) for d in (existing or []) if d is not None]
+    for doc_id in new:
+        if doc_id not in merged:
+            merged.append(doc_id)
+    return merged
+
+
 def _pin_doc(db, doc_id: int) -> None:
     """Mark an on-demand-fetched historical doc so a future rolling-window
     eviction never drops it. Uses the existing doc_tags JSONB (no migration)."""
@@ -175,6 +185,11 @@ def backfill_node(state: QAState) -> QAState:
             # numbers that repeat across consellerias — one the question's date already
             # narrowed to (its es/va twins share that date). Otherwise stay hands-off.
             pin_ids = corpus_ids if (len(corpus_ids) == 1 or _date_patterns(ref)) else []
+            # Merge with any pin already set upstream (e.g. the second-hop's own
+            # pin for a second explicit ref) instead of overwriting it — backfill
+            # only ever resolves parse_reference's first hit, so a second entity's
+            # pin from retrieve_candidates_node must survive this pass.
+            pin_ids = _merge_pin_ids(state.get("norm_pin_doc_ids"), pin_ids)
             elapsed = time.monotonic() - start
             logger.info(
                 "backfill.skip req=%s reason=already_in_corpus pin=%s elapsed=%.2fs",
@@ -232,8 +247,12 @@ def backfill_node(state: QAState) -> QAState:
                 "ondemand_ref": ref.num_year,
                 # Pin the freshly-fetched norm into the read set: after the loop back
                 # to retrieval it must not be re-evicted by the same non-deterministic
-                # ranking that made it absent in the first place.
-                "norm_pin_doc_ids": [ondemand_doc_id] if ondemand_doc_id is not None else [],
+                # ranking that made it absent in the first place. Merged with any pin
+                # already set upstream (see the already_in_corpus branch above).
+                "norm_pin_doc_ids": _merge_pin_ids(
+                    state.get("norm_pin_doc_ids"),
+                    [ondemand_doc_id] if ondemand_doc_id is not None else [],
+                ),
                 "norm_target_ref": norm_target_ref,
             },
             elapsed_seconds=round(elapsed, 3),

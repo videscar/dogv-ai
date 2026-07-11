@@ -165,6 +165,16 @@ class Settings(BaseSettings):
     ask_semantic_anchor_enabled: bool = True
     ask_semantic_anchor_top: int = 3
 
+    # Second retrieval hop (gated): "compare X and Y" questions where the second
+    # entity's document never enters the pool because the primary query only
+    # embeds/BM25s one topic. Fires only on explicit multi-ref (>=2 distinct
+    # N/YYYY norm refs) or multi-facet questions where an entity/facet is absent
+    # from the fused pool; a targeted extra retrieval pass merges its top docs in
+    # additively. Off by default in prod; on for this branch's eval.
+    ask_second_hop_enabled: bool = True
+    ask_second_hop_top_docs: int = 5
+    ask_second_hop_max_hops: int = 2
+
     # Conversation / multi-turn. History is client-owned (sent on each request); the
     # server stays stateless. With empty history every path below is a no-op, so
     # single-turn behaviour is unchanged.

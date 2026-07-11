@@ -13,6 +13,7 @@ from api.config import enabled_lanes, get_settings
 from api.embed import EmbedClient
 from api.enumeration import parse_enumeration
 from api.query_classifiers import is_reference_query
+from agent.nodes.second_hop import apply_second_hop
 from api.query_expansion import (
     build_bm25_queries,
     build_hyde_document,
@@ -155,10 +156,34 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         )
         used_fallback = "+".join(fallbacks) if fallbacks else None
 
+        # Second hop: gated, only pays for an extra retrieval pass when the
+        # question is multi-entity AND an entity's document is missing from the
+        # pool the ladder above already settled on. See agent/nodes/second_hop.py.
+        pool, hop_doc_ids, hop_profile = apply_second_hop(
+            question,
+            pool,
+            filters,
+            state.get("intent") or {},
+            client,
+            request_id,
+        )
+        if hop_doc_ids:
+            # Pin the added docs into the read set: rerank's caps are non-
+            # deterministic and would otherwise be free to drop a hop doc that
+            # only entered the pool at the very end of the fused list. Merge with
+            # any pin already set upstream instead of overwriting it.
+            existing_pins = [int(d) for d in (state.get("norm_pin_doc_ids") or []) if d is not None]
+            for doc_id in hop_doc_ids:
+                if doc_id not in existing_pins:
+                    existing_pins.append(doc_id)
+            norm_pin_doc_ids = existing_pins
+        else:
+            norm_pin_doc_ids = state.get("norm_pin_doc_ids") or []
+
         hyde_fired = query.hyde_embedding is not None
         elapsed = time.monotonic() - start
         logger.info(
-            "retrieve.done req=%s candidates=%s chunks=%s sources=%s fallback=%s rrf_expand=%s hyde=%s gate_margin=%s elapsed=%.2fs",
+            "retrieve.done req=%s candidates=%s chunks=%s sources=%s fallback=%s rrf_expand=%s hyde=%s gate_margin=%s second_hop=%s elapsed=%.2fs",
             request_id,
             len(pool.fused),
             len(pool.chunk_candidates),
@@ -167,6 +192,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             pool.rrf_expanded,
             hyde_fired,
             None if hyde_gate_margin is None else round(hyde_gate_margin, 3),
+            bool(hop_profile),
             elapsed,
         )
         return return_with_profile(
@@ -180,6 +206,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 "query_embeddings": embeddings,
                 "hyde_embedding": query.hyde_embedding,
                 "filters": filters,
+                "norm_pin_doc_ids": norm_pin_doc_ids,
             },
             elapsed_seconds=round(elapsed, 3),
             candidate_docs=len(pool.fused),
@@ -189,6 +216,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             source_counts=pool.counts,
             hyde_fired=hyde_fired,
             hyde_gate_margin=(None if hyde_gate_margin is None else round(hyde_gate_margin, 3)),
+            second_hop=hop_profile,
         )
     except Exception:
         logger.exception(
