@@ -8,12 +8,12 @@ from agent.nodes.retrieve_pool import (
     apply_relaxation_ladder,
     compute_pool,
 )
+from agent.nodes.second_hop import apply_second_hop
 from agent.shared import QAState, return_with_profile, rrf_margin_ratio
 from api.config import enabled_lanes, get_settings
 from api.embed import EmbedClient
 from api.enumeration import parse_enumeration
 from api.query_classifiers import is_reference_query
-from agent.nodes.second_hop import apply_second_hop
 from api.query_expansion import (
     build_bm25_queries,
     build_hyde_document,

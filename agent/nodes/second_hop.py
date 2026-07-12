@@ -205,7 +205,9 @@ def _run_hop_pool(
     return compute_pool(query, filters)
 
 
-def _merge_additive(pool: PoolResult, extra_docs: list[dict[str, Any]], hop_pool: PoolResult) -> list[int]:
+def _merge_additive(
+    pool: PoolResult, extra_docs: list[dict[str, Any]], hop_pool: PoolResult
+) -> list[int]:
     """Append docs not already in `pool.fused` to the end (never reorder/remove
     existing candidates) and carry their chunk evidence along. Returns the ids
     actually added."""

@@ -5,8 +5,12 @@ targeted eval run, not here)."""
 from __future__ import annotations
 
 from agent.nodes.retrieve_pool import PoolResult
-from agent.nodes.second_hop import _facet_targets, _merge_additive, _uncovered_refs
-from api.dogv_resolver import parse_references
+from agent.nodes.second_hop import (
+    _facet_targets,
+    _merge_additive,
+    _split_compound_clauses,
+    _uncovered_refs,
+)
 
 
 def _doc(doc_id: int, title: str = "") -> dict:
@@ -15,7 +19,14 @@ def _doc(doc_id: int, title: str = "") -> dict:
 
 def _pool(*doc_ids: int) -> PoolResult:
     fused = [_doc(d) for d in doc_ids]
-    return PoolResult(fused=fused, top_chunks={}, chunk_candidates=[], counts={}, rrf_expanded=False, soft_language=False)
+    return PoolResult(
+        fused=fused,
+        top_chunks={},
+        chunk_candidates=[],
+        counts={},
+        rrf_expanded=False,
+        soft_language=False,
+    )
 
 
 def test_uncovered_refs_both_missing():
@@ -68,7 +79,10 @@ def test_merge_additive_carries_chunk_evidence_for_new_docs_only():
     hop = PoolResult(
         fused=[_doc(2)],
         top_chunks={1: [{"text": "should not overwrite"}], 2: [{"text": "hop chunk"}]},
-        chunk_candidates=[{"document_id": 2, "text": "hop chunk"}, {"document_id": 9, "text": "unrelated"}],
+        chunk_candidates=[
+            {"document_id": 2, "text": "hop chunk"},
+            {"document_id": 9, "text": "unrelated"},
+        ],
         counts={},
         rrf_expanded=False,
         soft_language=False,
@@ -89,8 +103,6 @@ def test_merge_additive_noop_when_all_already_present():
 
 
 # --- hop-local compound-clause splitter -------------------------------------
-
-from agent.nodes.second_hop import _split_compound_clauses
 
 
 def test_split_valencian_i_quin_second_clause():
