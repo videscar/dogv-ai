@@ -159,7 +159,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         # Second hop: gated, only pays for an extra retrieval pass when the
         # question is multi-entity AND an entity's document is missing from the
         # pool the ladder above already settled on. See agent/nodes/second_hop.py.
-        pool, hop_doc_ids, hop_profile = apply_second_hop(
+        pool, hop_doc_ids, hop_protect_ids, hop_profile = apply_second_hop(
             question,
             pool,
             filters,
@@ -207,6 +207,10 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 "hyde_embedding": query.hyde_embedding,
                 "filters": filters,
                 "norm_pin_doc_ids": norm_pin_doc_ids,
+                # In-pool docs a hop identified as an entity's best evidence:
+                # edition-recency (RC1) must not prune them as stale siblings of
+                # the other entity's fresher docs (v2-051's 2025 concesión).
+                "second_hop_protect_ids": hop_protect_ids,
             },
             elapsed_seconds=round(elapsed, 3),
             candidate_docs=len(pool.fused),

@@ -24,6 +24,7 @@ Two triggers, checked in order, capped at `ask_second_hop_max_hops` total hops:
 from __future__ import annotations
 
 import logging
+import re
 from typing import Any
 
 from sqlalchemy import text as sa_text
@@ -31,7 +32,13 @@ from sqlalchemy import text as sa_text
 from agent.nodes.retrieve_pool import PoolQuery, PoolResult, compute_pool
 from api.config import enabled_lanes, get_settings
 from api.db import SessionLocal
-from api.dogv_resolver import Reference, corpus_like_patterns, parse_references, reference_matches_title
+from api.dogv_resolver import (
+    Reference,
+    _topic_terms_of,
+    corpus_like_patterns,
+    parse_references,
+    reference_matches_title,
+)
 from api.query_expansion import build_bm25_queries, decompose_question
 from api.retrieval import RetrievalFilters
 
@@ -88,7 +95,77 @@ def _direct_title_lookup(ref: Reference, limit: int = 3) -> list[dict[str, Any]]
     return out
 
 
+# Interrogative marker opening a second clause after "y"/"i": "i quin és el sou
+# base...", "y cuál es...", "y cuánto se concedió...". A conjunction followed by
+# one of these is the strongest signal the question carries a second entity.
+_CLAUSE_MARKER_RE = re.compile(
+    r"^(?:quin(?:a|s|es)?\b|qu[eè]\b|qu[eé]\b|cu[aá]l(?:es)?\b|qui(?:[eé]n(?:es)?)?\b|"
+    r"cu[aá]nt[oa]s?\b|quant(?:a|s|es)?\b)",
+    re.IGNORECASE,
+)
+
+_CONJUNCTION_RE = re.compile(r"\s(?:y|i)\s", re.IGNORECASE)
+
+
+def _split_compound_clauses(question: str) -> list[str]:
+    """Hop-local entity splitter for single-question compound clauses.
+
+    decompose_question only splits on ?/;/. boundaries, so "quina taxa es paga
+    (Ordre 23/2026) i quin és el sou base..." — one question mark, two entities —
+    never yields a second facet. This splitter handles the conjunction case:
+    prefer the "y"/"i" whose right side opens with an interrogative marker (the
+    second ask), else fall back to the LAST conjunction (list-final "y el Fondo
+    de Cooperación Municipal" names the second entity; earlier conjunctions like
+    "la DANA y los municipios" join words inside the first one). Both halves
+    must be entity-like (>=2 content words) or the split is rejected. Lives here
+    (not in query_expansion) so the global BM25 facet path is untouched and
+    ungated questions stay byte-identical.
+    """
+    q = (question or "").strip()
+    if not q:
+        return []
+    matches = list(_CONJUNCTION_RE.finditer(q))
+    if not matches:
+        return []
+    chosen = None
+    for m in matches:
+        if _CLAUSE_MARKER_RE.match(q[m.end() :].lstrip(" ¿¡")):
+            chosen = m
+            break
+    if chosen is None:
+        chosen = matches[-1]
+    halves = [
+        q[: chosen.start()].strip(" ¿?¡!.,;:"),
+        q[chosen.end() :].strip(" ¿?¡!.,;:"),
+    ]
+    if any(len(_topic_terms_of(h)) < 2 for h in halves):
+        return []
+    # The second clause must name an entity of its own (a digit/year or a
+    # mid-clause capitalized proper noun: "subgrup A1 (taules 2026)", "Fondo de
+    # Cooperación Municipal"). An anaphoric second clause ("y qué subida salarial
+    # aplican") asks a second FACT about the same document — hopping on it only
+    # pins near-duplicate noise into the read set.
+    if not _has_entity_anchor(halves[1]):
+        return []
+    return halves
+
+
+def _has_entity_anchor(clause: str) -> bool:
+    if re.search(r"\d", clause):
+        return True
+    words = clause.split()
+    return any(w[:1].isupper() for w in words[1:])
+
+
 def _facet_targets(question: str) -> list[str]:
+    """Hop facet candidates: the local compound-clause split when it fires
+    (its second half is the entity the primary pass under-weighted), else
+    decompose_question's trailing facets. The first half of a local split is
+    kept too — coverage checks are cheap relative to a missed entity, and the
+    top-1-absent gate no-ops the half the main pass already covered."""
+    halves = _split_compound_clauses(question)
+    if halves:
+        return list(reversed(halves))  # second clause first: it's the likely miss
     facets = decompose_question(question, max_facets=getattr(settings, "ask_max_facets", 3))
     return facets[1:] if len(facets) >= 2 else []
 
@@ -153,20 +230,33 @@ def apply_second_hop(
     intent: dict[str, Any],
     client: Any,
     request_id: str | None,
-) -> tuple[PoolResult, list[int], dict[str, Any] | None]:
+) -> tuple[PoolResult, list[int], list[int], dict[str, Any] | None]:
     """Run the gated second hop in place on `pool`. Returns (pool, added_doc_ids,
-    profile) — profile is None when the gate never fired (zero extra work done)."""
+    protect_doc_ids, profile) — profile is None when the gate never fired (zero
+    extra work done). protect_doc_ids are each evaluated entity's top-ranked docs
+    that were ALREADY in the pool: they need no merge/pin, but they are that
+    entity's best evidence, so edition-recency suppression (RC1) must not prune
+    them as stale siblings of the OTHER entity's fresher docs (v2-051: the 2025
+    DANA-alquiler concesión was in the pool and RC1 dropped it)."""
     if not getattr(settings, "ask_second_hop_enabled", False):
-        return pool, [], None
+        return pool, [], [], None
     max_hops = max(0, getattr(settings, "ask_second_hop_max_hops", 2))
     if max_hops == 0:
-        return pool, [], None
+        return pool, [], [], None
     top_docs = max(1, getattr(settings, "ask_second_hop_top_docs", 5))
     lanes = enabled_lanes(settings)
 
     fired: list[str] = []
     added_doc_ids: list[int] = []
+    protect_doc_ids: list[int] = []
     hops_used = 0
+
+    def _collect_protected(hop_pool: PoolResult) -> None:
+        pool_ids = {int(d["document_id"]) for d in pool.fused}
+        for doc in hop_pool.fused[: min(3, top_docs)]:
+            doc_id = int(doc["document_id"])
+            if doc_id in pool_ids and doc_id not in protect_doc_ids:
+                protect_doc_ids.append(doc_id)
 
     for ref in _uncovered_refs(question, pool.fused):
         if hops_used >= max_hops:
@@ -174,6 +264,7 @@ def apply_second_hop(
         hop_pool = _run_hop_pool(client, _ref_hop_question(ref), intent, lanes, filters)
         if hop_pool is None:
             continue
+        _collect_protected(hop_pool)
         extra_docs = list(hop_pool.fused[:top_docs])
         extra_ids = {int(d["document_id"]) for d in extra_docs}
         for direct_doc in _direct_title_lookup(ref):
@@ -192,6 +283,7 @@ def apply_second_hop(
             hop_pool = _run_hop_pool(client, facet, intent, lanes, filters)
             if hop_pool is None or not hop_pool.fused:
                 continue
+            _collect_protected(hop_pool)
             fused_ids = {int(d["document_id"]) for d in pool.fused}
             if int(hop_pool.fused[0]["document_id"]) in fused_ids:
                 continue  # facet's top doc already covered: conservative no-op
@@ -202,11 +294,22 @@ def apply_second_hop(
                 hops_used += 1
 
     if not fired:
-        return pool, [], None
+        return pool, [], [], None
     logger.info(
-        "retrieve.second_hop req=%s entities=%s docs_added=%s",
+        "retrieve.second_hop req=%s entities=%s docs_added=%s protected=%s",
         request_id,
         fired,
         added_doc_ids,
+        protect_doc_ids,
     )
-    return pool, added_doc_ids, {"fired": True, "entities": fired, "docs_added": added_doc_ids}
+    return (
+        pool,
+        added_doc_ids,
+        protect_doc_ids,
+        {
+            "fired": True,
+            "entities": fired,
+            "docs_added": added_doc_ids,
+            "docs_protected": protect_doc_ids,
+        },
+    )

@@ -92,6 +92,13 @@ def _apply_edition_recency(
     if len(doc_ids) < 2:
         return doc_ids, pool, set()
     protected = [int(d) for d in (state.get("norm_pin_doc_ids") or []) if d is not None]
+    # Second-hop entity docs are in-pool already (no pin needed for read-set
+    # membership), but they are one entity's best evidence in a multi-entity
+    # question — a fresher doc of the OTHER entity must not suppress them as a
+    # stale edition (v2-051: the 2025 DANA-alquiler concesión).
+    for d in state.get("second_hop_protect_ids") or []:
+        if d is not None and int(d) not in protected:
+            protected.append(int(d))
     with SessionLocal() as db:
         kept, dropped = suppress_stale_editions(
             db,

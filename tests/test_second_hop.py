@@ -86,3 +86,65 @@ def test_merge_additive_noop_when_all_already_present():
     added = _merge_additive(pool, hop.fused, hop)
     assert added == []
     assert [d["document_id"] for d in pool.fused] == [1, 2]
+
+
+# --- hop-local compound-clause splitter -------------------------------------
+
+from agent.nodes.second_hop import _split_compound_clauses
+
+
+def test_split_valencian_i_quin_second_clause():
+    q = (
+        "Per a l'OPE 2026, quina taxa d'examen es paga (Ordre 23/2026) i quin és "
+        "el sou base del subgrup A1 (taules 2026) si s'aprova la plaça?"
+    )
+    halves = _split_compound_clauses(q)
+    assert len(halves) == 2
+    assert "sou base del subgrup A1" in halves[1]
+    assert "taxa d'examen" in halves[0]
+
+
+def test_split_prefers_last_conjunction_when_no_marker():
+    # earlier "y" joins words INSIDE the first entity ("la DANA y los municipios");
+    # the list-final "y el Fondo..." names the second one
+    q = (
+        "¿Qué dos tipos de ayuda relacionadas con la DANA y los municipios aparecen: "
+        "las de alquiler de vivienda y el Fondo de Cooperación Municipal? "
+        "Indica el importe comprometido de cada una."
+    )
+    halves = _split_compound_clauses(q)
+    assert len(halves) == 2
+    assert halves[1].startswith("el Fondo de Cooperación Municipal")
+
+
+def test_split_rejects_anaphoric_second_clause():
+    # second clause asks another fact about the SAME doc: no entity anchor
+    q = (
+        "¿Cuál es el importe del sueldo base mensual del subgrupo A1 según las "
+        "tablas retributivas de la Generalitat de 2026, y qué subida salarial aplican?"
+    )
+    assert _split_compound_clauses(q) == []
+
+
+def test_split_rejects_anaphoric_second_clause_valencian():
+    q = (
+        "Segons la resolució de concessió d'ajudes CMIART de febrer de 2026, fins a "
+        "quina data han de justificar les persones beneficiàries i quin percentatge "
+        "de suport s'aplica?"
+    )
+    assert _split_compound_clauses(q) == []
+
+
+def test_split_no_conjunction_is_empty():
+    assert _split_compound_clauses("¿Qué establece el Decreto 65/2022?") == []
+    assert _split_compound_clauses("") == []
+
+
+def test_facet_targets_puts_second_clause_first():
+    q = (
+        "En l'àmbit dels nomenaments universitaris de 2026, qui és el nou gerent de "
+        "la Universitat de València i qui s'ha nomenat vocal del Ple del Consell "
+        "Valencià d'Universitats?"
+    )
+    facets = _facet_targets(q)
+    assert facets and "vocal del Ple" in facets[0]
