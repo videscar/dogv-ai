@@ -138,6 +138,11 @@ def _split_compound_clauses(question: str) -> list[str]:
         q[: chosen.start()].strip(" ¿?¡!.,;:"),
         q[chosen.end() :].strip(" ¿?¡!.,;:"),
     ]
+    # A half that runs past a sentence boundary drags the NEXT sentence into the
+    # entity query ("el Fondo de Cooperación Municipal? Indica el importe...")
+    # and steers the hop to lexically-adjacent non-entities (v2-051 pulled the
+    # *turístico* Fondo variant). Keep only the clause up to the boundary.
+    halves = [re.split(r"[?;.]", h, maxsplit=1)[0].strip(" ¿?¡!.,;:") for h in halves]
     if any(len(_topic_terms_of(h)) < 2 for h in halves):
         return []
     # The second clause must name an entity of its own (a digit/year or a
