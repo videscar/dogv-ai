@@ -262,6 +262,16 @@ class Settings(BaseSettings):
     ask_edition_recency_enabled: bool = True
     ask_edition_recency_sim: float = 0.86
     ask_edition_recency_scan_n: int = 12
+    # Damage cap: a true edition family is small (current + 1-2 stale years); a
+    # suppression wanting more drops than this is a tight thematic cluster of
+    # distinct acts (grounded probes P13/P14 lost 6-8 of 10 pool docs) — skip it.
+    ask_edition_recency_max_drops: int = 3
+    # DOGV publishes weeks after an act is signed (corpus p50=10d, p95=50d). The
+    # planner turns in-question dates — usually the act's signing date — into a
+    # publication-date window, silently excluding the gold doc when the lag crosses
+    # the window edge. Extend intent-derived until_date by this allowance; explicit
+    # relative-time (feed) windows are publication-time semantics and are not touched.
+    ask_intent_date_pub_lag_days: int = 60
     ask_read_expand_docs: int = 2
     ask_read_coverage_docs: int = 2
     ask_read_eligibility_docs: int = 1

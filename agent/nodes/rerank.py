@@ -107,6 +107,7 @@ def _apply_edition_recency(
             sim_threshold=float(getattr(settings, "ask_edition_recency_sim", 0.86)),
             scan_n=int(getattr(settings, "ask_edition_recency_scan_n", 12)),
             protected_ids=protected,
+            max_drops=int(getattr(settings, "ask_edition_recency_max_drops", 3)),
         )
     if not dropped:
         return doc_ids, pool, set()

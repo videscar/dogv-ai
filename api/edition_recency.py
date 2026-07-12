@@ -15,11 +15,73 @@ title boilerplate are protected by the different-date rule.
 
 from __future__ import annotations
 
+import re
+import unicodedata
 from collections.abc import Iterable
 from datetime import date
 from typing import Any
 
 from .rerank import parse_issue_date
+
+# "... por la que se nombra ...", "... per la qual s'assignen ..." — the act verb
+# right after the relative-clause opener is the DOGV title's act-type marker.
+_ACT_VERB_RE = re.compile(
+    r"(?:por\s+la\s+que|por\s+la\s+cual|por\s+el\s+que|por\s+el\s+cual"
+    r"|per\s+la\s+qual|pel\s+qual)\s+(?:se|es|s['’])\s*(\w+)",
+    re.IGNORECASE | re.UNICODE,
+)
+
+# Code-like identifiers that name a specific selective process / expedient:
+# "convocatoria 9/24", "ABI 544/2019", body-scale codes "A1-07-03". Pure year
+# and course-year tokens ("2024", "2024-2025", "2025/26") are the recency
+# dimension RC1 exists to collapse, so they are excluded from the code class.
+_CODE_RE = re.compile(r"\b(?:[A-ZÀ-Ü]{2,10}[/-])?\d{1,4}/\d{2,4}\b|\b[A-Z]\d(?:-\d{2}){1,2}\b")
+_YEARISH_RE = re.compile(r"^\d{4}(?:[/-]\d{2,4})?$")
+
+
+def _act_stem(title: str) -> str:
+    """Normalized 4-char stem of the title's act verb ('' when not found)."""
+    match = _ACT_VERB_RE.search(title)
+    if not match:
+        return ""
+    verb = match.group(1).lower()
+    verb = unicodedata.normalize("NFKD", verb)
+    verb = "".join(ch for ch in verb if not unicodedata.combining(ch))
+    return verb[:4]
+
+
+def _code_tokens(title: str) -> set[str]:
+    tokens = set()
+    for raw in _CODE_RE.findall(title):
+        token = raw.strip()
+        if not token or _YEARISH_RE.match(token):
+            continue
+        tokens.add(token.upper())
+    return tokens
+
+
+def titles_veto_pair(title_a: str | None, title_b: str | None) -> bool:
+    """True when two titles provably describe *different administrative acts*, so the
+    docs must not be treated as editions of one act however close their embeddings.
+
+    Two vetoes, both conservative (no veto when the signal is missing/one-sided):
+    - act-type: 'se nombra' vs 'se modifica' vs 'se crea' are different acts about
+      possibly the same entity (the nomination/adscription false-family);
+    - code conflict: both titles carry process codes and none is shared —
+      'convocatoria 9/24' vs '7/24', 'A1-07-03' vs 'A1-07-02' (near-identical
+      boilerplate of parallel processes overlaps true-edition cosine entirely).
+
+    Same-act annual re-editions keep their verb and differ only in year/course
+    tokens (excluded from the code class), so stale-year suppression survives.
+    """
+    a, b = title_a or "", title_b or ""
+    stem_a, stem_b = _act_stem(a), _act_stem(b)
+    if stem_a and stem_b and stem_a != stem_b:
+        return True
+    codes_a, codes_b = _code_tokens(a), _code_tokens(b)
+    if codes_a and codes_b and not (codes_a & codes_b):
+        return True
+    return False
 
 
 def _find(parent: dict[int, int], x: int) -> int:
@@ -74,11 +136,16 @@ def edition_sibling_pairs(
     doc_ids: list[int],
     issue_date_by_doc: dict[int, date | None],
     sim_threshold: float,
+    title_by_doc: dict[int, str | None] | None = None,
 ) -> list[tuple[int, int]]:
     """Pairs of candidate docs whose document embeddings are near-duplicate
     (cosine >= sim_threshold) AND that carry different issue dates. The different-date
     filter is what keeps distinct same-day publications (which can share a title
-    boilerplate and rank very high in similarity) from being treated as editions."""
+    boilerplate and rank very high in similarity) from being treated as editions.
+    When titles are provided, pairs whose titles provably describe different acts
+    (act-verb or process-code conflict, see titles_veto_pair) are excluded: parallel
+    convocatorias and same-entity follow-up acts sit inside the true-edition cosine
+    band, so the embedding threshold alone cannot separate them."""
     if len(doc_ids) < 2:
         return []
     from sqlalchemy import text as sa_text
@@ -110,6 +177,8 @@ def edition_sibling_pairs(
         da, dbb = issue_date_by_doc.get(a), issue_date_by_doc.get(b)
         if da is None or dbb is None or da == dbb:
             continue
+        if title_by_doc is not None and titles_veto_pair(title_by_doc.get(a), title_by_doc.get(b)):
+            continue
         pairs.append((a, b))
     return pairs
 
@@ -122,25 +191,38 @@ def suppress_stale_editions(
     sim_threshold: float,
     scan_n: int,
     protected_ids: Iterable[int] = (),
+    max_drops: int | None = None,
 ) -> tuple[list[int], set[int]]:
     """Return (kept_doc_ids, dropped_ids). Scans the top `scan_n` of `ordered_doc_ids`,
     detects edition families, and drops older siblings — except any in `protected_ids`
-    (e.g. a norm-pinned disposition). Order of the kept ids is preserved."""
+    (e.g. a norm-pinned disposition). Order of the kept ids is preserved.
+
+    `max_drops` is a damage cap: a true edition family in a read pool is small
+    (the current plus one or two stale years), so a suppression wanting to drop
+    more docs than the cap is near-certainly a thematic cluster of *related but
+    distinct* acts (one program's convocatoria + concessions + assignments) that
+    embeds tightly; in that case do nothing and let downstream ranking decide."""
     if len(ordered_doc_ids) < 2:
         return ordered_doc_ids, set()
     issue_date_by_doc: dict[int, date | None] = {}
+    title_by_doc: dict[int, str | None] = {}
     for item in candidates:
         did = item.get("document_id")
         if did is not None:
             issue_date_by_doc[int(did)] = parse_issue_date(item.get("issue_date"))
+            title_by_doc[int(did)] = item.get("title")
     scan_ids = [int(d) for d in ordered_doc_ids[:scan_n]]
-    pairs = edition_sibling_pairs(db, scan_ids, issue_date_by_doc, sim_threshold)
+    pairs = edition_sibling_pairs(
+        db, scan_ids, issue_date_by_doc, sim_threshold, title_by_doc=title_by_doc
+    )
     if not pairs:
         return ordered_doc_ids, set()
     stale = stale_edition_ids(pairs, issue_date_by_doc)
     protected = {int(x) for x in protected_ids}
     stale -= protected
     if not stale:
+        return ordered_doc_ids, set()
+    if max_drops is not None and len(stale) > max_drops:
         return ordered_doc_ids, set()
     kept = [int(d) for d in ordered_doc_ids if int(d) not in stale]
     return kept, stale

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import calendar
 import re
 from datetime import date, datetime
 from typing import Any
@@ -145,6 +146,47 @@ def _normalize_language(value: Any) -> str | None:
 
 _YEAR_PATTERN = re.compile(r"\b(19\d{2}|20\d{2}|2100)\b")
 
+_MONTH_NUMBERS = {
+    "enero": 1, "gener": 1,
+    "febrero": 2, "febrer": 2,
+    "marzo": 3, "març": 3,
+    "abril": 4,
+    "mayo": 5, "maig": 5,
+    "junio": 6, "juny": 6,
+    "julio": 7, "juliol": 7,
+    "agosto": 8, "agost": 8,
+    "septiembre": 9, "setiembre": 9, "setembre": 9,
+    "octubre": 10,
+    "noviembre": 11, "novembre": 11,
+    "diciembre": 12, "desembre": 12,
+}  # fmt: skip
+
+_MONTH_YEAR_PATTERN = re.compile(
+    r"\b(" + "|".join(_MONTH_NUMBERS) + r")\s+(?:de|del)\s+(19\d{2}|20\d{2})\b",
+    re.IGNORECASE,
+)
+
+
+def _infer_month_range(question: str | None) -> tuple[date | None, date | None]:
+    """Month window from explicit 'agost de 2024'/'julio de 2025' phrases (es/va).
+
+    The intent LLM regularly misses these, especially in Valencian; without a
+    window the December re-editions of an August act outrank it and the
+    edition-recency pruning treats the question as recency-ambiguous. Multiple
+    hits span min..max month."""
+    if not question:
+        return None, None
+    stamps = []
+    for match in _MONTH_YEAR_PATTERN.finditer(question):
+        month = _MONTH_NUMBERS[match.group(1).lower()]
+        stamps.append((int(match.group(2)), month))
+    if not stamps:
+        return None, None
+    start_year, start_month = min(stamps)
+    end_year, end_month = max(stamps)
+    last_day = calendar.monthrange(end_year, end_month)[1]
+    return date(start_year, start_month, 1), date(end_year, end_month, last_day)
+
 
 def _infer_year_range(question: str | None) -> tuple[date | None, date | None]:
     if not question:
@@ -204,7 +246,9 @@ def normalize_intent(raw: Any, question: str | None = None) -> dict[str, Any]:
     since_date = _parse_date(data.get("since_date"))
     until_date = _parse_date(data.get("until_date"))
     if since_date is None and until_date is None:
-        inferred_since, inferred_until = _infer_year_range(question)
+        inferred_since, inferred_until = _infer_month_range(question)
+        if inferred_since is None:
+            inferred_since, inferred_until = _infer_year_range(question)
         since_date = inferred_since
         until_date = inferred_until
     needs_online = (

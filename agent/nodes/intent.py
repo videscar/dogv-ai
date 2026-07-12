@@ -62,6 +62,13 @@ def analyze_intent_node(state: QAState) -> QAState:
                     since_date = window_start
                 if until_date is None:
                     until_date = today
+        elif until_date is not None:
+            # Intent-derived windows carry act-date semantics ("de julio de 2025" =
+            # when it was signed); publication lags by weeks, so give the window a
+            # publication-lag allowance or the gold doc is filtered out for good
+            # (the relaxation ladder only drops dates when the pool is starved).
+            lag_days = max(0, int(getattr(settings, "ask_intent_date_pub_lag_days", 60)))
+            until_date = until_date + timedelta(days=lag_days)
         filters = RetrievalFilters(
             language=lang_filter,
             doc_kind=None,
