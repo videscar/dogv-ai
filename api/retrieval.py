@@ -193,8 +193,16 @@ def bm25_search(
         rows = _run("spanish", query_text)
 
     if not rows:
-        tokens = re.findall(r"[\w·'-]+", query_text.lower())
-        terms = [t for t in tokens if len(t) >= 4]
+        tokens = re.findall(r"[\w·'’-]+", query_text.lower())
+        # Split clitics (d'iniciació -> iniciació): a raw apostrophe is invalid
+        # tsquery syntax for to_tsquery. The middle-dot (l·l) is left intact —
+        # to_tsquery tokenizes it fine, and splitting would shred col·lectiu etc.
+        terms = [
+            part
+            for tok in tokens
+            for part in (p.strip("-") for p in re.split(r"['’]", tok))
+            if len(part) >= 4
+        ]
         if terms:
             or_query = " | ".join(terms[:8])
             rows = _run(ts_config, or_query, use_or=True)
