@@ -216,6 +216,14 @@ def _extract_unit_claims(value: str) -> dict[str, set[str]]:
         token = _canonical_number_token(match.group(0))
         if not token:
             continue
+        # Enumeration markers are not claims: a structured answer ("...440
+        # euros.\n4) Hores setmanals...") puts the NEXT item's list marker
+        # inside the previous figure's ±16-char currency window, and the bare
+        # "4" then fails the source-presence check and dumps a correct answer
+        # (verified on the ten-field grant query). A number directly followed
+        # by ")" is a list marker, never a currency/percent figure.
+        if text[match.end() : match.end() + 1] == ")":
+            continue
         start = max(0, match.start() - 16)
         end = min(len(text), match.end() + 16)
         window = lower[start:end]

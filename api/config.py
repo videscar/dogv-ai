@@ -175,6 +175,23 @@ class Settings(BaseSettings):
     ask_second_hop_top_docs: int = 5
     ask_second_hop_max_hops: int = 2
 
+    # Multi-field grant-query anchoring (api/field_anchor.py): a question asking
+    # several structured fields (import, hores, durada, termini, BDNS...) of ONE
+    # beca/convocatòria gets (1) an identity-only retrieval hop replacing the
+    # field-clause facet hop (the field vocabulary otherwise out-votes the doc
+    # identity and per-field noise docs get pinned into the read set), (2) per-field
+    # cross-doc read extras skipped, (3) a wider chunk cap + field-cue windowing so
+    # the extract's own field sections reach the reader, and (4) an anchored
+    # synthesis instruction (all fields from one document; absent = "No consta";
+    # near-identical siblings presented separately, never blended).
+    ask_field_anchor_enabled: bool = True
+    ask_field_anchor_pin_docs: int = (
+        2  # identity-hop docs pinned into the read set (es+va editions of the target)
+    )
+    ask_field_anchor_chunk_max_chars: int = (
+        3000  # extract-length chunks reach the reader whole (grant extracts are ~2-3k chars)
+    )
+
     # Conversation / multi-turn. History is client-owned (sent on each request); the
     # server stays stateless. With empty history every path below is a no-op, so
     # single-turn behaviour is unchanged.

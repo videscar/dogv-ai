@@ -49,7 +49,27 @@ def test_build_answer_falls_back_after_retry_exhausted(monkeypatch):
         question="¿Qué importe máximo tienen las ayudas para jóvenes?",
         language="es",
         evidence=[{"doc_id": 12144, "quote": "Base novena. Cuantía de la ayuda... 250 euros"}],
+        doc_meta={12144: {"title": "Resolucion ayudas jovenes 2025", "ref": "2025/500"}},
     )
 
-    assert result["answer"].startswith("Evidencias disponibles:")
+    # The fallback lists documents by DB-backed title — never internal doc ids
+    # or raw chunk fragments.
+    assert "Resolucion ayudas jovenes 2025" in result["answer"]
+    assert "12144" not in result["answer"]
+    assert "Base novena" not in result["answer"]
     assert result["citations"] == [12144]
+
+
+def test_build_answer_fallback_without_meta_leaks_nothing(monkeypatch):
+    monkeypatch.setattr(answer, "LlmClient", _AlwaysFailClient)
+
+    result = answer.build_answer(
+        question="¿Qué importe máximo tienen las ayudas para jóvenes?",
+        language="es",
+        evidence=[{"doc_id": 12144, "quote": "Base novena. Cuantía de la ayuda... 250 euros"}],
+    )
+
+    # No metadata for the doc -> no title line; the fallback must still never
+    # emit the internal id or the raw quote.
+    assert "12144" not in result["answer"]
+    assert "Base novena" not in result["answer"]

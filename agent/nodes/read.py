@@ -25,6 +25,7 @@ from agent.shared import (
 from api.config import get_settings
 from api.db import SessionLocal
 from api.enumeration import is_enumeration_query
+from api.field_anchor import asked_fields, field_cue_terms, is_multi_field_grant_query
 from api.intent import needs_amounts, needs_eligibility
 from api.models import DogvDocument, DogvIssue
 from api.reader import extract_evidence
@@ -265,7 +266,10 @@ def _companion_extras(question: str, doc_ids: list[int], keywords: list[str]) ->
 
 
 def _fetch_reader_inputs(
-    doc_ids: list[int], question: str, query_embedding: list[float] | None
+    doc_ids: list[int],
+    question: str,
+    query_embedding: list[float] | None,
+    extra_salient: list[str] | None = None,
 ) -> tuple[
     dict[int, tuple[Any, Any]],
     dict[int, list[dict[str, Any]]],
@@ -328,6 +332,9 @@ def _fetch_reader_inputs(
                 )
 
         salient = _salient_keywords(question)
+        for term in extra_salient or []:
+            if term not in salient:
+                salient.append(term)
         keyword_chunks = _lexical_chunks_for_docs(
             db,
             doc_ids,
@@ -348,11 +355,13 @@ def _build_docs_payload(
     ordered_map: dict[int, list[dict[str, Any]]],
     salient: list[str],
     enumeration_query: bool,
+    chunk_max_chars: int | None = None,
 ) -> list[dict[str, Any]]:
     """Assemble the per-doc reader payload (merged, windowed chunks + metadata)."""
     payload: list[dict[str, Any]] = []
     target_chunks = getattr(settings, "ask_chunks_per_doc", 6)
-    chunk_max_chars = getattr(settings, "ask_chunk_max_chars", 1200)
+    if chunk_max_chars is None:
+        chunk_max_chars = getattr(settings, "ask_chunk_max_chars", 1200)
     fallback_chars = getattr(settings, "ask_doc_fallback_chars", 12000)
     for doc_id in target_ids:
         row = docs_by_id.get(doc_id)
@@ -526,19 +535,33 @@ def read_docs_node(state: QAState) -> QAState:
     candidate_docs = state.get("candidate_docs") or []
     top_chunks = state.get("top_chunks") or {}
 
+    # Multi-field grant query: all fields must come from the anchored document
+    # (pinned first by the identity hop). The eligibility/amount extras would
+    # re-inject per-field foreign docs (the requisitos-densest / number-densest
+    # candidates) — exactly the cross-document field contamination being fixed —
+    # so they are skipped; coverage extras stay (near-identical siblings must
+    # still be readable for disambiguation).
+    field_query = getattr(settings, "ask_field_anchor_enabled", True) and (
+        is_multi_field_grant_query(question)
+    )
+
     # Read set: budget-capped rerank selection + coverage/eligibility/amount extras.
     doc_ids, read_max_docs, enumeration_query = _read_budget(question, doc_ids, candidate_docs)
     doc_ids = _coverage_extras(
         question, keywords, doc_ids, candidate_docs, top_chunks, read_max_docs
     )
-    doc_ids = _eligibility_extras(question, keywords, doc_ids, candidate_docs, top_chunks)
-    doc_ids = _amount_extras(question, doc_ids, candidate_docs, top_chunks)
+    if not field_query:
+        doc_ids = _eligibility_extras(question, keywords, doc_ids, candidate_docs, top_chunks)
+        doc_ids = _amount_extras(question, doc_ids, candidate_docs, top_chunks)
     doc_ids = _companion_extras(question, doc_ids, keywords)
 
     try:
         query_embedding = state.get("query_embedding")
         docs_by_id, fallback_chunks, extra_chunks, keyword_chunks, salient = _fetch_reader_inputs(
-            doc_ids, question, query_embedding
+            doc_ids,
+            question,
+            query_embedding,
+            extra_salient=(field_cue_terms(asked_fields(question)) if field_query else None),
         )
 
         confidence_min = getattr(settings, "ask_doc_confidence_min", 0.06)
@@ -554,13 +577,27 @@ def read_docs_node(state: QAState) -> QAState:
             extra_chunks,
             salient,
             enumeration_query,
+            # Grant extracts are single ~2-3k-char chunks; the default 1200-char
+            # window keeps the head (beneficiaris) and cuts the field sections
+            # (Import/Termini at the tail), turning stated fields into false
+            # "No consta". Let extract-length chunks through whole.
+            chunk_max_chars=(
+                getattr(settings, "ask_field_anchor_chunk_max_chars", 3000) if field_query else None
+            ),
         )
-        evidence = extract_evidence(state["question"], docs_payload, full_docs=None)
+        evidence = extract_evidence(
+            state["question"], docs_payload, full_docs=None, field_query=field_query
+        )
         full_docs = []
         if evidence or high_confidence:
             full_docs = _build_full_docs(doc_ids, docs_by_id)
             if not evidence and full_docs:
-                evidence = extract_evidence(state["question"], docs_payload, full_docs=full_docs)
+                evidence = extract_evidence(
+                    state["question"],
+                    docs_payload,
+                    full_docs=full_docs,
+                    field_query=field_query,
+                )
                 if not evidence:
                     full_docs = []
         if evidence and getattr(settings, "ask_read_citation_floor", True):

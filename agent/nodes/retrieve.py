@@ -13,6 +13,7 @@ from agent.shared import QAState, return_with_profile, rrf_margin_ratio
 from api.config import enabled_lanes, get_settings
 from api.embed import EmbedClient
 from api.enumeration import parse_enumeration
+from api.field_anchor import identity_query, is_multi_field_grant_query
 from api.query_classifiers import is_reference_query
 from api.query_expansion import (
     build_bm25_queries,
@@ -31,9 +32,18 @@ def _build_facet_specs(
     intent: dict,
     max_facets: int,
 ) -> list[tuple[str, str | None]]:
-    """BM25 (query, strict_query) specs: the main question plus decomposed facets."""
+    """BM25 (query, strict_query) specs: the main question plus decomposed facets.
+
+    Multi-field grant queries swap the decomposed facets (which would be the
+    field-request clauses — per-field noise magnets) for the single identity
+    query, so every extra BM25 lane votes for the document's identity instead
+    of its field vocabulary.
+    """
     facet_questions = [question]
-    facets = decompose_question(question, max_facets=max_facets)
+    if getattr(settings, "ask_field_anchor_enabled", True) and is_multi_field_grant_query(question):
+        facets = [f for f in [identity_query(question)] if f]
+    else:
+        facets = decompose_question(question, max_facets=max_facets)
     if facets:
         seen = {question.strip().lower()}
         for facet in facets:

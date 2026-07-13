@@ -39,6 +39,7 @@ from api.dogv_resolver import (
     parse_references,
     reference_matches_title,
 )
+from api.field_anchor import identity_query, is_multi_field_grant_query
 from api.query_expansion import build_bm25_queries, decompose_question
 from api.retrieval import RetrievalFilters
 
@@ -168,6 +169,10 @@ def _facet_targets(question: str) -> list[str]:
     decompose_question's trailing facets. The first half of a local split is
     kept too — coverage checks are cheap relative to a missed entity, and the
     top-1-absent gate no-ops the half the main pass already covered."""
+    if getattr(settings, "ask_field_anchor_enabled", True) and is_multi_field_grant_query(question):
+        # Field-request clauses must never become hop queries (their pools are
+        # per-field noise); the identity hop in apply_second_hop covers these.
+        return []
     halves = _split_compound_clauses(question)
     if halves:
         return list(reversed(halves))  # second clause first: it's the likely miss
@@ -282,6 +287,35 @@ def apply_second_hop(
             added_doc_ids += added
             fired.append(f"ref:{ref.raw}")
             hops_used += 1
+
+    # Multi-field grant query: the facet targets would be the FIELD-request
+    # clauses ("quant es cobra al mes...", "qui hi pot optar, l'import, el
+    # termini..."), whose retrieval pools are per-field noise (amount-dense
+    # credit transfers, SS laws) that then gets pinned into the read set. Hop
+    # on the identity query instead — the question minus its field clauses —
+    # and pin its top docs (typically the es+va editions of the target act)
+    # into the read set even when they are already in the pool: the fused pool
+    # ranks by the field-diluted full question, so pool membership alone does
+    # not get the target read.
+    if (
+        hops_used < max_hops
+        and not fired
+        and getattr(settings, "ask_field_anchor_enabled", True)
+        and is_multi_field_grant_query(question)
+    ):
+        identity = identity_query(question)
+        if identity:
+            hop_pool = _run_hop_pool(client, identity, intent, lanes, filters)
+            if hop_pool is not None and hop_pool.fused:
+                _collect_protected(hop_pool)
+                pin_n = max(1, getattr(settings, "ask_field_anchor_pin_docs", 2))
+                anchor_ids = [int(d["document_id"]) for d in hop_pool.fused[:pin_n]]
+                _merge_additive(pool, list(hop_pool.fused[:top_docs]), hop_pool)
+                for doc_id in anchor_ids:
+                    if doc_id not in added_doc_ids:
+                        added_doc_ids.append(doc_id)
+                fired.append(f"identity:{identity[:80]}")
+                hops_used += 1
 
     if hops_used < max_hops and not fired:
         for facet in _facet_targets(question):

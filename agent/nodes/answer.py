@@ -18,6 +18,7 @@ from api.dogv_resolver import (
     title_primary_tipo,
 )
 from api.dogv_urls import build_html_url, build_pdf_url
+from api.field_anchor import is_multi_field_grant_query
 from api.models import DogvDocument, DogvIssue
 from api.query_classifiers import is_reference_query
 
@@ -263,6 +264,10 @@ def answer_node(state: QAState) -> QAState:
             full_docs=full_docs,
             history=state.get("history"),
             doc_meta=_evidence_doc_meta(state),
+            field_query=(
+                getattr(settings, "ask_field_anchor_enabled", True)
+                and is_multi_field_grant_query(state["question"])
+            ),
         )
         answer = result.get("answer") or ""
         diagnostics = result.get("diagnostics") or {}

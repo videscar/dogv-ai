@@ -110,5 +110,8 @@ def test_validation_fallback_respects_max_items(monkeypatch):
         ],
     )
 
-    bullet_lines = [line for line in result["answer"].splitlines() if line.startswith("- (")]
+    bullet_lines = [line for line in result["answer"].splitlines() if line.startswith("- ")]
     assert len(bullet_lines) == 2
+    # Internal doc ids never surface in the summary lines.
+    assert "(101)" not in result["answer"]
+    assert "(102)" not in result["answer"]

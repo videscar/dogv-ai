@@ -38,6 +38,20 @@ ANSWER_SYSTEM = (
     "Devuelve SOLO JSON con campos: answer (texto), citations (lista de doc_id)."
 )
 
+# Appended for multi-field grant queries (api.field_anchor): many extracts of
+# near-identical convocatorias coexist (same template, distinct department/code/
+# amounts), and without this the synthesis blends fields across them.
+ANSWER_FIELD_ANCHOR = (
+    "La pregunta pide varios campos (importe, plazo, horas, duración, requisitos, BDNS...) "
+    "de UNA beca o convocatoria concreta. Primero identifica el UNICO documento que "
+    "corresponde exactamente a la beca preguntada (titulacion/departamento/proyecto/codigo). "
+    "Despues responde TODOS los campos usando solo citas de ese mismo documento (mismo doc_id) "
+    "y cita solo ese documento. Si un campo no aparece en ese documento, di 'No consta en el "
+    "extracto' para ese campo: NUNCA tomes el valor de otra convocatoria parecida. Si varias "
+    "convocatorias casi identicas encajan y no puedes elegir una sola, presentalas por separado "
+    "(titulo o codigo + sus propios valores), sin mezclar nunca valores de documentos distintos."
+)
+
 ANSWER_USER = """Idioma de respuesta: {language}
 {conversation}
 Pregunta:
@@ -197,14 +211,17 @@ def build_answer(
     full_docs: list[dict[str, Any]] | None = None,
     history: list[dict[str, Any]] | None = None,
     doc_meta: dict[int, dict[str, Any]] | None = None,
+    field_query: bool = False,
 ) -> dict[str, Any]:
     client = LlmClient(timeout=ANSWER_TIMEOUT)
     evidence_block = _format_evidence(evidence, doc_meta) or "Ninguna."
     full_docs_block = _format_full_docs(full_docs)
     conversation_block = _format_history(history)
     system_prompt = ANSWER_SYSTEM
+    if field_query:
+        system_prompt = f"{system_prompt}\n{ANSWER_FIELD_ANCHOR}"
     if "gpt-oss" in str(getattr(client, "model", "") or "").lower():
-        system_prompt = f"{ANSWER_SYSTEM}\nReasoning: high"
+        system_prompt = f"{system_prompt}\nReasoning: high"
     messages = [
         {"role": "system", "content": system_prompt},
         {
@@ -266,7 +283,7 @@ def build_answer(
                 diagnostics["rejected_answer"] = (answer_text or "")[:600]
                 return {
                     "answer": _strip_doc_id_artifacts(
-                        validation_fallback_answer(language, evidence, full_docs)
+                        validation_fallback_answer(language, evidence, full_docs, doc_meta=doc_meta)
                     ),
                     "citations": fallback_citations,
                     "diagnostics": diagnostics,
@@ -280,7 +297,7 @@ def build_answer(
                     "answer.fallback reason=no_consta_only evidence_docs=%s",
                     len(evidence),
                 )
-                answer_text = fallback_from_evidence(language, evidence)
+                answer_text = fallback_from_evidence(language, evidence, doc_meta=doc_meta)
         return {
             "answer": _strip_doc_id_artifacts(answer_text),
             "citations": citations,
@@ -293,7 +310,9 @@ def build_answer(
             type(exc).__name__,
         )
         return {
-            "answer": _strip_doc_id_artifacts(fallback_from_evidence(language, evidence)),
+            "answer": _strip_doc_id_artifacts(
+                fallback_from_evidence(language, evidence, doc_meta=doc_meta)
+            ),
             "citations": collect_citation_ids(evidence),
             "diagnostics": diagnostics,
         }

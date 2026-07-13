@@ -287,11 +287,13 @@ def _coverage_rank_evidence(
     }
     extras: list[dict[str, Any]] = []
     extra_limit = max_extra
-    if phrases:
+    if max_extra > 0 and phrases:
         extra_limit = max_extra + 2
-    if entities:
+    if max_extra > 0 and entities:
         extra_limit = max(extra_limit, max_extra + 2)
     for doc_id, (score, chunk) in sorted(best_by_doc.items(), key=lambda x: x[1][0], reverse=True):
+        if extra_limit <= 0:
+            break
         if doc_id in existing_docs:
             continue
         if score[0] == 0 and score[1] == 0 and score[2] == 0:
@@ -483,7 +485,18 @@ def extract_evidence(
     question: str,
     docs: list[dict[str, Any]],
     full_docs: list[dict[str, Any]] | None = None,
+    field_query: bool = False,
 ) -> list[dict[str, Any]]:
+    """LLM quote extraction over the reader payload, plus deterministic pins.
+
+    `field_query` marks a multi-field grant query (api.field_anchor): the
+    per-field cross-document selectors (_eligibility_evidence,
+    _program_total_evidence, the lexical-coverage extras) are skipped for those —
+    they pick the best chunk PER FIELD KEYWORD from ANY read doc, which is how a
+    Social-Security law's chunk becomes the "règim" answer and a sibling beca's
+    total becomes "the" import. The payload already carries each doc's whole
+    extract, so the LLM reader quotes fields from the right document directly.
+    """
     if not docs:
         return []
 
@@ -518,8 +531,12 @@ def extract_evidence(
             and not is_enumeration_query(question)
         ):
             evidence = _reground_evidence(evidence, docs)
-        eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
-        program_total = _program_total_evidence(question, docs, full_docs=full_docs)
+        eligibility = (
+            [] if field_query else _eligibility_evidence(question, docs, full_docs=full_docs)
+        )
+        program_total = (
+            [] if field_query else _program_total_evidence(question, docs, full_docs=full_docs)
+        )
         if evidence:
             combined = evidence
         else:
@@ -533,14 +550,22 @@ def extract_evidence(
         # _program_total pin gives the convocatoria total without that collateral.
         if program_total:
             combined = program_total + combined
+        if field_query:
+            return _coverage_rank_evidence(question, combined, docs, max_extra=0, per_doc_chunks=1)
         return _coverage_rank_evidence(question, combined, docs)
     except Exception:
         fallback = _fallback_evidence(question, docs, full_docs=full_docs)
-        eligibility = _eligibility_evidence(question, docs, full_docs=full_docs)
-        program_total = _program_total_evidence(question, docs, full_docs=full_docs)
+        eligibility = (
+            [] if field_query else _eligibility_evidence(question, docs, full_docs=full_docs)
+        )
+        program_total = (
+            [] if field_query else _program_total_evidence(question, docs, full_docs=full_docs)
+        )
         combined = fallback
         if eligibility:
             combined = combined + eligibility
         if program_total:
             combined = program_total + combined
+        if field_query:
+            return _coverage_rank_evidence(question, combined, docs, max_extra=0, per_doc_chunks=1)
         return _coverage_rank_evidence(question, combined, docs)
