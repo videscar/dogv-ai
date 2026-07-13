@@ -409,13 +409,24 @@ def _build_docs_payload(
 
 
 def _build_full_docs(
-    target_ids: list[int], docs_by_id: dict[int, tuple[Any, Any]]
+    target_ids: list[int],
+    docs_by_id: dict[int, tuple[Any, Any]],
+    max_docs: int | None = None,
+    distinct_refs: bool = False,
 ) -> list[dict[str, Any]]:
-    """Full texts of the read docs, under the per-doc and total char budgets."""
-    max_full_docs = int(getattr(settings, "full_doc_max_docs", 0) or 0)
+    """Full texts of the read docs, under the per-doc and total char budgets.
+
+    `max_docs` overrides the settings slot count; `distinct_refs` skips
+    same-ref duplicates (the es+va editions of one act carry identical
+    content, so a second slot spent on the other edition adds nothing).
+    """
+    max_full_docs = (
+        int(getattr(settings, "full_doc_max_docs", 0) or 0) if max_docs is None else max_docs
+    )
     if max_full_docs <= 0:
         return []
     full_docs_local = []
+    seen_refs: set[str] = set()
     total_chars = 0
     for doc_id in target_ids:
         row = docs_by_id.get(doc_id)
@@ -424,6 +435,10 @@ def _build_full_docs(
         doc, issue = row
         if not doc.text:
             continue
+        if distinct_refs and doc.ref:
+            if doc.ref in seen_refs:
+                continue
+            seen_refs.add(doc.ref)
         text = doc.text
         if len(text) > settings.full_doc_max_chars:
             continue
@@ -590,7 +605,25 @@ def read_docs_node(state: QAState) -> QAState:
         )
         full_docs = []
         if evidence or high_confidence:
-            full_docs = _build_full_docs(doc_ids, docs_by_id)
+            # Field queries: grant extracts are ~2.5k chars, so several fit in
+            # the full-doc budget. With only the default single slot, a
+            # mis-pinned anchor doc starves the actually-cited extract of its
+            # field sections (synthesis then sees only the reader's sparse
+            # quotes for it and reports stated fields as absent). Distinct-ref
+            # slots skip the duplicate other-language edition.
+            full_docs = _build_full_docs(
+                doc_ids,
+                docs_by_id,
+                max_docs=(
+                    max(
+                        int(getattr(settings, "full_doc_max_docs", 0) or 0),
+                        int(getattr(settings, "ask_field_anchor_full_docs", 3)),
+                    )
+                    if field_query
+                    else None
+                ),
+                distinct_refs=field_query,
+            )
             if not evidence and full_docs:
                 evidence = extract_evidence(
                     state["question"],

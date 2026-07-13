@@ -78,7 +78,7 @@ _FIELD_RES: dict[str, re.Pattern[str]] = {
 }
 
 _GRANT_NOUN_RE = re.compile(
-    r"\bbec(?:a|ques)\b|\bajud(?:a|es)\b|\bayudas?\b|\bsubvenci\w+|\bconvocatori\w+"
+    r"\bbe(?:ca|cas|ques)\b|\bajud(?:a|es)\b|\bayudas?\b|\bsubvenci\w+|\bconvocatori\w+"
 )
 
 # Ask markers that open a field-request clause ("dis-me qui hi pot optar...",

@@ -55,6 +55,22 @@ class TestGateFiresOnTheFourFailures:
         assert is_multi_field_grant_query(Q3_MODALITAT)
         assert {"import", "departament"} <= asked_fields(Q3_MODALITAT)
 
+    def test_plural_grant_nouns_fire(self):
+        # "beques"/"becas" (not just singular "beca") must satisfy the grant-noun
+        # gate — caught by the generalization suite: the original four queries all
+        # used the singular and masked this.
+        va = (
+            "Vull demanar una de les beques d'iniciació a la investigació del "
+            "projecte X de l'UJI. Quant es cobra al mes, quantes hores setmanals "
+            "són i quin dia acaba el termini?"
+        )
+        es = (
+            "Sobre las becas Santander de la UPV dime el importe de cada beca, "
+            "las horas semanales y el plazo."
+        )
+        assert is_multi_field_grant_query(va)
+        assert is_multi_field_grant_query(es)
+
     def test_t4_ten_field_single_document(self):
         assert is_multi_field_grant_query(Q4_TEN_FIELDS)
         fields = asked_fields(Q4_TEN_FIELDS)

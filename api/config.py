@@ -191,6 +191,7 @@ class Settings(BaseSettings):
     ask_field_anchor_chunk_max_chars: int = (
         3000  # extract-length chunks reach the reader whole (grant extracts are ~2-3k chars)
     )
+    ask_field_anchor_full_docs: int = 3  # distinct-ref full-doc slots for field queries: extracts are small, and a mis-pinned anchor must not starve the cited doc of its field sections
 
     # Conversation / multi-turn. History is client-owned (sent on each request); the
     # server stays stateless. With empty history every path below is a no-op, so
