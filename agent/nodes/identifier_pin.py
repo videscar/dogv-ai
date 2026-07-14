@@ -110,7 +110,5 @@ def apply_identifier_pins(
 
     if not pinned:
         return pool, [], [], None
-    logger.info(
-        "retrieve.identifier_pin req=%s fired=%s pinned=%s", request_id, fired, pinned
-    )
+    logger.info("retrieve.identifier_pin req=%s fired=%s pinned=%s", request_id, fired, pinned)
     return pool, pinned, pinned, {"fired": True, "identifiers": fired, "pinned": pinned}

@@ -134,9 +134,7 @@ def _compact_codes(text: str, source: str) -> list[ExtractedIdentifier]:
     for m in _COMPACT_CODE_RE.finditer(text):
         token = m.group(1)
         out.append(
-            ExtractedIdentifier(
-                id_kind="code", id_key=token.lower(), raw=token, source=source
-            )
+            ExtractedIdentifier(id_kind="code", id_key=token.lower(), raw=token, source=source)
         )
     return out
 

@@ -120,7 +120,9 @@ def main():
             )
 
         kind_rows = db.execute(
-            sa_text("SELECT id_kind, count(*) FROM doc_identifier GROUP BY id_kind ORDER BY id_kind")
+            sa_text(
+                "SELECT id_kind, count(*) FROM doc_identifier GROUP BY id_kind ORDER BY id_kind"
+            )
         ).all()
         kind_counts = {row[0]: row[1] for row in kind_rows}
         distinct_keys = db.execute(

@@ -10,6 +10,7 @@ so this probe set is its validation harness.
     python scripts/oneoff/run_identifier_probes.py --class code
     python scripts/oneoff/run_identifier_probes.py --api http://127.0.0.1:8090
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,8 +71,10 @@ def main() -> int:
         by_class[p["id_class"]].append(hit)
         mark = "OK  " if hit else "MISS"
         traps = ",".join(p.get("traps") or []) or "-"
-        print(f"  {p['id']:5} {p['id_class']:7} {mark} gold={p['gold_doc_ids']} "
-              f"cited={cited[:4]} [{traps}] baseline={p.get('baseline')}")
+        print(
+            f"  {p['id']:5} {p['id_class']:7} {mark} gold={p['gold_doc_ids']} "
+            f"cited={cited[:4]} [{traps}] baseline={p.get('baseline')}"
+        )
         if p.get("baseline") == "pass" and not hit:
             regressions.append(p["id"])
         sys.stdout.flush()
