@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from api.config import get_settings
 from api.db import SessionLocal
 from scripts.build_chunks import build_chunks_for_range
+from scripts.build_doc_identifiers import build_identifiers_for_range
 from scripts.build_doc_references import build_references_for_range
 from scripts.classify_documents import classify_range
 from scripts.extract_documents import process_issue
@@ -96,5 +97,11 @@ def run_pipeline(
             build_references_for_range(db, start_date, end_date)
         except Exception:
             logger.exception("doc_reference.range_failed start=%s end=%s", start_date, end_date)
+
+        # Structured-identifier extraction (identifier layer): also best-effort.
+        try:
+            build_identifiers_for_range(db, start_date, end_date)
+        except Exception:
+            logger.exception("doc_identifier.range_failed start=%s end=%s", start_date, end_date)
     finally:
         db.close()

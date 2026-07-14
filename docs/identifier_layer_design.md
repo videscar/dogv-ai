@@ -182,9 +182,25 @@ year-trapped population, not merely preparatory.
 
 1. Build the identifier-probe set + baseline it on current prod. *(done — 6/12, above)*
 2. Intent year-guard (smallest, independent win). *(done — 8/12, `api/intent.py` `_complex_code_spans`; not yet deployed to prod)*
-3. Ingest extractor + `doc_identifier` table.
+3. Ingest extractor + `doc_identifier` table. *(done — table + `api/identifiers.py` + backfill; see below)*
 4. Query lane + migrate norm-pin onto it.
 5. Fold in code / bdns / person classes (person stays lexical-only — already 3/3; not pinned).
+
+### Step 3 result (dev DB backfill, 2026-07-14)
+
+`doc_identifier` created (`sql/2026-07-doc-identifier.sql`) and backfilled over all
+51,637 docs in ~15 s (`scripts/build_doc_identifiers.py`, wired into `ingest_pipeline`
+best-effort like `doc_reference`). Classes: **code 7,161 rows / 2,695 keys** (2,542 slash
+expedient codes + 153 `I`-shape body codes), **bdns 3,891 / 1,807**, **norm 1,424 / 665**.
+Two calibrations from the backfill: (a) the compact body-code regex was tightened to the
+`\d{2}I\d{3,4}` shape — the broader `\d{2}[A-Za-z]\d+` was also catching budget-line codes
+(`08R09`, `28E050`) that are not document identifiers; (b) `norm` extracts the doc's *own*
+identity (1,424 ≈ the 1,450 titles that start with a numbered norm — the audit's 3,649
+counted norm-refs appearing anywhere, which is the wrong population for a pin). Acid test:
+an exact `(id_kind, id_key)` lookup returns precisely the gold docs for every probe
+(gacujima/2025/36→{90640,90686}, gacujima/2024/26→{11849,33750}, bdns 895054→{85608,88100},
+decreto/74/2026→{86851,89343}), all match-counts ≤2 (es/va pair). `ref 2026/4148` resolves
+via the existing `ref` column. No retrieval path changed yet (probe set stays 8/12).
 
 ## Open questions
 
