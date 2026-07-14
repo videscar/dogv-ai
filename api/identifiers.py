@@ -83,6 +83,31 @@ def normalize_norm_key(tipo: str, numero: int, anyo: int) -> str:
     return f"{tipo}/{numero}/{anyo}".lower()
 
 
+# Any slash-joined alphanumeric run (GACUJIMA/2025/36, 2024/302/03, 74/2026).
+_SLASH_TOKEN_RE = re.compile(r"[A-Za-z0-9]+(?:/[A-Za-z0-9]+)+")
+
+
+def code_token_spans(text: str) -> list[tuple[int, int]]:
+    """Character spans of structured-code tokens in ``text``: slash-joined
+    alphanumeric runs that are letter-prefixed (GACUJIMA/2025/36) or have 3+
+    groups (a compound expedient/ref like 2024/302/03). A 4-digit year embedded
+    in such a token is part of the code, not a standalone date — callers use
+    these spans to stop a code-year from seeding a date filter (see
+    intent._infer_year_range).
+
+    A plain two-number N/YYYY (Ley 39/2015, Decreto 74/2026) is deliberately NOT
+    a code span: its year is the norm's real year and stays available as a date
+    signal. This is the single source of truth for "where are the code tokens";
+    modules that need it import this rather than re-implementing the regex.
+    """
+    spans: list[tuple[int, int]] = []
+    for match in _SLASH_TOKEN_RE.finditer(text):
+        token = match.group(0)
+        if any(char.isalpha() for char in token) or token.count("/") >= 2:
+            spans.append(match.span())
+    return spans
+
+
 def _slash_codes(text: str, source: str) -> list[ExtractedIdentifier]:
     out: list[ExtractedIdentifier] = []
     for m in _SLASH_CODE_RE.finditer(text):

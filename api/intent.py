@@ -5,6 +5,7 @@ import re
 from datetime import date, datetime
 from typing import Any
 
+from .identifiers import code_token_spans
 from .llm import LlmClient
 from .query_expansion import normalize_expansion_terms
 from .taxonomy import canonical_doc_kind, canonical_doc_subkind, normalize_text
@@ -146,24 +147,6 @@ def _normalize_language(value: Any) -> str | None:
 
 _YEAR_PATTERN = re.compile(r"\b(19\d{2}|20\d{2}|2100)\b")
 
-# Slash-joined alphanumeric identifiers (GACUJIMA/2025/36, ERESAR/2026/39R07/0008).
-# A year embedded in a letter-prefixed or 3+group code is a project/expedient
-# assignment year, not a publication date — it must not seed a date window. A plain
-# two-number N/YYYY (Ley 39/2015, Decreto 74/2026) keeps its year: those are norm-refs
-# whose second group genuinely is the norm's year, and existing behavior relies on it.
-_SLASH_CODE_PATTERN = re.compile(r"[A-Za-z0-9]+(?:/[A-Za-z0-9]+)+")
-
-
-def _complex_code_spans(question: str) -> list[tuple[int, int]]:
-    """Spans of slash-code tokens whose embedded years must NOT seed a date window."""
-    spans: list[tuple[int, int]] = []
-    for match in _SLASH_CODE_PATTERN.finditer(question):
-        token = match.group(0)
-        has_letter = any(char.isalpha() for char in token)
-        if has_letter or token.count("/") >= 2:
-            spans.append(match.span())
-    return spans
-
 _MONTH_NUMBERS = {
     "enero": 1, "gener": 1,
     "febrero": 2, "febrer": 2,
@@ -209,7 +192,7 @@ def _infer_month_range(question: str | None) -> tuple[date | None, date | None]:
 def _infer_year_range(question: str | None) -> tuple[date | None, date | None]:
     if not question:
         return None, None
-    code_spans = _complex_code_spans(question)
+    code_spans = code_token_spans(question)
     years: list[int] = []
     for match in _YEAR_PATTERN.finditer(question):
         y_start, y_end = match.span()

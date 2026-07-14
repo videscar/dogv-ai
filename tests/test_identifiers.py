@@ -2,11 +2,21 @@ from __future__ import annotations
 
 from api.identifiers import (
     ExtractedIdentifier,
+    code_token_spans,
     detect_query_identifiers,
     extract_doc_identifiers,
     normalize_code,
     normalize_norm_key,
 )
+
+
+def test_code_token_spans_marks_letter_and_multigroup_codes():
+    # Letter-prefixed and 3+group slash tokens are code spans...
+    assert code_token_spans("proyecto GACUJIMA/2025/36 de la UJI")
+    assert code_token_spans("expediente 2024/302/03 aprobado")
+    # ...but a plain two-number norm-ref is NOT (its year is a real date signal).
+    assert code_token_spans("la Ley 39/2015 de procedimiento") == []
+    assert code_token_spans("sin ningun codigo aqui") == []
 
 
 def _qkeys(question: str) -> set[tuple[str, str]]:
