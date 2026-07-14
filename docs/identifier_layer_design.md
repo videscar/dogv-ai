@@ -183,8 +183,39 @@ year-trapped population, not merely preparatory.
 1. Build the identifier-probe set + baseline it on current prod. *(done — 6/12, above)*
 2. Intent year-guard (smallest, independent win). *(done — 8/12, `api/intent.py` `_complex_code_spans`; not yet deployed to prod)*
 3. Ingest extractor + `doc_identifier` table. *(done — table + `api/identifiers.py` + backfill; see below)*
-4. Query lane + migrate norm-pin onto it.
-5. Fold in code / bdns / person classes (person stays lexical-only — already 3/3; not pinned).
+4. Query pin lane for code / bdns / ref. *(done — 12/12, 0 eval_v2 collision; see below)*
+5. Norm-pin migration onto the layer (separately eval-gated — deferred, see below).
+
+### Step 4 result (query pin lane) — dev DB, 2026-07-14
+
+`api/identifiers.detect_query_identifiers` (query-side detector, over-generates
+candidate keys; the exact `doc_identifier` match is the precision gate) +
+`agent/nodes/identifier_pin.apply_identifier_pins` (post-pool, wired into
+`retrieve.py` before the second hop). It exact-matches the named identifier,
+pins the docs into the read set (`norm_pin_doc_ids`) and protects them from RC1,
+**bypassing the ranking pool and the date filter**. Guarded by a match-count cap.
+
+**Probe set 8/12 → 12/12, 0 regressions** (stable): IP02 (es), IP03 (space form),
+IP10 (bdns, body-only), IP11 (ref column) all flip; IP01/IP04/IP05/IP12 now cite
+*both* es/va editions. So code 6/6, bdns 1/1, ref 1/1, norm 1/1, person 3/3.
+
+Two findings drove the final shape:
+- **IP05** looked like a regression (cited the es twin 112235 of the va gold
+  112283). Both editions carry the exact code and the same amount — the probe
+  gold had under-listed only the va edition. Fixed the gold + added a
+  deterministic pin order (date DESC, id ASC). Not a real miss.
+- **Norm scoped OUT of the pin lane.** The lane first pinned norm-refs too, which
+  regressed eval **v2-042**: that question cites "Decret 167/2025" but is about
+  DANA rental aid, whereas the real Decreto 167/2025 is an unrelated appointments
+  decree — an exact norm pin collides with premise correction. Codes/BDNS/refs
+  are precise, copy-verbatim machine identifiers; norm-refs are human-cited and
+  error-prone. Scoping the lane to `{code, bdns, ref}` makes it fire on **0/100**
+  eval_v2 questions (all 13 eval identifier-mentions are norm), so it provably
+  cannot regress the eval. IP09 (norm) still passes via ordinary title retrieval.
+
+Norm-pin migration (folding `second_hop._direct_title_lookup` onto `doc_identifier`)
+is left as a distinct step: it *does* overlap eval_v2's 13 norm cases and must be
+gated against them with premise-correction in mind.
 
 ### Step 3 result (dev DB backfill, 2026-07-14)
 

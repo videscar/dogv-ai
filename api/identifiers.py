@@ -34,6 +34,7 @@ import re
 from dataclasses import dataclass
 
 from .doc_references import _self_identity
+from .dogv_resolver import parse_references
 
 # Title + the first slice of the body carry the high-precision identifiers; deep
 # body text is boilerplate/annex noise. Matches doc_references._BODY_SCAN_CHARS.
@@ -163,3 +164,78 @@ def extract_doc_identifiers(title: str, body: str | None) -> list[ExtractedIdent
         seen.add(ident.dedup_key)
         deduped.append(ident)
     return deduped
+
+
+# ---------------------------------------------------------------------------
+# Query side: detect identifiers in a user question so the retrieval pin lane
+# can look them up exactly against doc_identifier / the ref column.
+# ---------------------------------------------------------------------------
+
+# A maximal run of alnum groups joined by spaces/slashes/dashes. Candidate code
+# windows are carved out of this run below — starting at each >=3-letter acronym
+# so an acronym buried after leading words ("beca gacujima 2025 36") is still a
+# candidate start. Deliberately liberal: precision comes from the exact match
+# against doc_identifier, not this regex.
+_LOOSE_CODE_RE = re.compile(r"\b([A-Za-z0-9]+(?:[\s/\-]+[A-Za-z0-9]+){1,10})\b")
+
+# A real expedient code is an acronym + at most this many trailing groups
+# (ERESAR/2026/39R07/0008 = acronym + 3); bounds the candidate windows.
+_MAX_CODE_GROUPS = 5
+
+# DOGV publication ref written year-first ("2026/4148"), matched against the
+# indexed ref column. Distinct from a norm-ref (year-last, "74/2026").
+_REF_COLUMN_RE = re.compile(r"\b(20\d{2}/\d{3,5})\b")
+
+
+@dataclass(frozen=True)
+class QueryIdentifier:
+    id_kind: str  # 'code' | 'bdns' | 'norm' | 'ref'
+    id_key: str
+
+
+def _code_candidate_keys(question: str) -> set[str]:
+    """Candidate code keys from a question. Within each loose run, a window is
+    opened at every >=3-letter acronym and extended up to _MAX_CODE_GROUPS
+    trailing groups; any window containing a 4-digit year is emitted. This yields
+    the real code (gacujima/2025/36) even when it is buried after leading words
+    ('beca gacujima 2025 36 uji') or trailed by junk — the windows that do not
+    correspond to a real code simply match no row in doc_identifier."""
+    keys: set[str] = set()
+    for m in _LOOSE_CODE_RE.finditer(question):
+        parts = [p for p in re.split(r"[\s/\-]+", m.group(1).strip()) if p]
+        n = len(parts)
+        for i in range(n):
+            if not re.fullmatch(r"[A-Za-z]{3,}", parts[i]):
+                continue  # a code must start with a >=3-letter acronym
+            for j in range(i + 1, min(n, i + 1 + _MAX_CODE_GROUPS)):
+                window = parts[i : j + 1]
+                if any(_YEAR_SEGMENT_RE.fullmatch(seg) for seg in window):
+                    keys.add("/".join(window).lower())
+    for m in _COMPACT_CODE_RE.finditer(question):
+        keys.add(m.group(1).lower())
+    return keys
+
+
+def detect_query_identifiers(question: str) -> list[QueryIdentifier]:
+    """All structured identifiers mentioned in ``question``, normalized to the
+    same keys the ingest side stores, for exact lookup by the pin lane."""
+    if not question:
+        return []
+    out: list[QueryIdentifier] = []
+    seen: set[tuple[str, str]] = set()
+
+    def _add(kind: str, key: str) -> None:
+        if key and (kind, key) not in seen:
+            seen.add((kind, key))
+            out.append(QueryIdentifier(kind, key))
+
+    for key in _code_candidate_keys(question):
+        _add("code", key)
+    for m in _BDNS_RE.finditer(question):
+        _add("bdns", m.group(1))
+    for ref in parse_references(question):
+        if ref.tipo and ref.numero is not None and ref.anyo is not None:
+            _add("norm", normalize_norm_key(ref.tipo, ref.numero, ref.anyo))
+    for m in _REF_COLUMN_RE.finditer(question):
+        _add("ref", m.group(1))
+    return out

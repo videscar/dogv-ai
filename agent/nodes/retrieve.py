@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import time
 
+from agent.nodes.identifier_pin import apply_identifier_pins
 from agent.nodes.retrieve_pool import (
     PoolQuery,
     apply_relaxation_ladder,
@@ -166,6 +167,14 @@ def retrieve_candidates_node(state: QAState) -> QAState:
         )
         used_fallback = "+".join(fallbacks) if fallbacks else None
 
+        # Identifier pin lane: when the question names an exact structured
+        # identifier (code / BDNS / norm-ref / publication ref), pin the docs
+        # that carry it straight into the read set, bypassing a ranking pool
+        # that cannot separate near-twins. See agent/nodes/identifier_pin.py.
+        pool, id_pin_ids, id_protect_ids, id_profile = apply_identifier_pins(
+            question, pool, request_id
+        )
+
         # Second hop: gated, only pays for an extra retrieval pass when the
         # question is multi-entity AND an entity's document is missing from the
         # pool the ladder above already settled on. See agent/nodes/second_hop.py.
@@ -177,18 +186,16 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             client,
             request_id,
         )
-        if hop_doc_ids:
-            # Pin the added docs into the read set: rerank's caps are non-
-            # deterministic and would otherwise be free to drop a hop doc that
-            # only entered the pool at the very end of the fused list. Merge with
-            # any pin already set upstream instead of overwriting it.
-            existing_pins = [int(d) for d in (state.get("norm_pin_doc_ids") or []) if d is not None]
-            for doc_id in hop_doc_ids:
-                if doc_id not in existing_pins:
-                    existing_pins.append(doc_id)
-            norm_pin_doc_ids = existing_pins
-        else:
-            norm_pin_doc_ids = state.get("norm_pin_doc_ids") or []
+        # Pin added docs into the read set: rerank's caps are non-deterministic
+        # and would otherwise be free to drop a pinned doc that only entered the
+        # pool at the very end of the fused list. Identifier pins go first (exact
+        # match is the strongest signal), then hop docs; merge with any upstream
+        # pin instead of overwriting it.
+        norm_pin_doc_ids = [int(d) for d in (state.get("norm_pin_doc_ids") or []) if d is not None]
+        for doc_id in id_pin_ids + hop_doc_ids:
+            if doc_id not in norm_pin_doc_ids:
+                norm_pin_doc_ids.append(doc_id)
+        protect_ids = list(dict.fromkeys(id_protect_ids + hop_protect_ids))
 
         hyde_fired = query.hyde_embedding is not None
         elapsed = time.monotonic() - start
@@ -202,7 +209,7 @@ def retrieve_candidates_node(state: QAState) -> QAState:
             pool.rrf_expanded,
             hyde_fired,
             None if hyde_gate_margin is None else round(hyde_gate_margin, 3),
-            bool(hop_profile),
+            bool(hop_profile) or bool(id_profile),
             elapsed,
         )
         return return_with_profile(
@@ -217,10 +224,11 @@ def retrieve_candidates_node(state: QAState) -> QAState:
                 "hyde_embedding": query.hyde_embedding,
                 "filters": filters,
                 "norm_pin_doc_ids": norm_pin_doc_ids,
-                # In-pool docs a hop identified as an entity's best evidence:
-                # edition-recency (RC1) must not prune them as stale siblings of
-                # the other entity's fresher docs (v2-051's 2025 concesión).
-                "second_hop_protect_ids": hop_protect_ids,
+                # In-pool docs a hop (or the identifier lane) identified as an
+                # entity's best evidence: edition-recency (RC1) must not prune
+                # them as stale siblings of the other entity's fresher docs
+                # (v2-051's 2025 concesión), nor an exact identifier match.
+                "second_hop_protect_ids": protect_ids,
             },
             elapsed_seconds=round(elapsed, 3),
             candidate_docs=len(pool.fused),
