@@ -44,8 +44,11 @@ Two compounding root causes, both from mis-decomposing the code:
    `since 2025-01-01 / until 2025-12-31` filter — but the gold doc is dated **2026-06-11**,
    so it is filtered out of the pool before ranking matters.
 
-The hard failure needs **both** near-twin-family and year-trap. `ERESAR/2026` (code-year =
-issue-year) and `/12` (fewer twins) each miss one condition and succeed. This is why it
+The **necessary** condition is a near-twin family where the code is the only discriminator;
+token-loss then leaves the gold un-rankable. The year-trap is an aggravator, not required —
+the baseline (below) shows `GACUJIMA/2024/26` fails on token-loss alone with no year-trap
+(IP12), while `/12` passes *despite* both traps (IP04, short query, less competing
+vocabulary). `ERESAR/2026` succeeds because its expedient is not a near-twin. This is why it
 looks intermittent.
 
 ## Corpus inventory (51,637 docs)
@@ -139,9 +142,26 @@ additive lane. **But it fires 0/100 on `eval_v2`** (no eval question carries a c
 (`data/probes/identifier_probes.jsonl`, runner `scripts/oneoff/run_identifier_probes.py`) —
 that probe set, not the code, is the main new work.
 
+## Baseline (prod :8088, 2026-07-14)
+
+`scripts/oneoff/run_identifier_probes.py` → **6/12 GOLD_HIT**, and the misses land exactly
+on the classes the layer targets:
+
+| Class | Result | Reading |
+| --- | --- | --- |
+| code | 2/6 | IP01/02/03 (`/36`) + IP12 (`/2024/26`) miss on token-loss; IP04/IP05 pass |
+| bdns | 0/1 | body-only identifier, never matched |
+| ref | 0/1 | `ref` column never queried on |
+| norm | 1/1 | norm-pin already works (must be preserved) |
+| person | 3/3 | names are lexically matchable in titles (IP08 retrieves but hedges) |
+
+Takeaways: (a) the failure surface is precisely code + bdns + ref; (b) norm and person
+already pass, so the layer must **preserve** them, not just add; (c) IP12 refuted the
+"needs both traps" hypothesis — token-loss alone suffices inside a twin family.
+
 ## Staging (each step independently shippable, gated on the probe set)
 
-1. Build the identifier-probe set + baseline it on current prod. *(done — see the probe set)*
+1. Build the identifier-probe set + baseline it on current prod. *(done — 6/12, above)*
 2. Intent year-guard (smallest, independent win).
 3. Ingest extractor + `doc_identifier` table.
 4. Query lane + migrate norm-pin onto it.
