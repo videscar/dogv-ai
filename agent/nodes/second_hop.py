@@ -39,6 +39,7 @@ from api.dogv_resolver import (
     parse_references,
     reference_matches_title,
 )
+from api.edition_recency import suppress_stale_editions
 from api.field_anchor import identity_query, is_multi_field_grant_query
 from api.query_expansion import build_bm25_queries, decompose_question
 from api.retrieval import RetrievalFilters
@@ -263,9 +264,9 @@ def apply_second_hop(
     protect_doc_ids: list[int] = []
     hops_used = 0
 
-    def _collect_protected(hop_pool: PoolResult) -> None:
+    def _collect_protected(hop_fused: list[dict[str, Any]]) -> None:
         pool_ids = {int(d["document_id"]) for d in pool.fused}
-        for doc in hop_pool.fused[: min(3, top_docs)]:
+        for doc in hop_fused[: min(3, top_docs)]:
             doc_id = int(doc["document_id"])
             if doc_id in pool_ids and doc_id not in protect_doc_ids:
                 protect_doc_ids.append(doc_id)
@@ -276,7 +277,7 @@ def apply_second_hop(
         hop_pool = _run_hop_pool(client, _ref_hop_question(ref), intent, lanes, filters)
         if hop_pool is None:
             continue
-        _collect_protected(hop_pool)
+        _collect_protected(hop_pool.fused)
         extra_docs = list(hop_pool.fused[:top_docs])
         extra_ids = {int(d["document_id"]) for d in extra_docs}
         for direct_doc in _direct_title_lookup(ref):
@@ -307,10 +308,35 @@ def apply_second_hop(
         if identity:
             hop_pool = _run_hop_pool(client, identity, intent, lanes, filters)
             if hop_pool is not None and hop_pool.fused:
-                _collect_protected(hop_pool)
+                # Annual re-convocations rank high in the identity pool (same
+                # project, same department, near-identical text) and a stale
+                # prior-year edition that lands in the pins hogs the read-set
+                # front and the full-doc slots, starving the current edition
+                # (verified: the Feb-2025 convocation of the same beca,
+                # cos 0.895 vs the 2026 gold, out-pinned it and the answer
+                # degraded to "No consta"). Reuse RC1 within the hop pool
+                # before choosing pins; skipped when the question carries an
+                # explicit temporal window (mirrors the rerank-stage guard).
+                kept_fused = list(hop_pool.fused)
+                if not (filters.since_date or filters.until_date):
+                    hop_ids = [int(d["document_id"]) for d in kept_fused]
+                    with SessionLocal() as db:
+                        kept_ids, _ = suppress_stale_editions(
+                            db,
+                            hop_ids,
+                            kept_fused,
+                            sim_threshold=float(getattr(settings, "ask_edition_recency_sim", 0.86)),
+                            scan_n=max(top_docs, 8),
+                            protected_ids=(),
+                            max_drops=int(getattr(settings, "ask_edition_recency_max_drops", 3)),
+                        )
+                    if len(kept_ids) < len(hop_ids):
+                        by_id = {int(d["document_id"]): d for d in kept_fused}
+                        kept_fused = [by_id[i] for i in kept_ids]
+                _collect_protected(kept_fused)
                 pin_n = max(1, getattr(settings, "ask_field_anchor_pin_docs", 2))
-                anchor_ids = [int(d["document_id"]) for d in hop_pool.fused[:pin_n]]
-                _merge_additive(pool, list(hop_pool.fused[:top_docs]), hop_pool)
+                anchor_ids = [int(d["document_id"]) for d in kept_fused[:pin_n]]
+                _merge_additive(pool, list(kept_fused[:top_docs]), hop_pool)
                 for doc_id in anchor_ids:
                     if doc_id not in added_doc_ids:
                         added_doc_ids.append(doc_id)
@@ -324,7 +350,7 @@ def apply_second_hop(
             hop_pool = _run_hop_pool(client, facet, intent, lanes, filters)
             if hop_pool is None or not hop_pool.fused:
                 continue
-            _collect_protected(hop_pool)
+            _collect_protected(hop_pool.fused)
             fused_ids = {int(d["document_id"]) for d in pool.fused}
             if int(hop_pool.fused[0]["document_id"]) in fused_ids:
                 continue  # facet's top doc already covered: conservative no-op
