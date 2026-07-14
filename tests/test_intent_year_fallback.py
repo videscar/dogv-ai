@@ -74,6 +74,42 @@ def test_normalize_intent_keeps_explicit_dates():
     assert intent["until_date"] == date(2025, 3, 31)
 
 
+def test_normalize_intent_ignores_year_inside_project_code():
+    # GACUJIMA/2025/36 is a project/expedient code: the 2025 is the assignment
+    # year, but the act is published in 2026. Reading it as a date window
+    # (since 2025 / until 2025) excludes the gold doc (identifier-layer step 1).
+    intent = normalize_intent(
+        {"language": "ca", "keywords": [], "needs_online": False},
+        question=(
+            "En la beca d'iniciació a la investigació GACUJIMA/2025/36 de la UJI, "
+            "quina és la dotació econòmica?"
+        ),
+    )
+    assert intent["since_date"] is None
+    assert intent["until_date"] is None
+
+
+def test_normalize_intent_ignores_year_inside_long_expedient_code():
+    # ERESAR/2026/39R07/0008: letter-prefixed, 4 groups — masked as a code.
+    intent = normalize_intent(
+        {"language": "ca", "keywords": [], "needs_online": False},
+        question="Import autoritzat de l'expedient ERESAR/2026/39R07/0008.",
+    )
+    assert intent["since_date"] is None
+    assert intent["until_date"] is None
+
+
+def test_normalize_intent_keeps_year_when_code_and_real_year_coexist():
+    # A code-embedded year is masked, but a genuine standalone year in the same
+    # question still seeds the window.
+    intent = normalize_intent(
+        {"language": "es", "keywords": [], "needs_online": False},
+        question="¿Qué resolvió la beca GACUJIMA/2025/36 publicada en 2026?",
+    )
+    assert intent["since_date"] == date(2026, 1, 1)
+    assert intent["until_date"] == date(2026, 12, 31)
+
+
 def test_normalize_intent_infers_multi_year_bounds():
     intent = normalize_intent(
         {"since_date": None, "until_date": None},

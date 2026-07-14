@@ -44,12 +44,17 @@ Two compounding root causes, both from mis-decomposing the code:
    `since 2025-01-01 / until 2025-12-31` filter — but the gold doc is dated **2026-06-11**,
    so it is filtered out of the pool before ranking matters.
 
-The **necessary** condition is a near-twin family where the code is the only discriminator;
-token-loss then leaves the gold un-rankable. The year-trap is an aggravator, not required —
-the baseline (below) shows `GACUJIMA/2024/26` fails on token-loss alone with no year-trap
-(IP12), while `/12` passes *despite* both traps (IP04, short query, less competing
-vocabulary). `ERESAR/2026` succeeds because its expedient is not a near-twin. This is why it
-looks intermittent.
+These are **two independent removal mechanisms, either one sufficient** to lose the gold:
+(a) the year-trap filters it out of the pool before ranking; (b) token-loss leaves it
+un-rankable inside a near-twin family. Verified against publication dates: IP01 gold is
+published **2026-06-11** (code-year 2025) and IP12 gold **2025-03-05** (code-year 2024) —
+both fall outside the code-year window, so both were year-trapped. Removing that window
+(step 1) rescues both. IP02 (es) and IP03 (space form) carry IP01's *same* code yet still
+miss after the year-guard: there the near-twin token-loss is the operative cause and needs
+the exact-match lane (step 3). IP04 (`/12`) passes throughout (shorter query, less competing
+vocabulary); `ERESAR/2026` (IP05) never had a twin. The intermittency is the product of the
+two overlapping causes, not one. *(Correction: an earlier draft claimed IP12 had no
+year-trap and failed on token-loss alone — the dates above refute that; it was year-trapped.)*
 
 ## Corpus inventory (51,637 docs)
 
@@ -156,16 +161,30 @@ on the classes the layer targets:
 | person | 3/3 | names are lexically matchable in titles (IP08 retrieves but hedges) |
 
 Takeaways: (a) the failure surface is precisely code + bdns + ref; (b) norm and person
-already pass, so the layer must **preserve** them, not just add; (c) IP12 refuted the
-"needs both traps" hypothesis — token-loss alone suffices inside a twin family.
+already pass, so the layer must **preserve** them, not just add.
+
+### After step 1 (intent year-guard) — prod-equivalent worktree API :8090, 2026-07-14
+
+**8/12 GOLD_HIT, +2, zero regressions** (every `baseline=pass` probe still passes; result
+stable across two runs):
+
+| Class | 6/12 → 8/12 | What moved |
+| --- | --- | --- |
+| code | 2/6 → 4/6 | IP01 (`/2025/36` va) and IP12 (`/2024/26`) flip: both were year-trapped (gold published a year after the code-year), the guard removes the spurious window and the gold re-enters the pool and ranks |
+| bdns / ref | 0/1, 0/1 | unchanged — body-only / column-only, untouched by step 1 |
+| norm / person | 1/1, 3/3 | preserved |
+
+IP02 (es) and IP03 (space form) share IP01's code but stay MISS — token-loss inside the
+near-twin family, the target of step 3. So the year-guard is a real standalone win on the
+year-trapped population, not merely preparatory.
 
 ## Staging (each step independently shippable, gated on the probe set)
 
 1. Build the identifier-probe set + baseline it on current prod. *(done — 6/12, above)*
-2. Intent year-guard (smallest, independent win).
+2. Intent year-guard (smallest, independent win). *(done — 8/12, `api/intent.py` `_complex_code_spans`; not yet deployed to prod)*
 3. Ingest extractor + `doc_identifier` table.
 4. Query lane + migrate norm-pin onto it.
-5. Fold in code / bdns / person classes.
+5. Fold in code / bdns / person classes (person stays lexical-only — already 3/3; not pinned).
 
 ## Open questions
 
