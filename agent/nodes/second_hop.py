@@ -35,12 +35,12 @@ from api.db import SessionLocal
 from api.dogv_resolver import (
     Reference,
     _topic_terms_of,
-    corpus_like_patterns,
     parse_references,
     reference_matches_title,
 )
 from api.edition_recency import suppress_stale_editions
 from api.field_anchor import identity_query, is_multi_field_grant_query
+from api.identifiers import normalize_norm_key
 from api.query_expansion import build_bm25_queries, decompose_question
 from api.retrieval import RetrievalFilters
 
@@ -64,36 +64,39 @@ def _ref_hop_question(ref: Reference) -> str:
 
 
 def _direct_title_lookup(ref: Reference, limit: int = 3) -> list[dict[str, Any]]:
-    """Direct title-pattern SQL fetch (corpus_like_patterns), same mechanism the
-    backfill on-demand-fetch path uses to confirm corpus presence. A short numeric
-    title like "ORDEN 18/2026..." carries little lexical/semantic signal, so the
-    embedding+BM25 hop lane can still miss it even when it's plainly in corpus;
-    this is the fallback that recovers it deterministically."""
-    patterns = corpus_like_patterns(ref)
-    if not patterns:
+    """Deterministically fetch the document that IS this norm-ref, via the
+    identifier layer (doc_identifier 'norm' class — each document's own numbered
+    identity, extracted from its title at ingest). A short numeric title like
+    "ORDEN 18/2026..." carries little lexical/semantic signal, so the
+    embedding+BM25 hop lane can miss it even when it is plainly in corpus; the
+    exact identifier lookup recovers it. Replaces the former title-ILIKE scan
+    (corpus_like_patterns) with the shared, indexed identifier table.
+
+    A tipo-less ref (a bare N/YYYY with no "ORDEN"/"DECRETO" word) has no norm key
+    and is skipped — those do not arise in the multi-ref compare questions this
+    hop serves."""
+    if ref.tipo is None:
         return []
-    clauses = " OR ".join(f"dd.title ILIKE :p{i}" for i in range(len(patterns)))
-    params: dict[str, Any] = {f"p{i}": pat for i, pat in enumerate(patterns)}
-    params["limit"] = limit
+    key = normalize_norm_key(ref.tipo, ref.numero, ref.anyo)
     sql = sa_text(
-        f"""
+        """
         SELECT dd.id AS document_id, dd.title, dd.ref, dd.type, dd.doc_kind,
                dd.doc_subkind, dd.pdf_url, dd.html_url, di.date AS issue_date
-        FROM dogv_documents dd
+        FROM doc_identifier ident
+        JOIN dogv_documents dd ON dd.id = ident.document_id
         JOIN dogv_issues di ON di.id = dd.issue_id
-        WHERE ({clauses})
-        ORDER BY di.date DESC
+        WHERE ident.id_kind = 'norm' AND ident.id_key = :key
+        ORDER BY di.date DESC, dd.id ASC
         LIMIT :limit
         """
     )
     with SessionLocal() as db:
-        rows = db.execute(sql, params).mappings().all()
+        rows = db.execute(sql, {"key": key, "limit": limit}).mappings().all()
     out: list[dict[str, Any]] = []
     for row in rows:
         d = dict(row)
-        if reference_matches_title(ref, d.get("title") or ""):
-            d["rrf_score"] = 0.0
-            out.append(d)
+        d["rrf_score"] = 0.0
+        out.append(d)
     return out
 
 
