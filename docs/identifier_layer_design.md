@@ -77,10 +77,39 @@ Two quantified traps:
 Code uniqueness is favorable: **977 / 1,102 distinct full codes map to ≤2 docs** (es+va),
 so exact-code lookup has low false-pin risk.
 
-## Where identifiers are special-cased today (the fragmentation)
+## Consolidation results (2026-07-14) — and a correction
 
-Ten modules, **~6 separate regexes re-implementing "N/YYYY" detection**, four ILIKE-title
-call-sites, no shared notion of an identifier:
+**Correction to the framing below.** The original pitch — "~6 separate regexes
+re-implementing N/YYYY detection" — was overstated. On close re-audit the identifier
+logic was *less* duplicated than claimed: there is essentially **one** N/YYYY parser
+(`dogv_resolver._NUMBER_YEAR_RE`, already reused by `doc_references`), and the other
+"identifier regexes" handle **distinct classes** (edition process-codes, A1/B2 employment
+subgroup-codes, plain years), not the same thing six times. Real duplication existed in two
+places, both now removed; the rest are legitimately separate concerns kept separate.
+
+**Retired (genuine duplication → single source of truth in `api/identifiers.py`):**
+- `intent._SLASH_CODE_PATTERN` + `_complex_code_spans` → `identifiers.code_token_spans`
+  (intent no longer re-derives "what is a code token").
+- `second_hop._direct_title_lookup`'s ILIKE title-scan + its `corpus_like_patterns`
+  coupling → one indexed `doc_identifier` norm lookup (second_hop now consumes the layer).
+- `dogv_resolver._REF_IN_TITLE_RE` → folded into `_NUMBER_YEAR_RE` (was a capture-less copy).
+
+**Deliberately NOT folded (distinct concerns — folding would be forced unification):**
+- `edition_recency._CODE_RE` / `_code_tokens` — a token-*set* built from titles (union of
+  norm + code tokens) for RC1 edition-family comparison; a different algorithm and purpose.
+- `enumeration._GROUP_CODE_RE` — A1/B2 employment subgroup codes, used as a query *filter*
+  (they appear in many docs), not a unique document pin.
+- `intent._YEAR_PATTERN` / `_MONTH_YEAR_PATTERN` — date detection, not identifier detection.
+
+Net: `identifiers.py` is now the single home for code/bdns/ref detection + normalization +
+the shared `code_token_spans` primitive, consumed by `intent`, `second_hop`, and
+`identifier_pin`. Probe set stayed **12/12** through every consolidation step; the one
+eval_v2 case touched by the norm-pin migration (v2-047) is byte-identical.
+
+## Where identifiers were special-cased (the original fragmentation audit)
+
+Ten modules, several identifier regexes, four ILIKE-title call-sites, no shared notion of an
+identifier (see the correction above — this was the pre-work picture):
 
 | Module | What it does with identifiers | Own regex |
 | --- | --- | --- |
