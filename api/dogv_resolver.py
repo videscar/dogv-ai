@@ -538,7 +538,6 @@ def resolve_question(question: str) -> ResolvedDoc | None:
     return resolve(ref, _query_lang(question))
 
 
-_REF_IN_TITLE_RE = re.compile(r"\b\d{1,4}/\d{2,4}\b")
 # How far after a "Ley N/YYYY" token to look for the law's name. DOGV titles read
 # "Ley 1/2022, de 13 de abril, de la Generalitat, de Transparencia y Buen Gobierno"
 # — the topic name sits within ~90 chars of the number.
@@ -580,7 +579,7 @@ def _infer_principal_ref(titles: list[str], tipo: str, topic_terms: list[str]) -
         for m in tipo_ref_re.finditer(title):
             ref = m.group(1)
             window = title[m.end() : m.end() + _PRINCIPAL_NAME_WINDOW]
-            nxt = _REF_IN_TITLE_RE.search(window)  # don't bleed into the next norm
+            nxt = _NUMBER_YEAR_RE.search(window)  # don't bleed into the next norm
             if nxt:
                 window = window[: nxt.start()]
             wn = _strip_accents(window.lower())
