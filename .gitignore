@@ -44,3 +44,5 @@ data/eval_v2/answers_w3_unitaware_fix.jsonl.meta.json
 data/eval_v2/answers_w3_currentstrict.jsonl
 data/eval_v2/answer_input_w3.json
 data/eval_v2/answer_input_determinism.json
+data/regression_reports/
+data/tester_regression/run_20*.md

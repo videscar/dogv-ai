@@ -231,10 +231,41 @@ retrieve the gold document (an embeddings ceiling, dominated by vague queries �
 R@10 0.44 — and by Valencian, which trails Spanish by ~7 points); median `/ask`
 latency is ~50–60 s (a multi-stage pipeline on a local 27B); no OCR for scanned PDFs.
 
-Commands:
+### One command: the full regression sweep
+
+`scripts/run_all_regressions.sh` runs **every** regression set in sequence against a
+live API (default prod `:8088`) and writes all outputs under
+`data/regression_reports/<timestamp>/`:
 
 ```bash
-# End-to-end answers against the live API + aggregation
+scripts/run_all_regressions.sh                       # prod :8088
+scripts/run_all_regressions.sh http://127.0.0.1:8090 # a dev API
+```
+
+| # | Suite | Size | What it checks |
+|---|---|---|---|
+| 1 | Identifier probes | 12 | code/BDNS/ref exact-match retrieval (gold-cited) |
+| 2 | Tester / Raul regression | 30 | answered (not abstained) + correct norm citation |
+| 3 | Retrieval eval | 90 | recall@k per stage (in-process) |
+| 4 | eval_v2 citation + abstention | 100 | gold-cited / correctly-abstained (fast signal, **not** the LLM-judge score) |
+
+**Latest full sweep — prod, master `81b1352`, 2026-07-14:** identifier probes **12/12** ·
+tester/Raul **30/30** · retrieval rerank **R@10 0.733** (at the documented ~0.74 ceiling) ·
+eval_v2 citation **67/100 raw** (misses concentrate in the known-hard vague/wrong-ref
+categories — the embeddings ceiling; the abstain regex undercounts, the LLM-judge measures
+out-of-scope abstention at 10/10). The identifier layer fires on 0/100 eval_v2 questions, so
+it neither helped nor regressed that set.
+
+Individual suites / the authoritative answer-quality pipeline:
+
+```bash
+# All suites at once (the sweep above)
+scripts/run_all_regressions.sh http://127.0.0.1:8088
+
+# Identifier-layer probe set (code/BDNS/ref exact-match retrieval)
+.venv/bin/python scripts/oneoff/run_identifier_probes.py --api http://127.0.0.1:8088
+
+# Authoritative end-to-end answer quality (LLM judge) + aggregation
 .venv/bin/python eval_v2/collect_answers.py --base-url http://127.0.0.1:8088
 .venv/bin/python eval_v2/score_answers.py <judgments.jsonl> <answers.jsonl> data/eval_v2/reports/answer_metrics.json
 
@@ -242,6 +273,9 @@ Commands:
 .venv/bin/python scripts/run_eval.py --input data/eval_v2/retrieval_input.json
 .venv/bin/python eval_v2/retrieval_metrics.py data/eval_reports/<run_id>.json
 .venv/bin/python scripts/check_eval_regression.py --report data/eval_reports/<run_id>.json
+
+# eval_v2 citation + abstention (fast retrieval-into-answer regression signal)
+.venv/bin/python scripts/eval_v2_citation_check.py --api http://127.0.0.1:8088
 
 # External tester regression set (30Q against production)
 .venv/bin/python scripts/run_tester_regression.py --api http://localhost:8088
